@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useT, formatTZS, formatDate } from "@/lib/i18n";
-import { TrendingUp, Boxes, Users, AlertTriangle, CreditCard, Activity } from "lucide-react";
+import { TrendingUp, Boxes, Users, AlertTriangle, CreditCard, Activity, FileText, CheckCircle, AlertCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -32,7 +32,8 @@ function Dashboard() {
         productsRes, 
         lowStockRes, 
         customersRes, 
-        debtsRes
+        debtsRes,
+        invoicesRes
       ] = await Promise.all([
         (() => {
           let q = supabase.from("sales").select("total").gte("created_at", today.toISOString()).eq("status", "completed");
@@ -55,13 +56,23 @@ function Dashboard() {
           return q;
         })(),
         supabase.from("products").select("id", { count: "exact", head: true }),
-        supabase
-          .from("products")
-          .select("id, name, stock_quantity, low_stock_threshold")
-          .lte("stock_quantity", 5)
-          .limit(10),
+        (() => {
+          let q = supabase
+            .from("products")
+            .select("id, name, low_stock_threshold, branch_inventory!inner(stock_quantity)")
+            .eq("is_active", true);
+          if (branchId) q = q.eq("branch_inventory.branch_id", branchId);
+          return q;
+        })(),
         supabase.from("customers").select("id", { count: "exact", head: true }),
         supabase.from("customers").select("balance").gt("balance", 0),
+        (() => {
+          let q = supabase
+            .from("invoices")
+            .select("balance, payment_status, sales!inner(branch_id)");
+          if (branchId) q = q.eq("sales.branch_id", branchId);
+          return q;
+        })()
       ]);
 
       const sum = (rows: { total: number | null | string }[] | null) =>
@@ -76,6 +87,12 @@ function Dashboard() {
       const monthTotal = sum(monthRes.data);
       const monthCount = monthRes.data?.length || 0;
       const avgOrderValue = monthCount > 0 ? monthTotal / monthCount : 0;
+
+      const invoicesData = invoicesRes.data ?? [];
+      const totalInvoicesCount = invoicesData.length;
+      const paidInvoicesCount = invoicesData.filter((i: any) => i.payment_status === "Paid").length;
+      const unpaidInvoicesCount = invoicesData.filter((i: any) => i.payment_status === "Unpaid").length;
+      const outstandingInvoicesBalance = invoicesData.reduce((sum: number, i: any) => sum + Number(i.balance), 0);
 
       // Group week sales by day for the chart
       const chartData = Array.from({ length: 7 }).map((_, i) => {
@@ -96,17 +113,32 @@ function Dashboard() {
         }
       });
 
+      const allInventory = (lowStockRes.data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        low_stock_threshold: p.low_stock_threshold,
+        stock_quantity: p.branch_inventory?.[0]?.stock_quantity || 0
+      }));
+      const lowStockList = allInventory
+        .filter(p => p.stock_quantity <= (p.low_stock_threshold || 5))
+        .sort((a, b) => a.stock_quantity - b.stock_quantity)
+        .slice(0, 15);
+
       return {
         today: sum(todayRes.data),
         week: sum(weekRes.data),
         month: monthTotal,
         allTime: sum(allTimeRes.data),
         productCount: productsRes.count ?? 0,
-        lowStock: lowStockRes.data ?? [],
+        lowStock: lowStockList,
         customerCount: customersRes.count ?? 0,
         pendingDebts: sumDebts(debtsRes.data),
         avgOrderValue,
-        chartData
+        chartData,
+        totalInvoicesCount,
+        paidInvoicesCount,
+        unpaidInvoicesCount,
+        outstandingInvoicesBalance
       };
     },
   });
@@ -194,6 +226,32 @@ function Dashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Invoice Statistics */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-bold tracking-tight">Invoice Summary</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: "Total Invoices", value: String(stats?.totalInvoicesCount ?? 0), icon: FileText },
+            { label: "Paid Invoices", value: String(stats?.paidInvoicesCount ?? 0), icon: CheckCircle, color: "text-success bg-success/10" },
+            { label: "Unpaid Invoices", value: String(stats?.unpaidInvoicesCount ?? 0), icon: AlertCircle, color: "text-destructive bg-destructive/10" },
+            { label: "Invoice Outstanding", value: formatTZS(stats?.outstandingInvoicesBalance ?? 0), icon: CreditCard, color: "text-warning bg-warning/10" },
+          ].map((c) => (
+            <div
+              key={c.label}
+              className={`rounded-xl border border-border bg-card p-4 flex items-center gap-4 ${isLoading ? 'animate-pulse' : ''}`}
+            >
+              <div className={`p-3 rounded-full ${c.color || "bg-muted text-muted-foreground"}`}>
+                <c.icon className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">{c.label}</div>
+                <div className="text-xl font-bold">{c.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
