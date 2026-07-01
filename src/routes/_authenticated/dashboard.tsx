@@ -72,6 +72,16 @@ function Dashboard() {
             .select("balance, payment_status, sales!inner(branch_id)");
           if (branchId) q = q.eq("sales.branch_id", branchId);
           return q;
+        })(),
+        (() => {
+          let q = supabase
+            .from("sale_items")
+            .select("quantity, subtotal, products(name), sales!inner(created_at, status, branch_id)")
+            .eq("sales.status", "completed")
+            .gte("sales.created_at", monthStart.toISOString());
+            
+          if (branchId) q = q.eq("sales.branch_id", branchId);
+          return q;
         })()
       ]);
 
@@ -124,6 +134,16 @@ function Dashboard() {
         .sort((a, b) => a.stock_quantity - b.stock_quantity)
         .slice(0, 15);
 
+      const saleItemsThisMonth = results[9]?.data ?? [];
+      const byProduct: Record<string, { name: string, quantity: number, revenue: number }> = {};
+      saleItemsThisMonth.forEach((item: any) => {
+        const name = item.products?.name || "Unknown Product";
+        if (!byProduct[name]) byProduct[name] = { name, quantity: 0, revenue: 0 };
+        byProduct[name].quantity += Number(item.quantity);
+        byProduct[name].revenue += Number(item.subtotal);
+      });
+      const topProducts = Object.values(byProduct).sort((a,b) => b.quantity - a.quantity).slice(0, 8);
+
       return {
         today: sum(todayRes.data),
         week: sum(weekRes.data),
@@ -138,7 +158,8 @@ function Dashboard() {
         totalInvoicesCount,
         paidInvoicesCount,
         unpaidInvoicesCount,
-        outstandingInvoicesBalance
+        outstandingInvoicesBalance,
+        topProducts
       };
     },
   });
@@ -318,34 +339,72 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Transactions */}
-      <div className="rounded-xl border border-border bg-card shadow-sm">
-        <div className="px-5 py-4 border-b border-border">
-          <h2 className="font-semibold">{t("recentSales")}</h2>
-        </div>
-        <div className="divide-y divide-border">
-          {recent && recent.length > 0 ? (
-            recent.map((s) => (
-              <div key={s.id} className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary">
-                    <TrendingUp className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="font-medium">{s.receipt_number}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {formatDate(s.created_at)} · <span className="uppercase">{s.payment_method}</span>
+      <div className="grid gap-6 lg:grid-cols-2 mt-6">
+        {/* Recent Transactions */}
+        <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col h-[400px]">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="font-semibold">{t("recentSales")}</h2>
+          </div>
+          <div className="divide-y divide-border overflow-y-auto flex-1">
+            {recent && recent.length > 0 ? (
+              recent.map((s) => (
+                <div key={s.id} className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary">
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{s.receipt_number}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {formatDate(s.created_at)} · <span className="uppercase">{s.payment_method}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="font-bold text-base">{formatTZS(Number(s.total))}</div>
                 </div>
-                <div className="font-bold text-base">{formatTZS(Number(s.total))}</div>
+              ))
+            ) : (
+              <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+                {t("noData")}
               </div>
-            ))
-          ) : (
-            <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-              {t("noData")}
+            )}
+          </div>
+        </div>
+
+        {/* Top Selling Products This Month */}
+        <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col h-[400px]">
+          <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-primary/5">
+            <h2 className="font-semibold text-primary">Top Products (This Month)</h2>
+            <div className="grid h-6 w-6 place-items-center rounded-full bg-primary/10 text-primary">
+              <Activity className="h-3 w-3" />
             </div>
-          )}
+          </div>
+          <div className="divide-y divide-border overflow-y-auto flex-1 p-2">
+            {stats?.topProducts && stats.topProducts.length > 0 ? (
+              stats.topProducts.map((p: any, i: number) => (
+                <div key={p.name} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                      {i + 1}
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">{p.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">{p.quantity}</span> units sold
+                      </div>
+                    </div>
+                  </div>
+                  <div className="font-semibold text-sm text-right">
+                    {formatTZS(p.revenue)}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+                {isLoading ? "Loading products..." : "No sales data this month yet."}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
