@@ -368,6 +368,7 @@ function ProductDialog({ editing, onClose }: { editing: Product | null; onClose:
                     </option>
                   ))}
                 </select>
+                <p className="text-[10px] text-muted-foreground mt-1">To add a new category, use the 'Categories' button on the main Products page.</p>
               </div>
               <div>
                 <Label>Unit (e.g. pcs, kg, L)</Label>
