@@ -33,7 +33,8 @@ function Dashboard() {
         lowStockRes, 
         customersRes, 
         debtsRes,
-        invoicesRes
+        invoicesRes,
+        topProductsRes
       ] = await Promise.all([
         (() => {
           let q = supabase.from("sales").select("total").gte("created_at", today.toISOString()).eq("status", "completed");
@@ -134,7 +135,7 @@ function Dashboard() {
         .sort((a, b) => a.stock_quantity - b.stock_quantity)
         .slice(0, 15);
 
-      const saleItemsThisMonth = results[9]?.data ?? [];
+      const saleItemsThisMonth = topProductsRes.data ?? [];
       const byProduct: Record<string, { name: string, quantity: number, revenue: number }> = {};
       saleItemsThisMonth.forEach((item: any) => {
         const name = item.products?.name || "Unknown Product";
