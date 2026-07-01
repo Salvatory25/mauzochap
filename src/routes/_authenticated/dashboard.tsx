@@ -22,7 +22,8 @@ function Dashboard() {
       today.setHours(0, 0, 0, 0);
       const weekAgo = new Date(Date.now() - 6 * 86400000); // Last 7 days including today
       weekAgo.setHours(0,0,0,0);
-      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthStart = new Date(Date.now() - 29 * 86400000); // Last 30 days
+      monthStart.setHours(0,0,0,0);
 
       const [
         todayRes, 
@@ -377,7 +378,7 @@ function Dashboard() {
         {/* Top Selling Products This Month */}
         <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col h-[400px]">
           <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-primary/5">
-            <h2 className="font-semibold text-primary">Top Products (This Month)</h2>
+            <h2 className="font-semibold text-primary">Top Products (Last 30 Days)</h2>
             <div className="grid h-6 w-6 place-items-center rounded-full bg-primary/10 text-primary">
               <Activity className="h-3 w-3" />
             </div>
@@ -404,7 +405,7 @@ function Dashboard() {
               ))
             ) : (
               <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                {isLoading ? "Loading products..." : "No sales data this month yet."}
+                {isLoading ? "Loading products..." : "No sales data in the last 30 days."}
               </div>
             )}
           </div>
