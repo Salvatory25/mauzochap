@@ -190,7 +190,7 @@ function Dashboard() {
 
   const cards: { label: string; value: string; icon: any; accent?: string; primary?: boolean; color?: string }[] = [
     {
-      label: "Total Sales (All Time)",
+      label: t("totalSalesAllTime"),
       value: formatTZS(stats?.allTime ?? 0),
       icon: TrendingUp,
       accent: "var(--gradient-primary)",
@@ -202,7 +202,7 @@ function Dashboard() {
   ];
 
   const secondaryCards = [
-    { label: "Pending Debts", value: formatTZS(stats?.pendingDebts ?? 0), icon: CreditCard, color: "text-warning" },
+    { label: t("pendingDebts"), value: formatTZS(stats?.pendingDebts ?? 0), icon: CreditCard, color: "text-warning" },
     { label: t("totalProducts"), value: String(stats?.productCount ?? 0), icon: Boxes },
     { label: t("customers"), value: String(stats?.customerCount ?? 0), icon: Users },
   ];
@@ -211,7 +211,7 @@ function Dashboard() {
     <div className="space-y-6 pb-12">
       <div>
         <h1 className="text-3xl font-bold">{t("dashboard")}</h1>
-        <p className="text-sm text-muted-foreground">Comprehensive overview of your business.</p>
+        <p className="text-sm text-muted-foreground">{t("dashboardSubtitle")}</p>
       </div>
 
       {/* Primary KPIs */}
@@ -257,13 +257,13 @@ function Dashboard() {
 
       {/* Invoice Statistics */}
       <div className="space-y-3">
-        <h2 className="text-lg font-bold tracking-tight">Invoice Summary</h2>
+        <h2 className="text-lg font-bold tracking-tight">{t("invoiceSummary")}</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Total Invoices", value: String(stats?.totalInvoicesCount ?? 0), icon: FileText },
-            { label: "Paid Invoices", value: String(stats?.paidInvoicesCount ?? 0), icon: CheckCircle, color: "text-success bg-success/10" },
-            { label: "Unpaid Invoices", value: String(stats?.unpaidInvoicesCount ?? 0), icon: AlertCircle, color: "text-destructive bg-destructive/10" },
-            { label: "Invoice Outstanding", value: formatTZS(stats?.outstandingInvoicesBalance ?? 0), icon: CreditCard, color: "text-warning bg-warning/10" },
+            { label: t("totalInvoices"), value: String(stats?.totalInvoicesCount ?? 0), icon: FileText },
+            { label: t("paidInvoices"), value: String(stats?.paidInvoicesCount ?? 0), icon: CheckCircle, color: "text-success bg-success/10" },
+            { label: t("unpaidInvoices"), value: String(stats?.unpaidInvoicesCount ?? 0), icon: AlertCircle, color: "text-destructive bg-destructive/10" },
+            { label: t("invoiceOutstanding"), value: formatTZS(stats?.outstandingInvoicesBalance ?? 0), icon: CreditCard, color: "text-warning bg-warning/10" },
           ].map((c) => (
             <div
               key={c.label}
@@ -285,7 +285,7 @@ function Dashboard() {
         {/* Sales Summary Chart */}
         <div className="lg:col-span-2 rounded-xl border border-border bg-card shadow-sm flex flex-col">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="font-semibold">Sales Summary (Last 7 Days)</h2>
+            <h2 className="font-semibold">{t("salesSummary7Days")}</h2>
           </div>
           <div className="p-5 flex-1 min-h-[300px]">
             {stats?.chartData && stats.chartData.length > 0 ? (
@@ -304,7 +304,7 @@ function Dashboard() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
-                {isLoading ? "Loading chart..." : "No data available"}
+                {isLoading ? t("loadingChart") : t("noDataAvailable")}
               </div>
             )}
           </div>
@@ -314,7 +314,7 @@ function Dashboard() {
         <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col">
           <div className="px-5 py-4 border-b border-border flex items-center gap-2 bg-warning/5 text-warning">
             <AlertTriangle className="h-4 w-4" />
-            <h2 className="font-semibold">{t("lowStock")} Alerts</h2>
+            <h2 className="font-semibold">{t("lowStockAlerts")}</h2>
           </div>
           <div className="divide-y divide-border overflow-y-auto max-h-[300px]">
             {stats?.lowStock && stats.lowStock.length > 0 ? (
@@ -331,14 +331,14 @@ function Dashboard() {
                       className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-bold whitespace-nowrap"
                       style={{ color: "var(--warning)" }}
                     >
-                      {p.stock_quantity} left
+                      {p.stock_quantity} {t("left")}
                     </span>
                   </div>
                 ),
               )
             ) : (
               <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                All products are well stocked.
+                {t("allWellStocked")}
               </div>
             )}
           </div>
@@ -380,7 +380,7 @@ function Dashboard() {
         {/* Top Selling Products This Month */}
         <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col h-[400px]">
           <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-primary/5">
-            <h2 className="font-semibold text-primary">Top Products (Last 30 Days)</h2>
+            <h2 className="font-semibold text-primary">{t("topProducts30Days")}</h2>
             <div className="grid h-6 w-6 place-items-center rounded-full bg-primary/10 text-primary">
               <Activity className="h-3 w-3" />
             </div>
@@ -396,7 +396,7 @@ function Dashboard() {
                     <div>
                       <div className="font-medium text-sm">{p.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        <span className="font-semibold text-foreground">{p.quantity}</span> units sold
+                        <span className="font-semibold text-foreground">{p.quantity}</span> {t("unitsSold")}
                       </div>
                     </div>
                   </div>
@@ -407,7 +407,7 @@ function Dashboard() {
               ))
             ) : (
               <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                {isLoading ? "Loading products..." : "No sales data in the last 30 days."}
+                {isLoading ? t("loadingProducts") : t("noSales30Days")}
               </div>
             )}
           </div>
