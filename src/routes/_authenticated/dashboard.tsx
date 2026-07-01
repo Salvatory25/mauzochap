@@ -33,8 +33,7 @@ function Dashboard() {
         lowStockRes, 
         customersRes, 
         debtsRes,
-        invoicesRes,
-        topProductsRes
+        invoicesRes
       ] = await Promise.all([
         (() => {
           let q = supabase.from("sales").select("total").gte("created_at", today.toISOString()).eq("status", "completed");
@@ -47,7 +46,7 @@ function Dashboard() {
           return q;
         })(),
         (() => {
-          let q = supabase.from("sales").select("total").gte("created_at", monthStart.toISOString()).eq("status", "completed");
+          let q = supabase.from("sales").select("id, total").gte("created_at", monthStart.toISOString()).eq("status", "completed");
           if (branchId) q = q.or(`branch_id.eq.${branchId},branch_id.is.null`);
           return q;
         })(),
@@ -71,16 +70,6 @@ function Dashboard() {
           let q = supabase
             .from("invoices")
             .select("balance, payment_status, sales!inner(branch_id)");
-          if (branchId) q = q.eq("sales.branch_id", branchId);
-          return q;
-        })(),
-        (() => {
-          let q = supabase
-            .from("sale_items")
-            .select("quantity, subtotal, products(name), sales!inner(created_at, status, branch_id)")
-            .eq("sales.status", "completed")
-            .gte("sales.created_at", monthStart.toISOString());
-            
           if (branchId) q = q.eq("sales.branch_id", branchId);
           return q;
         })()
@@ -135,7 +124,20 @@ function Dashboard() {
         .sort((a, b) => a.stock_quantity - b.stock_quantity)
         .slice(0, 15);
 
-      const saleItemsThisMonth = topProductsRes.data ?? [];
+      const monthData = monthRes.data || [];
+      const monthSaleIds = monthData.map((s: any) => s.id);
+      let saleItemsThisMonth: any[] = [];
+      
+      if (monthSaleIds.length > 0) {
+        // Since monthSaleIds can be large, we might need to chunk it if it's over 1000, 
+        // but for now Supabase handles a good chunk. To be safe:
+        const { data } = await supabase
+          .from("sale_items")
+          .select("quantity, subtotal, products(name)")
+          .in("sale_id", monthSaleIds.slice(0, 1000));
+        saleItemsThisMonth = data || [];
+      }
+
       const byProduct: Record<string, { name: string, quantity: number, revenue: number }> = {};
       saleItemsThisMonth.forEach((item: any) => {
         const name = item.products?.name || "Unknown Product";
