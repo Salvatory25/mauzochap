@@ -70,7 +70,7 @@ function Dashboard() {
         (() => {
           let q = supabase
             .from("invoices")
-            .select("balance, payment_status, sales!inner(branch_id)");
+            .select("id, balance, payment_status, created_at, sales!inner(branch_id)");
           if (branchId) q = q.eq("sales.branch_id", branchId);
           return q;
         })()
@@ -125,17 +125,19 @@ function Dashboard() {
         .sort((a, b) => a.stock_quantity - b.stock_quantity)
         .slice(0, 15);
 
-      const monthData = monthRes.data || [];
-      const monthSaleIds = monthData.map((s: any) => s.id);
+      const monthInvoices = invoicesRes.data?.filter((inv: any) => new Date(inv.created_at) >= monthStart) || [];
+      const invoiceIds = monthInvoices.map((inv: any) => inv.id);
       let saleItemsThisMonth: any[] = [];
       
-      if (monthSaleIds.length > 0) {
-        // Since monthSaleIds can be large, we might need to chunk it if it's over 1000, 
-        // but for now Supabase handles a good chunk. To be safe:
-        const { data } = await supabase
-          .from("sale_items")
+      if (invoiceIds.length > 0) {
+        const { data, error } = await supabase
+          .from("invoice_items")
           .select("quantity, subtotal, products(name)")
-          .in("sale_id", monthSaleIds.slice(0, 1000));
+          .in("invoice_id", invoiceIds.slice(0, 1000));
+        
+        if (error) {
+          console.error("Error fetching top products:", error);
+        }
         saleItemsThisMonth = data || [];
       }
 
