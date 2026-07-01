@@ -25,6 +25,7 @@ type Product = {
   sku: string | null;
   category_id: string | null;
   barcode: string | null;
+  low_stock_threshold?: number;
 };
 type CartItem = Product & { qty: number };
 type PaymentMethod = "cash" | "mobile_money" | "card" | "credit" | "bank";
@@ -66,7 +67,7 @@ function POSPage() {
       const { data } = await supabase
         .from("products")
         .select(`
-          id,name,price,sku,barcode,category_id,
+          id,name,price,sku,barcode,category_id,low_stock_threshold,
           branch_inventory!inner(stock_quantity)
         `)
         .eq("is_active", true)
@@ -227,7 +228,62 @@ function POSPage() {
       const { error: itemErr } = await supabase.from("sale_items").insert(items);
       if (itemErr) throw itemErr;
 
-      toast.success("Sale completed");
+      // Generate Invoice automatically after sale items are successfully inserted
+      let paymentStatus: "Paid" | "Partial" | "Unpaid" = "Unpaid";
+      if (finalAmountPaid >= total) {
+        paymentStatus = "Paid";
+      } else if (finalAmountPaid > 0) {
+        paymentStatus = "Partial";
+      } else {
+        paymentStatus = "Unpaid";
+      }
+
+      const { data: invoice, error: invoiceErr } = await supabase
+        .from("invoices")
+        .insert({
+          sale_id: sale.id,
+          customer_id: customerId || null,
+          subtotal,
+          discount: Number(discount || 0),
+          tax: taxAmount,
+          total_amount: total,
+          amount_paid: finalAmountPaid,
+          balance: Math.max(0, total - finalAmountPaid),
+          payment_method: finalMethod,
+          payment_status: paymentStatus,
+          created_by: user.id,
+          business_id: sale.business_id || undefined
+        })
+        .select()
+        .single();
+
+      if (invoiceErr) throw invoiceErr;
+
+      const invoiceItems = cart.map((i) => ({
+        invoice_id: invoice.id,
+        product_id: i.id,
+        quantity: i.qty,
+        unit_price: i.price,
+        subtotal: i.price * i.qty,
+        business_id: sale.business_id || undefined
+      }));
+
+      const { error: invoiceItemErr } = await supabase.from("invoice_items").insert(invoiceItems);
+      if (invoiceItemErr) throw invoiceItemErr;
+
+      const lowStockItems = cart.filter(item => {
+        const newStock = item.stock_quantity - item.qty;
+        return newStock <= (item.low_stock_threshold || 5);
+      });
+
+      if (lowStockItems.length > 0) {
+        toast.error(
+          `Low Stock Alert: ${lowStockItems.map(i => i.name).join(", ")} are now running low!`,
+          { duration: 10000 }
+        );
+      }
+
+      toast.success("Sale completed and Invoice generated");
       setCompletedSale({ ...sale, items: cart });
       cancelSale();
       qc.invalidateQueries();
