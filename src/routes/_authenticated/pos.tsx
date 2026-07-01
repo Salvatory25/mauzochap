@@ -229,6 +229,8 @@ function POSPage() {
       if (itemErr) throw itemErr;
 
       // Generate Invoice automatically after sale items are successfully inserted
+      // HOTFIX: Commented out because the 'invoices' and 'invoice_items' tables do not exist in the DB yet!
+      /*
       let paymentStatus: "Paid" | "Partial" | "Unpaid" = "Unpaid";
       if (finalAmountPaid >= total) {
         paymentStatus = "Paid";
@@ -270,6 +272,7 @@ function POSPage() {
 
       const { error: invoiceItemErr } = await supabase.from("invoice_items").insert(invoiceItems);
       if (invoiceItemErr) throw invoiceItemErr;
+      */
 
       const lowStockItems = cart.filter(item => {
         const newStock = item.stock_quantity - item.qty;
@@ -283,7 +286,7 @@ function POSPage() {
         );
       }
 
-      toast.success("Sale completed and Invoice generated");
+      toast.success("Sale completed");
       setCompletedSale({ ...sale, items: cart });
       cancelSale();
       qc.invalidateQueries();

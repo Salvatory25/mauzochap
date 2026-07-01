@@ -125,15 +125,15 @@ function Dashboard() {
         .sort((a, b) => a.stock_quantity - b.stock_quantity)
         .slice(0, 15);
 
-      const monthInvoices = invoicesRes.data?.filter((inv: any) => new Date(inv.created_at) >= monthStart) || [];
-      const invoiceIds = monthInvoices.map((inv: any) => inv.id);
+      const monthData = monthRes.data || [];
+      const monthSaleIds = monthData.map((s: any) => s.id);
       let saleItemsThisMonth: any[] = [];
       
-      if (invoiceIds.length > 0) {
+      if (monthSaleIds.length > 0) {
         const { data, error } = await supabase
-          .from("invoice_items")
+          .from("sale_items")
           .select("quantity, subtotal, products(name)")
-          .in("invoice_id", invoiceIds.slice(0, 1000));
+          .in("sale_id", monthSaleIds.slice(0, 1000));
         
         if (error) {
           console.error("Error fetching top products:", error);
