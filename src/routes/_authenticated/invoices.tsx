@@ -54,6 +54,7 @@ type InvoiceItem = {
     name: string;
     sku: string | null;
     unit: string | null;
+    cost_price: number | null;
   } | null;
 };
 
@@ -815,7 +816,7 @@ function A4InvoiceView({ invoice, business }: { invoice: Invoice; business: any 
           <div className="flex justify-between text-xs font-bold pt-2 border-t border-gray-200 text-gray-950">
             <span>Estimated Profit</span>
             {(() => {
-              const totalCost = (invoice.invoice_items || []).reduce((acc, item) => acc + (item.quantity * ((item.products as any)?.cost_price || 0)), 0);
+              const totalCost = (invoice.invoice_items || []).reduce((acc, item) => acc + (item.quantity * (item.products?.cost_price || 0)), 0);
               const estProfit = invoice.total_amount - totalCost;
               return (
                 <span className={estProfit >= 0 ? "text-emerald-600" : "text-red-600"}>

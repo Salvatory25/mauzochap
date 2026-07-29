@@ -863,6 +863,140 @@ export type Database = {
           }
         ]
       }
+      invoices: {
+        Row: {
+          id: string
+          business_id: string
+          invoice_number: string | null
+          sale_id: string
+          customer_id: string | null
+          subtotal: number
+          discount: number
+          tax: number
+          total_amount: number
+          amount_paid: number
+          balance: number
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_status: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          business_id?: string
+          invoice_number?: string | null
+          sale_id: string
+          customer_id?: string | null
+          subtotal?: number
+          discount?: number
+          tax?: number
+          total_amount?: number
+          amount_paid?: number
+          balance?: number
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          business_id?: string
+          invoice_number?: string | null
+          sale_id?: string
+          customer_id?: string | null
+          subtotal?: number
+          discount?: number
+          tax?: number
+          total_amount?: number
+          amount_paid?: number
+          balance?: number
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_status?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      invoice_items: {
+        Row: {
+          id: string
+          business_id: string
+          invoice_id: string
+          product_id: string | null
+          quantity: number
+          unit_price: number
+          subtotal: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          business_id?: string
+          invoice_id: string
+          product_id?: string | null
+          quantity: number
+          unit_price: number
+          subtotal: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          business_id?: string
+          invoice_id?: string
+          product_id?: string | null
+          quantity?: number
+          unit_price?: number
+          subtotal?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       sale_items: {
         Row: {
           created_at: string

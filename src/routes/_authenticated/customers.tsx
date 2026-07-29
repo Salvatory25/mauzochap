@@ -424,7 +424,7 @@ function PaymentDialog({ customer, onClose }: { customer: Customer | null; onClo
 }
 
 function CustomerProfileDialog({ customer, onClose }: { customer: Customer | null; onClose: () => void }) {
-  const [tab, setTab] = useState<"purchases" | "payments">("purchases");
+  const [tab, setTab] = useState<"purchases" | "payments" | "outstanding_invoices">("purchases");
 
   const { data: sales = [], isLoading: loadingSales } = useQuery({
     queryKey: ["customer-sales", customer?.id],
@@ -447,6 +447,20 @@ function CustomerProfileDialog({ customer, onClose }: { customer: Customer | nul
         .from("customer_payments")
         .select("*")
         .eq("customer_id", customer!.id)
+        .order("created_at", { ascending: false });
+      return data ?? [];
+    }
+  });
+
+  const { data: outstandingInvoices = [], isLoading: loadingInvoices } = useQuery({
+    queryKey: ["customer-outstanding-invoices", customer?.id],
+    enabled: !!customer && tab === "outstanding_invoices",
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("customer_id", customer!.id)
+        .gt("balance", 0)
         .order("created_at", { ascending: false });
       return data ?? [];
     }
@@ -492,6 +506,12 @@ function CustomerProfileDialog({ customer, onClose }: { customer: Customer | nul
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === "payments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
         >
           Payment History
+        </button>
+        <button
+          onClick={() => setTab("outstanding_invoices")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === "outstanding_invoices" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+        >
+          Outstanding Invoices
         </button>
       </div>
 
@@ -549,6 +569,37 @@ function CustomerProfileDialog({ customer, onClose }: { customer: Customer | nul
                     <td className="px-4 py-3 text-right font-medium text-success">+{formatTZS(p.amount)}</td>
                     <td className="px-4 py-3 text-right capitalize">{p.payment_method.replace("_", " ")}</td>
                     <td className="px-4 py-3 pl-8 text-muted-foreground text-xs">{p.notes || '—'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
+
+        {tab === "outstanding_invoices" && (
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 sticky top-0 text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-left">Invoice Number</th>
+                <th className="px-4 py-3 text-left">Date</th>
+                <th className="px-4 py-3 text-right">Total</th>
+                <th className="px-4 py-3 text-right">Paid</th>
+                <th className="px-4 py-3 text-right">Balance Due</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {loadingInvoices ? (
+                <tr><td colSpan={5} className="px-4 py-8 text-center">Loading...</td></tr>
+              ) : outstandingInvoices.length === 0 ? (
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No outstanding invoices found.</td></tr>
+              ) : (
+                outstandingInvoices.map((inv: any) => (
+                  <tr key={inv.id} className="hover:bg-muted/30">
+                    <td className="px-4 py-3 font-semibold text-primary">{inv.invoice_number}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{formatDate(inv.created_at)}</td>
+                    <td className="px-4 py-3 text-right font-medium">{formatTZS(inv.total_amount)}</td>
+                    <td className="px-4 py-3 text-right text-success">{formatTZS(inv.amount_paid)}</td>
+                    <td className="px-4 py-3 text-right text-warning font-semibold">{formatTZS(inv.balance)}</td>
                   </tr>
                 ))
               )}

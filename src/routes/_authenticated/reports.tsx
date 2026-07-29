@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useT, formatTZS } from "@/lib/i18n";
+import { useT, formatTZS, formatDate } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { FileDown, Calendar as CalendarIcon, DownloadCloud, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
@@ -63,6 +63,19 @@ function ReportsPage() {
             .from("products")
             .select("name, cost, price, branch_inventory(stock_quantity)");
 
+      let invoicesQuery = supabase
+        .from("invoices")
+        .select(`
+          id, invoice_number, total_amount, amount_paid, balance, payment_status, created_at, customer_id,
+          customers(name, phone, email),
+          sales!inner(branch_id)
+        `)
+        .gte("created_at", startDate)
+        .order("created_at", { ascending: false });
+      if (branchId) {
+        invoicesQuery = invoicesQuery.eq("sales.branch_id", branchId);
+      }
+
       const results = await Promise.all([
         salesQuery,
         expensesQuery,
@@ -71,6 +84,7 @@ function ReportsPage() {
         supabase.from("customers").select("name, phone, email, balance").gt("balance", 0),
         supabase.from("suppliers").select("name, phone, email, balance").gt("balance", 0),
         supabase.from("profiles").select("id, full_name"),
+        invoicesQuery,
       ]);
       
       if (results[0].error) console.error("Sales query error:", results[0].error);
@@ -152,6 +166,7 @@ function ReportsPage() {
 
       const customerDebt = customersData.reduce((s: number, c: any) => s + Number(c.balance), 0);
       const supplierDebt = suppliersData.reduce((s: number, c: any) => s + Number(c.balance), 0);
+      const invoicesData = results[6].data || [];
 
       return {
         days,
@@ -168,6 +183,7 @@ function ReportsPage() {
         suppliers: suppliersData,
         topUsers,
         topProducts,
+        invoices: invoicesData,
       };
     },
   });
@@ -296,6 +312,61 @@ function ReportsPage() {
     generateTabularPDF("Cashier Performance Report", columns, rows);
   };
 
+  const exportInvoicesPDF = (type: "daily" | "monthly" | "outstanding") => {
+    if (!data) return;
+    const columns = ["Invoice No", "Date", "Customer", "Total (TZS)", "Paid (TZS)", "Balance (TZS)", "Status"];
+    
+    let filteredInvoices = data.invoices;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    
+    if (type === "daily") {
+      filteredInvoices = data.invoices.filter((i: any) => i.created_at.slice(0, 10) === todayStr);
+    } else if (type === "outstanding") {
+      filteredInvoices = data.invoices.filter((i: any) => Number(i.balance) > 0);
+    }
+    
+    const rows = filteredInvoices.map((i: any) => [
+      i.invoice_number || "-",
+      formatDate(i.created_at),
+      i.customers?.name || "Walk-in Customer",
+      formatTZS(i.total_amount),
+      formatTZS(i.amount_paid),
+      formatTZS(i.balance),
+      i.payment_status
+    ]);
+    
+    const totalBilled = filteredInvoices.reduce((acc: number, curr: any) => acc + Number(curr.total_amount), 0);
+    const totalPaid = filteredInvoices.reduce((acc: number, curr: any) => acc + Number(curr.amount_paid), 0);
+    const totalOutstanding = filteredInvoices.reduce((acc: number, curr: any) => acc + Number(curr.balance), 0);
+    
+    const summary = [
+      `TOTAL BILLED: ${formatTZS(totalBilled)}`,
+      `TOTAL PAID: ${formatTZS(totalPaid)}`,
+      `TOTAL OUTSTANDING: ${formatTZS(totalOutstanding)}`
+    ];
+    
+    const title = type === "daily" 
+      ? "Daily Invoices Report" 
+      : type === "outstanding" 
+      ? "Outstanding Invoices Report" 
+      : "Monthly Invoices Report";
+      
+    generateTabularPDF(title, columns, rows, summary);
+  };
+
+  const exportCustomerBalancesReportPDF = () => {
+    if (!data) return;
+    const columns = ["Customer Name", "Phone", "Email", "Outstanding Balance (TZS)"];
+    const rows = data.customers.map((c: any) => [
+      c.name,
+      c.phone || "-",
+      c.email || "-",
+      formatTZS(c.balance)
+    ]);
+    const summary = [`TOTAL CUSTOMER DEBT: ${formatTZS(data.customerDebt)}`];
+    generateTabularPDF("Customer Balances Report", columns, rows, summary);
+  };
+
   const exportToPDF = async () => {
     const input = document.getElementById("report-content");
     if (!input) return;
@@ -410,6 +481,10 @@ function ReportsPage() {
               <DropdownMenuItem onClick={exportProductsPDF}>Download Product Performance PDF</DropdownMenuItem>
               <DropdownMenuItem onClick={exportUsersPDF}>Download User Performance PDF</DropdownMenuItem>
               <DropdownMenuItem onClick={exportDebtPDF}>Download Outstanding Debt PDF</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportInvoicesPDF("daily")}>Download Daily Invoices PDF</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportInvoicesPDF("monthly")}>Download Monthly Invoices PDF</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportInvoicesPDF("outstanding")}>Download Outstanding Invoices PDF</DropdownMenuItem>
+              <DropdownMenuItem onClick={exportCustomerBalancesReportPDF}>Download Customer Balances PDF</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
