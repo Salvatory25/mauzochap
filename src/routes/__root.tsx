@@ -95,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // PWA manifest
       { rel: "manifest", href: "/manifest.json" },
       // iOS touch icon
-      { rel: "apple-touch-icon", href: "/logo.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,
