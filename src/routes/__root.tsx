@@ -81,10 +81,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:title", content: "MauzoChap" },
       { property: "og:description", content: "POS & Business Management for African SMEs." },
+      // PWA / iOS meta tags
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "MauzoChap" },
+      { name: "theme-color", content: "#0f172a" },
+      { name: "application-name", content: "MauzoChap" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/logo.png" }
+      { rel: "icon", type: "image/png", href: "/logo.png" },
+      // PWA manifest
+      { rel: "manifest", href: "/manifest.json" },
+      // iOS touch icon
+      { rel: "apple-touch-icon", href: "/logo.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -110,6 +121,16 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+
+  useEffect(() => {
+    // Register PWA service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .then((reg) => console.log("[SW] Registered:", reg.scope))
+        .catch((err) => console.error("[SW] Registration failed:", err));
+    }
+  }, []);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
