@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useT, formatTZS, formatDate } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { FileDown, Calendar as CalendarIcon, DownloadCloud, ShieldAlert } from "lucide-react";
+import { FileDown, Calendar as CalendarIcon, DownloadCloud, ShieldAlert, Lock } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { jsPDF } from "jspdf";
@@ -20,6 +20,7 @@ type DateFilter = "today" | "week" | "month" | "all";
 
 function ReportsPage() {
   const t = useT();
+  const navigate = useNavigate();
   const { branchId, isManager, business } = useAuth();
   const [dateFilter, setDateFilter] = useState<DateFilter>("month");
   const [isExportingPDF, setIsExportingPDF] = useState(false);
@@ -468,7 +469,7 @@ function ReportsPage() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button disabled={isExportingPDF}>
+              <Button disabled={isExportingPDF || business?.package === "trial"}>
                 <DownloadCloud className={`mr-2 h-4 w-4 ${isExportingPDF ? 'animate-bounce' : ''}`} />
                 {isExportingPDF ? "Generating PDF..." : "Export Reports"}
               </Button>
@@ -505,144 +506,163 @@ function ReportsPage() {
         ))}
       </div>
       
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 mt-4">
-        <div className="rounded-xl border border-border bg-card p-5 bg-muted/10">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Customer Debt (To Collect)</div>
-          <div className="mt-2 text-xl font-bold text-warning">{formatTZS(data.customerDebt)}</div>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-5 bg-muted/10">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Supplier Debt (To Pay)</div>
-          <div className="mt-2 text-xl font-bold text-destructive">{formatTZS(data.supplierDebt)}</div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-5">
-        <h2 className="font-semibold mb-4">Sales Trend ({getFilterLabel()})</h2>
-        <div className="flex items-end gap-2 h-48">
-          {data.days.length === 0 ? (
-            <div className="text-sm text-muted-foreground m-auto">{t("noData")}</div>
-          ) : (
-            data.days.map(([d, val]) => (
-              <div key={d} className="flex-1 flex flex-col items-center gap-1">
-                <div
-                  className="w-full rounded-t-md"
-                  style={{
-                    height: `${(val / data.maxDay) * 100}%`,
-                    background: "var(--gradient-primary)",
-                    minHeight: "4px",
-                  }}
-                  title={`${d}: ${formatTZS(val)}`}
-                />
-                <span className="text-[10px] text-muted-foreground">{d.slice(5)}</span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="font-semibold mb-4">Top 10 Products by Revenue</h2>
-          <div className="space-y-4">
-            {data.topProducts.length === 0 ? (
-              <div className="text-sm text-muted-foreground">{t("noData")}</div>
-            ) : (
-              data.topProducts.map((p, i) => (
-                <div key={p.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-bold text-muted-foreground">{i + 1}</div>
-                    <div>
-                      <div className="font-medium text-sm">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">{p.quantity} units sold</div>
-                    </div>
-                  </div>
-                  <div className="font-semibold">{formatTZS(p.revenue)}</div>
-                </div>
-              ))
-            )}
+      {business?.package === "trial" ? (
+        <div className="relative border border-dashed border-border rounded-xl p-10 bg-card text-center space-y-4 shadow-sm max-w-4xl mx-auto mt-6">
+          <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <Lock className="h-6 w-6 text-primary animate-pulse" />
           </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="font-semibold mb-4">Cashier Performance</h2>
-          <div className="space-y-4">
-            {data.topUsers.length === 0 ? (
-              <div className="text-sm text-muted-foreground">{t("noData")}</div>
-            ) : (
-              data.topUsers.map((u, i) => (
-                <div key={u.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold">
-                      {u.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm">{u.name}</div>
-                      <div className="text-xs text-muted-foreground">{u.count} sales processed</div>
-                    </div>
-                  </div>
-                  <div className="font-semibold text-success">{formatTZS(u.total)}</div>
-                </div>
-              ))
-            )}
+          <div className="space-y-2">
+            <h3 className="text-lg font-bold">Advanced Analytics Locked</h3>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              You are currently on the <strong>Starter (Free Trial)</strong> plan. Upgrade to the Kilimanjaro or Serengeti plan to unlock advanced charts, customer/supplier debts, cashier performance, and detailed PDF exports.
+            </p>
           </div>
+          <Button onClick={() => navigate({ to: "/setup-billing" })} className="font-semibold shadow-md active:scale-95 transition-transform">
+            Upgrade Plan
+          </Button>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 mt-4">
+            <div className="rounded-xl border border-border bg-card p-5 bg-muted/10">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Customer Debt (To Collect)</div>
+              <div className="mt-2 text-xl font-bold text-warning">{formatTZS(data.customerDebt)}</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-5 bg-muted/10">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Supplier Debt (To Pay)</div>
+              <div className="mt-2 text-xl font-bold text-destructive">{formatTZS(data.supplierDebt)}</div>
+            </div>
+          </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="font-semibold mb-4">By Payment Method</h2>
-          <div className="space-y-3">
-            {Object.entries(data.byPayment).length === 0 ? (
-              <div className="text-sm text-muted-foreground">{t("noData")}</div>
-            ) : (
-              Object.entries(data.byPayment).map(([k, v]) => (
-                <div key={k}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="capitalize">{k.replace("_", " ")}</span>
-                    <span className="font-semibold">{formatTZS(v)}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h2 className="font-semibold mb-4">Sales Trend ({getFilterLabel()})</h2>
+            <div className="flex items-end gap-2 h-48">
+              {data.days.length === 0 ? (
+                <div className="text-sm text-muted-foreground m-auto">{t("noData")}</div>
+              ) : (
+                data.days.map(([d, val]) => (
+                  <div key={d} className="flex-1 flex flex-col items-center gap-1">
                     <div
-                      className="h-full"
+                      className="w-full rounded-t-md"
                       style={{
-                        width: `${(v / data.totalSales) * 100}%`,
+                        height: `${(val / data.maxDay) * 100}%`,
                         background: "var(--gradient-primary)",
+                        minHeight: "4px",
                       }}
+                      title={`${d}: ${formatTZS(val)}`}
                     />
+                    <span className="text-[10px] text-muted-foreground">{d.slice(5)}</span>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="font-semibold mb-4">Expenses by Category</h2>
-          <div className="space-y-3">
-            {Object.entries(data.byCategory).length === 0 ? (
-              <div className="text-sm text-muted-foreground">{t("noData")}</div>
-            ) : (
-              Object.entries(data.byCategory).map(([k, v]) => (
-                <div key={k}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>{k}</span>
-                    <span className="font-semibold">{formatTZS(v)}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full bg-warning"
-                      style={{
-                        width: `${(v / data.totalExpenses) * 100}%`,
-                        background: "var(--warning)",
-                      }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border border-border bg-card p-5">
+              <h2 className="font-semibold mb-4">Top 10 Products by Revenue</h2>
+              <div className="space-y-4">
+                {data.topProducts.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">{t("noData")}</div>
+                ) : (
+                  data.topProducts.map((p, i) => (
+                    <div key={p.name} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-bold text-muted-foreground">{i + 1}</div>
+                        <div>
+                          <div className="font-medium text-sm">{p.name}</div>
+                          <div className="text-xs text-muted-foreground">{p.quantity} units sold</div>
+                        </div>
+                      </div>
+                      <div className="font-semibold">{formatTZS(p.revenue)}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-5">
+              <h2 className="font-semibold mb-4">Cashier Performance</h2>
+              <div className="space-y-4">
+                {data.topUsers.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">{t("noData")}</div>
+                ) : (
+                  data.topUsers.map((u, i) => (
+                    <div key={u.name} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold">
+                          {u.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">{u.name}</div>
+                          <div className="text-xs text-muted-foreground">{u.count} sales processed</div>
+                        </div>
+                      </div>
+                      <div className="font-semibold text-success">{formatTZS(u.total)}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border border-border bg-card p-5">
+              <h2 className="font-semibold mb-4">By Payment Method</h2>
+              <div className="space-y-3">
+                {Object.entries(data.byPayment).length === 0 ? (
+                  <div className="text-sm text-muted-foreground">{t("noData")}</div>
+                ) : (
+                  Object.entries(data.byPayment).map(([k, v]) => (
+                    <div key={k}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="capitalize">{k.replace("_", " ")}</span>
+                        <span className="font-semibold">{formatTZS(v)}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full"
+                          style={{
+                            width: `${(v / data.totalSales) * 100}%`,
+                            background: "var(--gradient-primary)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-5">
+              <h2 className="font-semibold mb-4">Expenses by Category</h2>
+              <div className="space-y-3">
+                {Object.entries(data.byCategory).length === 0 ? (
+                  <div className="text-sm text-muted-foreground">{t("noData")}</div>
+                ) : (
+                  Object.entries(data.byCategory).map(([k, v]) => (
+                    <div key={k}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>{k}</span>
+                        <span className="font-semibold">{formatTZS(v)}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full bg-warning"
+                          style={{
+                            width: `${(v / data.totalExpenses) * 100}%`,
+                            background: "var(--warning)",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
       </div>
     </div>
   );

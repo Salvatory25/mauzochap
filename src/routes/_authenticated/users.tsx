@@ -45,7 +45,10 @@ type Profile = {
 function UsersPage() {
   const t = useT();
   const qc = useQueryClient();
-  const { roles, user, isAdmin } = useAuth();
+  const { roles, user, isAdmin, business } = useAuth();
+  const currentPackage = business?.package || "trial";
+  const userLimit = currentPackage === "trial" ? 1 : currentPackage === "kilimanjaro" ? 3 : 9999;
+  const canAddMoreUsers = usersList.length < userLimit;
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"invite" | "edit-role" | null>(null);
@@ -131,7 +134,7 @@ function UsersPage() {
             }}
           >
             <DialogTrigger asChild>
-              <Button onClick={() => openDialog("invite")} className="shadow-[var(--shadow-soft)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
+              <Button onClick={() => openDialog("invite")} disabled={!canAddMoreUsers} className="shadow-[var(--shadow-soft)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
                  <UserPlus className="h-4 w-4" /> Invite / Add User
               </Button>
             </DialogTrigger>
@@ -142,6 +145,12 @@ function UsersPage() {
           </Dialog>
         )}
       </div>
+
+      {!canAddMoreUsers && (
+        <div className="bg-warning/10 text-warning p-4 rounded-lg text-sm border border-warning/20">
+          <strong>Limit Reached:</strong> You have reached the maximum number of users for your current package ({currentPackage.toUpperCase()}). Please upgrade your subscription to add more users.
+        </div>
+      )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

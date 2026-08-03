@@ -20,6 +20,10 @@ import {
   MapPin,
   ChevronDown,
   Menu,
+  Bell,
+  BellRing,
+  Check,
+  Clock,
 } from "lucide-react";
 import {
   Sheet,
@@ -36,8 +40,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { useLang, useT } from "@/lib/i18n";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 function Blocker({ title, message, icon: Icon, action }: { title: string, message: string, icon: any, action?: React.ReactNode }) {
   const queryClient = useQueryClient();
@@ -69,6 +74,177 @@ function Blocker({ title, message, icon: Icon, action }: { title: string, messag
   );
 }
 
+function NotificationCenter() {
+  const { business, branchId } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const [readLowStock, setReadLowStock] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      return JSON.parse(localStorage.getItem("read_low_stock") || "[]");
+    }
+    return [];
+  });
+
+  const { data: dbNotifications = [], refetch: refetchNotifications } = useQuery({
+    queryKey: ["notifications-list", business?.id],
+    enabled: !!business?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("business_id", business!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: productsData = [] } = useQuery({
+    queryKey: ["low-stock-notifications", branchId],
+    enabled: !!branchId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, low_stock_threshold, branch_inventory(stock_quantity, branch_id)");
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const lowStockNotifications = productsData
+    .map(p => {
+      const branchStock = (p.branch_inventory as any)?.find((bi: any) => bi.branch_id === branchId);
+      const qty = branchStock?.stock_quantity || 0;
+      return { ...p, stock_quantity: qty };
+    })
+    .filter(p => p.stock_quantity <= p.low_stock_threshold)
+    .map(p => {
+      const id = `low-stock-${p.id}`;
+      return {
+        id,
+        title: "Low Stock Alert",
+        message: `${p.name} is running low on stock (${p.stock_quantity} left).`,
+        type: "stock",
+        is_read: readLowStock.includes(id),
+        created_at: new Date().toISOString()
+      };
+    });
+
+  const allNotifications = [...dbNotifications, ...lowStockNotifications].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  const unreadCount = allNotifications.filter(n => !n.is_read).length;
+
+  const handleMarkAsRead = async (id: string) => {
+    if (id.startsWith("low-stock-")) {
+      const newList = [...readLowStock, id];
+      setReadLowStock(newList);
+      localStorage.setItem("read_low_stock", JSON.stringify(newList));
+      return;
+    }
+    const { error } = await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("id", id);
+    if (!error) refetchNotifications();
+  };
+
+  const handleMarkAllAsRead = async () => {
+    const unreadDbIds = dbNotifications.filter(n => !n.is_read).map(n => n.id);
+    if (unreadDbIds.length > 0) {
+      await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .in("id", unreadDbIds);
+      refetchNotifications();
+    }
+    
+    const unreadLowStockIds = lowStockNotifications.filter(n => !n.is_read).map(n => n.id);
+    if (unreadLowStockIds.length > 0) {
+      const newList = [...readLowStock, ...unreadLowStockIds];
+      setReadLowStock(newList);
+      localStorage.setItem("read_low_stock", JSON.stringify(newList));
+    }
+    toast.success("All notifications marked as read");
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-2 rounded-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer text-sidebar-foreground/80 flex items-center justify-center"
+        title="Notifications"
+      >
+        {unreadCount > 0 ? (
+          <>
+            <BellRing className="h-5 w-5 text-primary animate-pulse" />
+            <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[8px] font-extrabold flex items-center justify-center border border-sidebar shadow-md">
+              {unreadCount}
+            </span>
+          </>
+        ) : (
+          <Bell className="h-5 w-5" />
+        )}
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 bottom-12 lg:bottom-auto lg:top-12 z-50 w-80 bg-card border border-border rounded-xl shadow-2xl overflow-hidden text-foreground">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
+              <span className="font-bold text-sm">Notifications</span>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Check className="h-3 w-3" /> Mark all read
+                </button>
+              )}
+            </div>
+            <div className="max-h-72 overflow-y-auto divide-y divide-border">
+              {allNotifications.length === 0 ? (
+                <div className="p-8 text-center text-xs text-muted-foreground">
+                  No notifications yet.
+                </div>
+              ) : (
+                allNotifications.map((n) => (
+                  <div
+                    key={n.id}
+                    className={`p-3.5 text-left transition-colors hover:bg-muted/30 flex flex-col gap-1 ${
+                      !n.is_read ? "bg-primary/5 font-medium" : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className={`text-xs font-bold uppercase tracking-wider ${
+                        n.type === 'stock' ? 'text-destructive' :
+                        n.type === 'payment' ? 'text-amber-600' : 'text-primary'
+                      }`}>
+                        {n.title}
+                      </span>
+                      {!n.is_read && (
+                        <button
+                          onClick={() => handleMarkAsRead(n.id)}
+                          className="text-[9px] text-muted-foreground hover:text-foreground cursor-pointer flex items-center gap-0.5 bg-muted px-1.5 py-0.5 rounded shrink-0"
+                          title="Mark as read"
+                        >
+                          <Check className="h-2.5 w-2.5" /> Read
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{n.message}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const t = useT();
   const [lang, setLang] = useLang();
@@ -95,12 +271,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (business.account_status === "pending") {
       return (
         <Blocker
-          title="Account Pending"
-          message="Your account is currently pending verification. Please set up billing to continue."
-          icon={ShieldAlert}
+          title="Payment Verification Pending"
+          message="Your payment details have been received and are currently being reviewed by our administration team. Please check verification status."
+          icon={Clock}
           action={
             <Button className="w-full" onClick={() => navigate({ to: "/setup-billing" })}>
-              Set up Billing
+              View Verification Status
             </Button>
           }
         />
@@ -119,8 +295,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return (
         <Blocker
           title="Account Rejected"
-          message="Your application to use MauzoChap was rejected."
+          message={`Your application to use MauzoChap was rejected. Reason: ${business.rejection_reason || "Verification failed."}`}
           icon={ShieldAlert}
+          action={
+            <Button className="w-full" onClick={() => navigate({ to: "/setup-billing" })}>
+              Resubmit Payment Details
+            </Button>
+          }
         />
       );
     }
@@ -133,7 +314,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           icon={CreditCard}
           action={
             <Button className="w-full" onClick={() => navigate({ to: "/setup-billing" })}>
-              Renew Subscription
+              Renew / Upgrade Subscription
             </Button>
           }
         />
@@ -242,7 +423,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       <div className="border-t border-sidebar-border p-4 space-y-3 bg-sidebar/50 shrink-0">
-        <div className="text-xs text-sidebar-foreground/80 truncate font-medium">{user?.email}</div>
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-sidebar-foreground/80 truncate font-medium max-w-[170px]">{user?.email}</div>
+          {business && !isSuperAdmin && <NotificationCenter />}
+        </div>
         <div className="flex flex-wrap gap-1">
           {roles.map((r) => (
             <span
@@ -255,7 +439,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <button
           onClick={() => setLang(lang === "en" ? "sw" : "en")}
-          className="flex w-full items-center gap-2 rounded-md border border-sidebar-border px-3 py-2 text-sm hover:bg-sidebar-accent transition-colors"
+          className="flex w-full items-center gap-2 rounded-md border border-sidebar-border px-3 py-2 text-sm hover:bg-sidebar-accent transition-colors animate-pulse"
         >
           <Languages className="h-4 w-4" />
           {lang === "en" ? "English" : "Kiswahili"}
@@ -284,6 +468,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <img src="/logo.png" alt="MauzoChap" className="w-[180px] h-full object-contain scale-[1.15] origin-left" />
         </Link>
         <div className="flex items-center gap-2">
+          {business && !isSuperAdmin && <NotificationCenter />}
           <button
             onClick={() => setLang(lang === "en" ? "sw" : "en")}
             className="text-xs font-bold uppercase tracking-wider bg-sidebar-accent px-3 py-2 rounded-md"

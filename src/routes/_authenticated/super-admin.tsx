@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ShieldAlert, Building2, CreditCard, Activity, CheckCircle2, XCircle, Clock } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { sendEmail } from "@/lib/email";
 
 export const Route = createFileRoute("/_authenticated/super-admin")({
   component: SuperAdminDashboard,
@@ -38,7 +39,7 @@ function SuperAdminDashboard() {
     queryKey: ["super-admin-payments"],
     enabled: isSuperAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from("payments").select("*, businesses(business_name)").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("payments").select("*, businesses(business_name, email, package)").order("created_at", { ascending: false });
       if (error) throw error;
       return data as any[];
     },
@@ -73,26 +74,88 @@ function SuperAdminDashboard() {
     }
   };
 
-  const handleApprovePayment = async (paymentId: string, businessId: string, pkg: string) => {
+  const handleApprovePayment = async (paymentId: string, businessId: string, pkg: string, clientEmail: string, businessName: string) => {
     try {
       // 1. Mark payment as paid
       const { error: pErr } = await supabase.from("payments").update({ verification_status: "paid" }).eq("id", paymentId);
       if (pErr) throw pErr;
 
-      // 2. Calculate expiry date (All new plans are 1 year)
-      const days = 365;
+      // 2. Calculate expiry date (30 days for Kilimanjaro and Serengeti monthly plans)
+      const days = 30;
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + days);
 
-      // 3. Update business status to approved and set expiry
+      // 3. Update business package, status to approved, set expiry and clear rejection reason
       const { error: bErr } = await supabase.from("businesses").update({ 
         account_status: "approved",
-        expiry_date: expiry.toISOString().split("T")[0]
+        package: pkg as any,
+        expiry_date: expiry.toISOString().split("T")[0],
+        rejection_reason: null
       }).eq("id", businessId);
       
       if (bErr) throw bErr;
 
+      // 4. In-app notification
+      await supabase.from("notifications").insert({
+        business_id: businessId,
+        title: "Subscription Activated",
+        message: `Your subscription to ${pkg.toUpperCase()} has been successfully activated. Expiry Date: ${expiry.toLocaleDateString()}`,
+        type: "subscription"
+      });
+
+      // 5. Send email notification to client
+      sendEmail({
+        to: clientEmail || "client@mauzochap.com",
+        subject: "MauzoChap POS Subscription Activated!",
+        body: `Dear Client,\n\nWe have successfully verified your payment reference. Your subscription to the ${pkg.toUpperCase()} plan is now active!\n\nSubscription Details:\n- Business Name: ${businessName}\n- Validity Period: 30 Days\n- Expiry Date: ${expiry.toLocaleDateString()}\n\nYou can now access all business features according to your plan.\n\nThank you for choosing MauzoChap POS!\n\nBest regards,\nMauzoChap Team`
+      });
+
       toast.success("Payment verified and subscription activated!");
+      qc.invalidateQueries({ queryKey: ["super-admin-payments"] });
+      qc.invalidateQueries({ queryKey: ["super-admin-businesses"] });
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleRejectPayment = async (paymentId: string, businessId: string, clientEmail: string, businessName: string) => {
+    const reason = window.prompt(
+      "Enter the reason for rejecting this payment:", 
+      "Payment reference could not be verified. Please check your transaction reference and submit the correct reference."
+    );
+    if (reason === null) return; // User cancelled
+
+    try {
+      // 1. Mark payment as rejected
+      const { error: pErr } = await supabase.from("payments").update({ 
+        verification_status: "rejected" as any,
+        rejection_reason: reason
+      }).eq("id", paymentId);
+      if (pErr) throw pErr;
+
+      // 2. Set business account status to rejected and update rejection reason
+      const { error: bErr } = await supabase.from("businesses").update({ 
+        account_status: "rejected",
+        rejection_reason: reason
+      }).eq("id", businessId);
+      if (bErr) throw bErr;
+
+      // 3. Notify the customer in-app
+      await supabase.from("notifications").insert({
+        business_id: businessId,
+        title: "Payment Verification Rejected",
+        message: `Your payment reference was rejected. Reason: ${reason}`,
+        type: "payment"
+      });
+
+      // 4. Send email notification to client
+      sendEmail({
+        to: clientEmail || "client@mauzochap.com",
+        subject: "MauzoChap POS Payment Verification Rejected",
+        body: `Dear Client,\n\nWe were unable to verify your payment reference for the subscription. Below are the details:\n\n- Business Name: ${businessName}\n- Rejection Reason: ${reason}\n\nPlease log back in to MauzoChap POS, go to the Billing section, and resubmit your payment with the correct reference number.\n\nIf you believe this is an error, please contact support.\n\nBest regards,\nMauzoChap Team`
+      });
+
+      toast.success("Payment rejected and client notified.");
       qc.invalidateQueries({ queryKey: ["super-admin-payments"] });
       qc.invalidateQueries({ queryKey: ["super-admin-businesses"] });
     } catch (err: any) {
@@ -232,17 +295,23 @@ function SuperAdminDashboard() {
                   <td className="px-4 py-3 text-right font-semibold">{Number(p.amount).toLocaleString()}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
-                      p.verification_status === "paid" ? "bg-success/15 text-success" : "bg-amber-500/15 text-amber-600"
+                      p.verification_status === "paid" ? "bg-success/15 text-success" : 
+                      p.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-600"
                     }`}>
-                      {p.verification_status === "paid" ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                      {p.verification_status === "paid" ? <CheckCircle2 className="h-3 w-3" /> : p.verification_status === "rejected" ? <XCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
                       {p.verification_status.replace("_", " ")}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
                     {p.verification_status === "waiting_verification" && (
-                      <Button size="sm" onClick={() => handleApprovePayment(p.id, p.business_id, p.businesses?.package || "kilimanjaro")}>
-                        Verify & Activate
-                      </Button>
+                      <>
+                        <Button size="sm" onClick={() => handleApprovePayment(p.id, p.business_id, p.businesses?.package || "kilimanjaro", p.businesses?.email, p.businesses?.business_name)}>
+                          Verify & Activate
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRejectPayment(p.id, p.business_id, p.businesses?.email, p.businesses?.business_name)}>
+                          Reject
+                        </Button>
+                      </>
                     )}
                   </td>
                 </tr>

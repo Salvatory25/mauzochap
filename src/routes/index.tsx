@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/use-auth";
-import { Store, BarChart3, Boxes, Users, Receipt, ShieldCheck, Sun, Moon, Languages, MessageCircle } from "lucide-react";
+import { Store, BarChart3, Boxes, Users, Receipt, ShieldCheck, Sun, Moon, Languages, MessageCircle, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLang, useT } from "@/lib/i18n";
 
@@ -199,6 +199,176 @@ function Landing() {
             ))}
           </div>
         </section>
+
+        <section id="pricing" className="mx-auto w-full px-6 py-20 md:px-12 border-t border-border/60 bg-muted/10">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="text-3xl font-bold tracking-tight">Simple, Transparent Pricing</h2>
+            <p className="text-muted-foreground mt-2">
+              Choose the perfect plan for your business. Start free and upgrade anytime.
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
+            {/* Starter Plan Card */}
+            <div className="rounded-2xl border border-border bg-card p-8 flex flex-col justify-between shadow-[var(--shadow-soft)] hover:shadow-md transition-all hover:scale-[1.01]">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    14-Day Free Trial
+                  </span>
+                </div>
+                <h3 className="text-2xl font-bold">STARTER</h3>
+                <p className="text-sm text-muted-foreground mt-1">Get started with basic features</p>
+                <div className="mt-6 flex items-baseline gap-1">
+                  <span className="text-4xl font-extrabold tracking-tight">Free</span>
+                  <span className="text-muted-foreground">/ 14 days</span>
+                </div>
+                
+                <ul className="mt-8 space-y-4 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>1 Location</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>1 User</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>100 Products</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Basic Reports</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Invoices</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Receipts</span>
+                  </li>
+                </ul>
+              </div>
+              <Link
+                to="/auth"
+                className="mt-8 block w-full rounded-lg bg-muted text-center py-3 text-sm font-semibold hover:bg-muted/80 transition-colors"
+              >
+                Start Free Trial
+              </Link>
+            </div>
+
+            {/* Kilimanjaro Plan Card */}
+            <div className="rounded-2xl border-2 border-primary bg-card p-8 flex flex-col justify-between shadow-[var(--shadow-elevated)] relative hover:scale-[1.02] transition-all">
+              <div className="absolute top-0 right-6 -translate-y-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                Popular
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    Growth
+                  </span>
+                </div>
+                <h3 className="text-2xl font-bold">KILIMANJARO</h3>
+                <p className="text-sm text-muted-foreground mt-1">Perfect for single location shops</p>
+                <div className="mt-6 flex items-baseline gap-1">
+                  <span className="text-3xl font-extrabold tracking-tight">TSh 10,500</span>
+                  <span className="text-muted-foreground">/ Month</span>
+                </div>
+                
+                <ul className="mt-8 space-y-4 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>1 Location</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>3 Users</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Reports</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Invoices</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Receipts</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Multiple Branches</span>
+                  </li>
+                </ul>
+              </div>
+              <Link
+                to="/auth"
+                className="mt-8 block w-full rounded-lg text-center py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all active:scale-[0.98]"
+                style={{ background: "var(--gradient-primary)" }}
+              >
+                Choose Kilimanjaro
+              </Link>
+            </div>
+
+            {/* Serengeti Plan Card */}
+            <div className="rounded-2xl border border-border bg-card p-8 flex flex-col justify-between shadow-[var(--shadow-soft)] hover:shadow-md transition-all hover:scale-[1.01]">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    Enterprise
+                  </span>
+                </div>
+                <h3 className="text-2xl font-bold">SERENGETI</h3>
+                <p className="text-sm text-muted-foreground mt-1">For multi-branch & large retailers</p>
+                <div className="mt-6 flex items-baseline gap-1">
+                  <span className="text-3xl font-extrabold tracking-tight">TSh 20,500</span>
+                  <span className="text-muted-foreground">/ Month</span>
+                </div>
+                
+                <ul className="mt-8 space-y-4 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Locations</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Users</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Products</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Reports</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Invoices</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Receipts</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                    <span>Unlimited Branches</span>
+                  </li>
+                </ul>
+              </div>
+              <Link
+                to="/auth"
+                className="mt-8 block w-full rounded-lg bg-muted text-center py-3 text-sm font-semibold hover:bg-muted/80 transition-colors"
+              >
+                Choose Serengeti
+              </Link>
+            </div>
+          </div>
+        </section>
+
       </main>
 
       <footer className="border-t border-border py-8">

@@ -17,9 +17,7 @@ export const Route = createFileRoute("/_authenticated/locations")({
 const PACKAGE_LIMITS: Record<string, number> = {
   trial: 1,
   kilimanjaro: 1,
-  serengeti: 1,
-  zanzibar: 3,
-  uhuru: 9999,
+  serengeti: 9999,
 };
 
 function LocationsPage() {

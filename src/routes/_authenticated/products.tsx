@@ -57,7 +57,10 @@ type Category = {
 function ProductsPage() {
   const t = useT();
   const qc = useQueryClient();
-  const { isManager, branchId } = useAuth();
+  const { isManager, branchId, business } = useAuth();
+  const currentPackage = business?.package || "trial";
+  const productLimit = currentPackage === "trial" ? 100 : 999999;
+  const canAddMoreProducts = products.length < productLimit;
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -125,7 +128,7 @@ function ProductsPage() {
 
             <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" disabled={!canAddMoreProducts}>
                   <FileUp className="h-4 w-4 mr-2" /> Bulk Import
                 </Button>
               </DialogTrigger>
@@ -140,7 +143,7 @@ function ProductsPage() {
               }}
             >
               <DialogTrigger asChild>
-                <Button onClick={() => setEditing(null)}>
+                <Button onClick={() => setEditing(null)} disabled={!canAddMoreProducts}>
                   <Plus className="h-4 w-4 mr-2" /> {t("addProduct")}
                 </Button>
               </DialogTrigger>
@@ -149,6 +152,12 @@ function ProductsPage() {
           </div>
         )}
       </div>
+
+      {!canAddMoreProducts && (
+        <div className="bg-warning/10 text-warning p-4 rounded-lg text-sm border border-warning/20">
+          <strong>Limit Reached:</strong> You have reached the maximum number of products for your current package ({currentPackage.toUpperCase()}). Please upgrade your subscription to add more products.
+        </div>
+      )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
