@@ -24,6 +24,7 @@ import {
   BellRing,
   Check,
   Clock,
+  Sparkles,
 } from "lucide-react";
 import {
   Sheet,
@@ -342,6 +343,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       { to: "/users", icon: UserCog, label: t("users") },
       { to: "/locations", icon: MapPin, label: "Locations" },
     ] : []),
+    { to: "/tools", icon: Sparkles, label: "Tools" },
     { to: "/settings", icon: Settings, label: t("settings") },
   ];
 
