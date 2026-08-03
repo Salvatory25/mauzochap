@@ -315,8 +315,28 @@ function SetupBilling() {
           </p>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="bg-primary/10 text-primary p-4 rounded-lg text-sm mb-6">
-            <strong>Payment Instructions:</strong> Send exactly <strong>{PACKAGES.find(p => p.id === selectedPackage)?.price.toLocaleString()} TZS</strong> to Bank Account <strong>40310127484 - NMB</strong>.
+          <div className="bg-primary/10 text-primary p-6 rounded-lg text-sm mb-6 space-y-4 border border-primary/20">
+            <div>
+              <strong>Payment Instructions:</strong> Please send exactly <strong>{PACKAGES.find(p => p.id === selectedPackage)?.price.toLocaleString()} TZS</strong> using any of the following methods:
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 text-xs pt-2">
+              <div className="bg-background/50 p-3 rounded-lg border border-primary/10">
+                <span className="font-bold block text-muted-foreground">Bank Transfer (NMB):</span>
+                <span className="font-mono font-bold text-sm block mt-0.5">40310127484</span>
+              </div>
+              <div className="bg-background/50 p-3 rounded-lg border border-primary/10">
+                <span className="font-bold block text-muted-foreground">Tigo Pesa (Mix By Yass):</span>
+                <span className="font-mono font-bold text-sm block mt-0.5">0674673494</span>
+              </div>
+              <div className="bg-background/50 p-3 rounded-lg border border-primary/10">
+                <span className="font-bold block text-muted-foreground">Airtel Money:</span>
+                <span className="font-mono font-bold text-sm block mt-0.5">0668632187</span>
+              </div>
+              <div className="bg-background/50 p-3 rounded-lg border border-primary/10">
+                <span className="font-bold block text-muted-foreground">HaloPesa:</span>
+                <span className="font-mono font-bold text-sm block mt-0.5">0627274168</span>
+              </div>
+            </div>
           </div>
           
           <div className="space-y-3">
