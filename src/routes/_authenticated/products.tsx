@@ -60,7 +60,6 @@ function ProductsPage() {
   const { isManager, branchId, business } = useAuth();
   const currentPackage = business?.package || "trial";
   const productLimit = currentPackage === "trial" ? 100 : 999999;
-  const canAddMoreProducts = products.length < productLimit;
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -89,6 +88,8 @@ function ProductsPage() {
       });
     },
   });
+
+  const canAddMoreProducts = products.length < productLimit;
 
   const filtered = products.filter(
     (p) =>
