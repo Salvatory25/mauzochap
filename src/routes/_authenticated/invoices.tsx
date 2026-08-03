@@ -119,30 +119,54 @@ function InvoicesPage() {
         startDate = new Date(now.setDate(now.getDate() - 30)).toISOString();
       }
 
-      let q = supabase
-        .from("invoices")
-        .select(`
-          *,
-          customers(name, phone, email, address),
-          profiles:created_by(full_name),
-          invoice_items(
-            id, product_id, quantity, unit_price, subtotal,
-            products(name, sku, unit, cost_price)
-          )
-        `)
-        .gte("created_at", startDate)
-        .order("created_at", { ascending: false });
+      try {
+        let q = supabase
+          .from("invoices")
+          .select(`
+            *,
+            customers(name, phone, email, address),
+            profiles:created_by(full_name),
+            invoice_items(
+              id, product_id, quantity, unit_price, subtotal,
+              products(name, sku, unit, cost_price)
+            )
+          `)
+          .gte("created_at", startDate)
+          .order("created_at", { ascending: false });
 
-      if (statusFilter !== "all") {
-        q = q.eq("payment_status", statusFilter);
-      }
+        if (statusFilter !== "all") {
+          q = q.eq("payment_status", statusFilter);
+        }
 
-      const { data, error } = await q;
-      if (error) {
-        toast.error("Failed to load invoices");
-        throw error;
+        const { data, error } = await q;
+        if (error) throw error;
+        return (data ?? []) as unknown as Invoice[];
+      } catch (err) {
+        console.warn("Failed to fetch invoices with profiles join, retrying without profiles join:", err);
+        let q = supabase
+          .from("invoices")
+          .select(`
+            *,
+            customers(name, phone, email, address),
+            invoice_items(
+              id, product_id, quantity, unit_price, subtotal,
+              products(name, sku, unit, cost_price)
+            )
+          `)
+          .gte("created_at", startDate)
+          .order("created_at", { ascending: false });
+
+        if (statusFilter !== "all") {
+          q = q.eq("payment_status", statusFilter);
+        }
+
+        const { data, error } = await q;
+        if (error) {
+          toast.error("Failed to load invoices");
+          throw error;
+        }
+        return (data ?? []) as unknown as Invoice[];
       }
-      return (data ?? []) as unknown as Invoice[];
     },
   });
 
