@@ -48,7 +48,6 @@ function UsersPage() {
   const { roles, user, isAdmin, business } = useAuth();
   const currentPackage = business?.package || "trial";
   const userLimit = currentPackage === "trial" ? 1 : currentPackage === "kilimanjaro" ? 3 : 9999;
-  const canAddMoreUsers = usersList.length < userLimit;
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"invite" | "edit-role" | null>(null);
@@ -97,6 +96,8 @@ function UsersPage() {
       </div>
     );
   }
+
+  const canAddMoreUsers = usersList.length < userLimit;
 
   const filtered = usersList.filter(
     (u) =>
