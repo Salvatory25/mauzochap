@@ -24,7 +24,8 @@ import {
   Lock,
   Check,
   Building2,
-  Globe
+  Globe,
+  Mail
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -101,10 +102,6 @@ export function MultiStepRegister({
   const [businessType, setBusinessType] = useState("retail");
 
   // Step 5: Verification State
-  const [otpCode, setOtpCode] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
@@ -182,31 +179,6 @@ export function MultiStepRegister({
     if (currentStep > 1) {
       setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4 | 5);
     }
-  };
-
-  // OTP Handlers
-  const triggerSendOtp = () => {
-    setOtpSent(true);
-    setResendTimer(30);
-    toast.success(`Verification code sent to ${phone}`);
-    const interval = setInterval(() => {
-      setResendTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const verifyOtpCode = () => {
-    if (otpCode.length < 4) {
-      toast.error("Please enter a valid verification code");
-      return;
-    }
-    setOtpVerified(true);
-    toast.success("Phone number verified successfully!");
   };
 
   // Final Submission
@@ -305,7 +277,7 @@ export function MultiStepRegister({
               {currentStep === 2 && "Where is your store or business physically located?"}
               {currentStep === 3 && "Tell us about your store name and industry."}
               {currentStep === 4 && "Discover powerful POS tools included in your 14-day free trial."}
-              {currentStep === 5 && "Verify your phone & accept policy terms to complete registration."}
+              {currentStep === 5 && "Review your email verification details & accept terms to complete registration."}
             </p>
           </div>
           <button
@@ -669,63 +641,48 @@ export function MultiStepRegister({
         {/* STEP 5: VERIFICATION */}
         {currentStep === 5 && (
           <div className="space-y-5 animate-in fade-in-50 duration-300">
-            {/* Phone OTP Section */}
-            <div className="p-4 rounded-xl border border-border bg-muted/30 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold text-foreground">Phone Number OTP Verification</span>
+            {/* Email Verification Box */}
+            <div className="p-5 rounded-2xl border border-primary/30 bg-primary/5 space-y-3">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                  <Mail className="w-5 h-5" />
                 </div>
-                {otpVerified ? (
-                  <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-500/10 px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-emerald-500/20">
-                    <CheckCircle2 className="w-3 h-3" /> Verified
-                  </span>
-                ) : (
-                  <span className="text-[11px] font-semibold text-amber-600 bg-amber-500/10 px-2.5 py-0.5 rounded-full">
-                    Pending Verification
-                  </span>
-                )}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-foreground">Email Activation Verification</h3>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                      Standard Setup
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    An account activation link will be sent to <span className="font-bold text-foreground">{email || "your registered email"}</span> upon completing registration.
+                  </p>
+                </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                Verification code will be sent to <span className="font-semibold text-foreground">{phone || "your phone number"}</span>.
-              </p>
-
-              {!otpVerified ? (
-                <div className="flex items-center gap-2 pt-1">
-                  <Input
-                    placeholder="Enter 6-digit OTP"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    maxLength={6}
-                    className="max-w-[180px] text-center font-mono tracking-widest text-base font-bold"
-                  />
-                  {!otpSent ? (
-                    <Button type="button" variant="outline" size="sm" onClick={triggerSendOtp}>
-                      Send OTP Code
-                    </Button>
-                  ) : (
-                    <Button type="button" size="sm" onClick={verifyOtpCode}>
-                      Verify Code
-                    </Button>
-                  )}
-                  {otpSent && resendTimer > 0 && (
-                    <span className="text-[11px] text-muted-foreground font-mono">
-                      Resend in {resendTimer}s
-                    </span>
-                  )}
+              <div className="p-3 rounded-xl bg-background/80 border border-border/60 text-xs text-muted-foreground space-y-1">
+                <div className="flex items-center gap-1.5 text-foreground font-semibold">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Direct Email Activation (No extra SMS service needed)</span>
                 </div>
-              ) : (
-                <p className="text-xs text-emerald-600 font-medium">✓ Phone number confirmed. Ready for account creation.</p>
-              )}
+                <p className="pl-5 text-[11px]">
+                  Clicking the activation link in your email inbox will verify your owner account and grant access to your MauzoChap POS store workspace.
+                </p>
+              </div>
             </div>
 
-            {/* Email Verification Banner */}
-            <div className="p-3.5 rounded-xl border border-blue-500/20 bg-blue-500/5 flex items-center gap-3">
-              <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0" />
-              <div className="text-xs">
-                <p className="font-semibold text-foreground">Email Verification Notice</p>
-                <p className="text-muted-foreground mt-0.5">An account activation link will also be sent to <span className="font-medium text-foreground">{email}</span>.</p>
+            {/* Account Contact Summary */}
+            <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-2">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Account Information Summary</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Email Address</span>
+                  <span className="font-semibold text-foreground truncate block">{email || "Not provided"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-[11px]">Phone Contact</span>
+                  <span className="font-semibold text-foreground truncate block">{phone || "Not provided"}</span>
+                </div>
               </div>
             </div>
 
