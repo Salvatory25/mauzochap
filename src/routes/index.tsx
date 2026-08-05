@@ -1,8 +1,71 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/use-auth";
-import { Store, BarChart3, Boxes, Users, Receipt, ShieldCheck, Sun, Moon, Languages, MessageCircle, CheckCircle2 } from "lucide-react";
+import { Store, BarChart3, Boxes, Users, Receipt, ShieldCheck, Sun, Moon, Languages, MessageCircle, CheckCircle2, Star, Quote, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLang, useT } from "@/lib/i18n";
+
+const TESTIMONIALS = [
+  {
+    name: "Juma Rashid",
+    role: "Store Manager",
+    business: "Kariakoo Supermarket",
+    city: "Dar es Salaam",
+    quote: "Tangu tuanze kutumia MauzoChap dukani kwetu Kariakoo, tumeweza kudhibiti mauzo na stoki yetu kwa 100%. Hakuna tena upotevu wa bidhaa!",
+    rating: 5,
+    avatar: "JR",
+    color: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20"
+  },
+  {
+    name: "Grace Mwasongwe",
+    role: "Head Pharmacist",
+    business: "Afya Care Pharmacy",
+    city: "Arusha",
+    quote: "MauzoChap imetusaidia sana kufuatilia tarehe za kuisha kwa dawa (expiry dates) na kutoa risiti za haraka kwa wateja. Ni mfumo bora sana!",
+    rating: 5,
+    avatar: "GM",
+    color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+  },
+  {
+    name: "Josephat Kilonzo",
+    role: "Managing Director",
+    business: "Kilonzo Hardware & Electricals",
+    city: "Mwanza",
+    quote: "Ripoti za kila siku za faida na madeni ya wateja zimenisaidia kukuza biashara kwa haraka. Mfumo huu ni suluhisho la kweli kwetu.",
+    rating: 5,
+    avatar: "JK",
+    color: "bg-blue-500/10 text-blue-600 border-blue-500/20"
+  },
+  {
+    name: "Amina Bakari",
+    role: "Boutique Owner",
+    business: "Glamour Fashion Hub",
+    city: "Dodoma",
+    quote: "I love how fast checkout is and how easy it is to manage inventory across our stores. MauzoChap is worth every shilling!",
+    rating: 5,
+    avatar: "AB",
+    color: "bg-purple-500/10 text-purple-600 border-purple-500/20"
+  },
+  {
+    name: "David Mollel",
+    role: "Wholesale Director",
+    business: "Kilimanjaro Traders",
+    city: "Moshi",
+    quote: "Kusimamia wafanyakazi na kuona mauzo ya kila siku nikiwa safarini kupitia simu ni kitu bora zaidi. MauzoChap imerahisisha kila kitu.",
+    rating: 5,
+    avatar: "DM",
+    color: "bg-amber-500/10 text-amber-600 border-amber-500/20"
+  },
+  {
+    name: "Neema Mwita",
+    role: "Operations Lead",
+    business: "SmartTech Electronics",
+    city: "Mbeya",
+    quote: "Customer debt tracking and barcode scanning are lightning fast. Highly recommended for modern shops in Tanzania!",
+    rating: 5,
+    avatar: "NM",
+    color: "bg-rose-500/10 text-rose-600 border-rose-500/20"
+  }
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -365,6 +428,68 @@ function Landing() {
               >
                 Choose Serengeti
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section (Infinite Marquee Right-to-Left) */}
+        <section id="testimonials" className="py-20 border-t border-border/60 overflow-hidden bg-card/40 relative">
+          <div className="text-center max-w-2xl mx-auto mb-14 px-6">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-bold text-primary uppercase tracking-wider mb-3">
+              <Building2 className="w-3.5 h-3.5" /> {lang === "sw" ? "Ushuhuda wa Wafanyabiashara" : "Customer Stories"}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+              {lang === "sw" ? "Biashara 500+ Nchini Tanzania Zinatumia MauzoChap" : "Trusted by 500+ Tanzanian Businesses"}
+            </h2>
+            <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
+              {lang === "sw" 
+                ? "Tazama jinsi wamiliki wa maduka, maduka ya dawa, na maduka makubwa kutoka Dar es Salaam, Arusha, Mwanza na Dodoma wanavyorahisisha kazi zao kila siku." 
+                : "See how store owners, pharmacies, and merchants across Dar es Salaam, Arusha, Mwanza & Dodoma transform their daily operations with MauzoChap POS."}
+            </p>
+          </div>
+
+          {/* Marquee Wrapper with Side Gradients */}
+          <div className="relative w-full overflow-hidden">
+            {/* Left Edge Gradient */}
+            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-background to-transparent z-10" />
+            {/* Right Edge Gradient */}
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-background to-transparent z-10" />
+
+            <div className="animate-marquee flex items-center gap-6 py-4">
+              {[...TESTIMONIALS, ...TESTIMONIALS].map((item, idx) => (
+                <div
+                  key={idx}
+                  className="w-[320px] sm:w-[380px] shrink-0 rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-soft)] hover:shadow-md hover:border-primary/40 transition-all flex flex-col justify-between space-y-4 group"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      {/* Star Rating */}
+                      <div className="flex items-center gap-1 text-amber-400">
+                        {Array.from({ length: item.rating }).map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${item.color}`}>
+                        ✓ Verified Business
+                      </span>
+                    </div>
+
+                    <p className="text-xs md:text-sm text-foreground/90 italic leading-relaxed">
+                      "{item.quote}"
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-3 border-t border-border/50">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${item.color}`}>
+                      {item.avatar}
+                    </div>
+                    <div className="truncate">
+                      <h4 className="text-xs font-bold text-foreground truncate">{item.name}</h4>
+                      <p className="text-[11px] text-muted-foreground truncate">{item.business} • <span className="font-semibold text-foreground/80">{item.city}</span></p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
