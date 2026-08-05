@@ -780,7 +780,7 @@ export function MultiStepRegister({
             <div className="p-4 rounded-xl border border-border bg-card space-y-3">
               <div className="flex items-center justify-between border-b border-border/60 pb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-                  <CreditCard className="w-4 h-4 text-primary" /> Payment Channels (Lipa Hapa)
+                  <CreditCard className="w-4 h-4 text-primary" /> Tanzanian Payment Channels (Lipa Hapa)
                 </span>
                 <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-500/20">
                   Instant Verification
@@ -789,27 +789,23 @@ export function MultiStepRegister({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
-                  <span className="font-bold text-rose-600 block">🔴 Vodacom M-Pesa (Lipa Namba)</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">Till / Lipa Namba: 552109</p>
-                  <p className="text-[10px] text-muted-foreground">Name: MauzoChap Enterprise</p>
+                  <span className="font-bold text-blue-600 block">🔵 Mix By Yas</span>
+                  <p className="font-mono text-xs font-semibold text-foreground">Number: 0674673493</p>
                 </div>
 
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
-                  <span className="font-bold text-blue-600 block">🔵 TigoPesa / Yas (Lipa Namba)</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">Lipa Namba: 982401</p>
-                  <p className="text-[10px] text-muted-foreground">Name: MauzoChap POS</p>
+                  <span className="font-bold text-emerald-600 block">🟢 Airtel Money</span>
+                  <p className="font-mono text-xs font-semibold text-foreground">Number: 0668632187</p>
                 </div>
 
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
-                  <span className="font-bold text-emerald-600 block">🟢 Airtel Money (Lipa Namba)</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">Lipa Namba: 441092</p>
-                  <p className="text-[10px] text-muted-foreground">Name: MauzoChap System</p>
+                  <span className="font-bold text-amber-600 block">🟠 Halopesa</span>
+                  <p className="font-mono text-xs font-semibold text-foreground">Number: 0627274168</p>
                 </div>
 
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
-                  <span className="font-bold text-purple-600 block">🏦 NMB / CRDB Bank Account</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">Acc: 20810098231</p>
-                  <p className="text-[10px] text-muted-foreground">Name: MauzoChap Tanzania Ltd</p>
+                  <span className="font-bold text-purple-600 block">🏦 NMB Bank</span>
+                  <p className="font-mono text-xs font-semibold text-foreground">Acc: 40310127484</p>
                 </div>
               </div>
             </div>

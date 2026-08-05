@@ -339,8 +339,8 @@ function SetupBilling() {
                 <span className="font-mono font-bold text-sm block mt-0.5">40310127484</span>
               </div>
               <div className="bg-background/50 p-3 rounded-lg border border-primary/10">
-                <span className="font-bold block text-muted-foreground">Tigo Pesa (Mix By Yass):</span>
-                <span className="font-mono font-bold text-sm block mt-0.5">0674673494</span>
+                <span className="font-bold block text-muted-foreground">Mix By Yass:</span>
+                <span className="font-mono font-bold text-sm block mt-0.5">0674673493</span>
               </div>
               <div className="bg-background/50 p-3 rounded-lg border border-primary/10">
                 <span className="font-bold block text-muted-foreground">Airtel Money:</span>
