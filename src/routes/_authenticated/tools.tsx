@@ -15,7 +15,7 @@ function ToolsPage() {
   const [activeTab, setActiveTab] = useState<"qr" | "barcode">("qr");
 
   // QR Code State
-  const [qrText, setQrText] = useState("https://mauzochap.com");
+  const [qrText, setQrText] = useState("https://mauzochap.vercel.app");
   const [qrSize, setQrSize] = useState("300");
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(qrText)}`;
 
@@ -223,7 +223,7 @@ function ToolsPage() {
               <Button variant="outline" className="flex items-center gap-2" onClick={() => handleCopyLink(qrText)}>
                 <Copy className="h-4 w-4" /> Copy Content
               </Button>
-              <Button variant="outline" className="flex items-center gap-2" onClick={() => setQrText("https://mauzochap.com")}>
+              <Button variant="outline" className="flex items-center gap-2" onClick={() => setQrText("https://mauzochap.vercel.app")}>
                 <RefreshCw className="h-4 w-4" /> Reset Default
               </Button>
             </div>

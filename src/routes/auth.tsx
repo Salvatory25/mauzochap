@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MultiStepRegister } from "@/components/MultiStepRegister";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -23,8 +24,6 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [businessName, setBusinessName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [inviteBusinessName, setInviteBusinessName] = useState<string | null>(null);
@@ -62,30 +61,6 @@ function AuthPage() {
         toast.success("Password reset email sent! Check your inbox.");
         setMode("signin");
         return;
-      } else if (mode === "signup") {
-        const signUpData: Record<string, string> = {
-          full_name: fullName,
-        };
-        if (inviteId) {
-          signUpData.business_id = inviteId;
-          signUpData.role = inviteRole;
-          if (inviteBranch) {
-            signUpData.branch_id = inviteBranch;
-          }
-        } else {
-          signUpData.business_name = businessName;
-        }
-
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: signUpData,
-          },
-        });
-        if (error) throw error;
-        toast.success("Account created");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -98,28 +73,12 @@ function AuthPage() {
     }
   };
 
-  const handleGoogle = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
-
-    if (error) {
-      toast.error(error.message ?? "Google sign-in failed");
-      setLoading(false);
-      return;
-    }
-    // Supabase redirects the browser, so we don't necessarily need to navigate here
-  };
-
   return (
     <div
       className="grid min-h-screen lg:grid-cols-2"
       style={{ background: "var(--gradient-subtle)" }}
     >
+      {/* Left Branding Side */}
       <div 
         className="hidden lg:flex flex-col justify-center items-center p-12 relative overflow-hidden text-sidebar-foreground"
         style={{ background: "var(--sidebar)" }}
@@ -142,66 +101,49 @@ function AuthPage() {
         </p>
       </div>
 
-      <div className="flex items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-soft)]">
-          <Link to="/" className="lg:hidden flex items-center justify-center gap-2 mb-10">
-            <img src="/logo.png" alt="MauzoChap" className="w-[280px] max-w-full h-auto object-contain" />
-          </Link>
-          <h1 className="text-2xl font-bold">
-            {mode === "signin" ? t("signIn") : mode === "signup" ? (inviteId && inviteBusinessName ? "Join Store" : t("signUp")) : "Reset Password"}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signin"
-              ? "Welcome back, please sign in."
-              : mode === "signup"
-                ? (inviteId && inviteBusinessName 
-                    ? `You've been invited to join ${inviteBusinessName} as a ${inviteRole}.` 
-                    : "Start running your business in minutes.")
+      {/* Right Form Side */}
+      <div className="flex items-center justify-center p-4 md:p-8 overflow-y-auto">
+        {mode === "signup" ? (
+          <MultiStepRegister
+            onSuccess={() => navigate({ to: "/dashboard" })}
+            onSwitchToSignIn={() => setMode("signin")}
+            inviteId={inviteId}
+            inviteRole={inviteRole}
+            inviteBranch={inviteBranch}
+            inviteBusinessName={inviteBusinessName}
+          />
+        ) : (
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-soft)]">
+            <Link to="/" className="lg:hidden flex items-center justify-center gap-2 mb-10">
+              <img src="/logo.png" alt="MauzoChap" className="w-[280px] max-w-full h-auto object-contain" />
+            </Link>
+            <h1 className="text-2xl font-bold">
+              {mode === "signin" ? t("signIn") : "Reset Password"}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {mode === "signin"
+                ? "Welcome back, please sign in."
                 : "Enter your email to receive a password reset link."}
-          </p>
+            </p>
 
-
-          <form onSubmit={handleEmail} className="space-y-3">
-            {mode === "signup" && (
-              <>
-                <div>
-                  <Label htmlFor="full">{t("fullName")}</Label>
-                  <Input
-                    id="full"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
-                </div>
-                {!inviteId && (
-                  <div>
-                    <Label htmlFor="biz">{t("businessName")}</Label>
-                    <Input
-                      id="biz"
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                      required
-                    />
-                  </div>
-                )}
-              </>
-            )}
-            <div>
-              <Label htmlFor="email">{t("email")}</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            {mode !== "reset" && (
+            <form onSubmit={handleEmail} className="space-y-4 mt-6">
               <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">{t("password")}</Label>
-                  {mode === "signin" && (
+                <Label htmlFor="email">{t("email")}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1.5"
+                  required
+                />
+              </div>
+
+              {mode !== "reset" && (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">{t("password")}</Label>
                     <button
                       type="button"
                       onClick={() => setMode("reset")}
@@ -209,36 +151,39 @@ function AuthPage() {
                     >
                       Forgot password?
                     </button>
-                  )}
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="mt-1.5"
+                    required
+                    minLength={8}
+                  />
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                />
-              </div>
-            )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "..." : mode === "signin" ? t("signIn") : mode === "signup" ? t("signUp") : "Send Reset Link"}
-            </Button>
-          </form>
+              )}
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            {mode === "signin" ? "No account?" : mode === "signup" ? "Have an account?" : "Remember your password?"}{" "}
-            <button
-              type="button"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-              className="font-medium text-primary hover:underline"
-            >
-              {mode === "signup" ? t("signIn") : mode === "reset" ? "Back to Sign In" : t("signUp")}
-            </button>
-          </p>
-        </div>
+              <Button type="submit" className="w-full font-bold" disabled={loading}>
+                {loading ? "..." : mode === "signin" ? t("signIn") : "Send Reset Link"}
+              </Button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              {mode === "signin" ? "No account?" : "Remember your password?"}{" "}
+              <button
+                type="button"
+                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+                className="font-medium text-primary hover:underline"
+              >
+                {mode === "signin" ? t("signUp") : "Back to Sign In"}
+              </button>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+

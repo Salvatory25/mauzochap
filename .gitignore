@@ -36,3 +36,8 @@ dist-ssr
 .env.local
 
 .vercel
+
+# Test output & temp scripts
+playwright-report/
+test-results/
+test-query.js

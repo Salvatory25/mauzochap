@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
 import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
 import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedSetupBillingRouteImport } from './routes/_authenticated/setup-billing'
@@ -51,6 +52,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedToolsRoute = AuthenticatedToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSuppliersRoute = AuthenticatedSuppliersRouteImport.update({
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/setup-billing': typeof AuthenticatedSetupBillingRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
+  '/tools': typeof AuthenticatedToolsRoute
   '/users': typeof AuthenticatedUsersRoute
 }
 export interface FileRoutesByTo {
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/setup-billing': typeof AuthenticatedSetupBillingRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
+  '/tools': typeof AuthenticatedToolsRoute
   '/users': typeof AuthenticatedUsersRoute
 }
 export interface FileRoutesById {
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/_authenticated/setup-billing': typeof AuthenticatedSetupBillingRoute
   '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
+  '/_authenticated/tools': typeof AuthenticatedToolsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
 }
 export interface FileRouteTypes {
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/setup-billing'
     | '/super-admin'
     | '/suppliers'
+    | '/tools'
     | '/users'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/setup-billing'
     | '/super-admin'
     | '/suppliers'
+    | '/tools'
     | '/users'
   id:
     | '__root__'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/_authenticated/setup-billing'
     | '/_authenticated/super-admin'
     | '/_authenticated/suppliers'
+    | '/_authenticated/tools'
     | '/_authenticated/users'
   fileRoutesById: FileRoutesById
 }
@@ -293,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/users'
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tools': {
+      id: '/_authenticated/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof AuthenticatedToolsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/suppliers': {
@@ -411,6 +430,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSetupBillingRoute: typeof AuthenticatedSetupBillingRoute
   AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
   AuthenticatedSuppliersRoute: typeof AuthenticatedSuppliersRoute
+  AuthenticatedToolsRoute: typeof AuthenticatedToolsRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
 }
 
@@ -429,6 +449,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSetupBillingRoute: AuthenticatedSetupBillingRoute,
   AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
   AuthenticatedSuppliersRoute: AuthenticatedSuppliersRoute,
+  AuthenticatedToolsRoute: AuthenticatedToolsRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
 }
 
