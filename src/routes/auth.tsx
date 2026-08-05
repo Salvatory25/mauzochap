@@ -21,21 +21,26 @@ function AuthPage() {
   const t = useT();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
+  const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const modeParam = params.get("mode");
+  const inviteId = params.get("invite");
+  const inviteRole = params.get("role") || "cashier";
+  const inviteBranch = params.get("branch") || "";
+
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">(
+    modeParam === "signup" || modeParam === "register" || inviteId ? "signup" : "signin"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [inviteBusinessName, setInviteBusinessName] = useState<string | null>(null);
 
-  const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-  const inviteId = params.get("invite");
-  const inviteRole = params.get("role") || "cashier";
-  const inviteBranch = params.get("branch") || "";
-
   useEffect(() => {
-    if (inviteId) {
+    if (modeParam === "signup" || modeParam === "register" || inviteId) {
       setMode("signup");
+    }
+    if (inviteId) {
       supabase.rpc("get_business_name", { _business_id: inviteId })
         .then(({ data, error }) => {
           if (!error && data) {
@@ -43,7 +48,7 @@ function AuthPage() {
           }
         });
     }
-  }, [inviteId]);
+  }, [inviteId, modeParam]);
 
   if (user) {
     navigate({ to: "/dashboard" });

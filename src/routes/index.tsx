@@ -169,6 +169,7 @@ function Landing() {
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
                     to="/auth"
+                    search={{ mode: "signup" }}
                     className="rounded-lg px-6 py-4 text-base font-medium text-primary-foreground shadow-[var(--shadow-elevated)]"
                     style={{ background: "var(--gradient-primary)" }}
                   >
@@ -316,6 +317,7 @@ function Landing() {
               </div>
               <Link
                 to="/auth"
+                search={{ mode: "signup" }}
                 className="mt-8 block w-full rounded-lg bg-muted text-center py-3 text-sm font-semibold hover:bg-muted/80 transition-colors"
               >
                 Choose Starter
@@ -369,6 +371,7 @@ function Landing() {
               </div>
               <Link
                 to="/auth"
+                search={{ mode: "signup" }}
                 className="mt-8 block w-full rounded-lg text-center py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all active:scale-[0.98]"
                 style={{ background: "var(--gradient-primary)" }}
               >
@@ -424,6 +427,7 @@ function Landing() {
               </div>
               <Link
                 to="/auth"
+                search={{ mode: "signup" }}
                 className="mt-8 block w-full rounded-lg bg-muted text-center py-3 text-sm font-semibold hover:bg-muted/80 transition-colors"
               >
                 Choose Serengeti
