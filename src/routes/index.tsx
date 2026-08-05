@@ -439,7 +439,7 @@ function Landing() {
               <Building2 className="w-3.5 h-3.5" /> {lang === "sw" ? "Ushuhuda wa Wafanyabiashara" : "Customer Stories"}
             </span>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-              {lang === "sw" ? "Biashara 500+ Nchini Tanzania Zinatumia MauzoChap" : "Trusted by 500+ Tanzanian Businesses"}
+              {lang === "sw" ? "Biashara 150+ Nchini Tanzania Zinatumia MauzoChap" : "Trusted by 150+ Tanzanian Businesses"}
             </h2>
             <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
               {lang === "sw" 
