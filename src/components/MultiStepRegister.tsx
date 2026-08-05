@@ -360,7 +360,7 @@ export function MultiStepRegister({
               {currentStep === 1 && "Set up your admin credentials to get started."}
               {currentStep === 2 && "Where is your store or business physically located?"}
               {currentStep === 3 && "Tell us about your store name and industry."}
-              {currentStep === 4 && "Discover powerful POS tools included in your 14-day free trial."}
+              {currentStep === 4 && "Explore powerful tools and capabilities included in MauzoChap POS."}
               {currentStep === 5 && "Review your account details & accept policy terms to launch your POS store."}
             </p>
           </div>
@@ -640,22 +640,6 @@ export function MultiStepRegister({
         {/* STEP 4: AWARENESS SHOWCASE */}
         {currentStep === 4 && (
           <div className="space-y-5 animate-in fade-in-50 duration-300">
-            {/* Free Trial Banner */}
-            <div className="p-4 rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-foreground">MauzoChap 14-Day Free Access Trial</h3>
-                  <p className="text-xs text-muted-foreground">Full access to all POS modules • No credit card required</p>
-                </div>
-              </div>
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                100% Free
-              </span>
-            </div>
-
             {/* Core Features Grid */}
             <h3 className="text-sm font-bold tracking-tight text-foreground">Included Features in MauzoChap POS</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
