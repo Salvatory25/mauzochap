@@ -390,7 +390,7 @@ function Landing() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#25D366]"></span>
           </span>
-          <span>{lang === "sw" ? "Msaada? Tuchat WhatsApp" : "Need help? Chat on WhatsApp"}</span>
+          <span>{lang === "sw" ? "Wasiliana Nasi, WhatsApp" : "Contact Us, WhatsApp"}</span>
         </a>
 
         {/* Animated Floating WhatsApp Icon Button */}
