@@ -268,7 +268,7 @@ function Landing() {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl font-bold tracking-tight">Simple, Transparent Pricing</h2>
             <p className="text-muted-foreground mt-2">
-              Choose the perfect plan for your business. Start free and upgrade anytime.
+              Choose the perfect plan for your business. Select your package and start today.
             </p>
           </div>
 
