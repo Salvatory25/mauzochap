@@ -377,16 +377,40 @@ function Landing() {
         </div>
       </footer>
 
-      {/* Floating WhatsApp Icon */}
-      <a
-        href="https://wa.me/255627274168?text=Habari%20MauzoChap!%20Ningependa%20kupata%20maelezo%20zaidi%20kuhusu%20mfumo%20wenu%20wa%20POS%20na%20jinsi%20ya%20kuanza."
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg hover:scale-110 transition-transform duration-300"
-        title="Chat with us on WhatsApp"
-      >
-        <MessageCircle className="h-7 w-7" />
-      </a>
+      {/* Floating WhatsApp Widget */}
+      <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2.5">
+        {/* Floating Tooltip Pill */}
+        <a
+          href="https://wa.me/255627274168?text=Habari%20MauzoChap!%20Ningependa%20kupata%20maelezo%20zaidi%20kuhusu%20mfumo%20wenu%20wa%20POS%20na%20jinsi%20ya%20kuanza."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden sm:flex items-center gap-2 bg-card/90 backdrop-blur-md border border-[#25D366]/40 text-foreground px-3.5 py-2 rounded-full shadow-lg text-xs font-semibold hover:border-[#25D366] transition-all hover:scale-105"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#25D366]"></span>
+          </span>
+          <span>{lang === "sw" ? "Msaada? Tuchat WhatsApp" : "Need help? Chat on WhatsApp"}</span>
+        </a>
+
+        {/* Animated Floating WhatsApp Icon Button */}
+        <a
+          href="https://wa.me/255627274168?text=Habari%20MauzoChap!%20Ningependa%20kupata%20maelezo%20zaidi%20kuhusu%20mfumo%20wenu%20wa%20POS%20na%20jinsi%20ya%20kuanza."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl hover:scale-110 active:scale-95 transition-all duration-300 animate-bounce"
+          title="Chat with us on WhatsApp"
+        >
+          {/* Pulsing aura ring */}
+          <span className="absolute -inset-1 rounded-full bg-[#25D366]/40 animate-ping pointer-events-none" />
+          
+          {/* WhatsApp icon */}
+          <MessageCircle className="h-7 w-7 relative z-10" />
+
+          {/* Online green indicator badge */}
+          <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-white" />
+        </a>
+      </div>
     </div>
   );
 }
