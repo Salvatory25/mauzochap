@@ -85,7 +85,7 @@ BEGIN
   VALUES (
     new_biz_id,
     'Welcome to MauzoChap!',
-    'Thank you for signing up. Your 14-day free trial has been activated. Enjoy exploring the system!',
+    'Thank you for signing up. Welcome to MauzoChap POS! Enjoy exploring the system!',
     'subscription'
   );
   

@@ -192,7 +192,7 @@ function NotificationCenter() {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 bottom-12 lg:bottom-auto lg:top-12 z-50 w-80 bg-card border border-border rounded-xl shadow-2xl overflow-hidden text-foreground">
+          <div className="fixed lg:absolute right-4 lg:right-auto lg:left-0 top-16 lg:top-12 lg:bottom-auto z-50 w-[calc(100vw-2rem)] lg:w-80 max-w-sm bg-card border border-border rounded-xl shadow-2xl overflow-hidden text-foreground">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
               <span className="font-bold text-sm">Notifications</span>
               {unreadCount > 0 && (
@@ -234,7 +234,9 @@ function NotificationCenter() {
                         </button>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{n.message}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {n.message.replace(/Your 14-day free trial has been activated\.?/gi, "Welcome to MauzoChap POS!")}
+                    </p>
                   </div>
                 ))
               )}
