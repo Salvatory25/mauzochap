@@ -36,6 +36,7 @@ interface MultiStepRegisterProps {
   inviteRole?: string;
   inviteBranch?: string;
   inviteBusinessName?: string | null;
+  initialPackage?: string | null;
 }
 
 const TANZANIA_REGIONS = [
@@ -72,13 +73,65 @@ const BUSINESS_TYPES = [
   { value: "general", label: "General Merchant / Minimarket" },
 ];
 
+const PACKAGES_CONFIG = [
+  { 
+    id: "starter", 
+    name: "STARTER", 
+    price: "TSh 8,500", 
+    priceNum: 8500, 
+    period: "/ Month",
+    popular: false,
+    badge: "Basic",
+    features: [
+      "1 Location",
+      "1 User",
+      "100 Products",
+      "Basic Reports",
+      "Unlimited Invoices & Receipts"
+    ]
+  },
+  { 
+    id: "kilimanjaro", 
+    name: "KILIMANJARO", 
+    price: "TSh 10,500", 
+    priceNum: 10500, 
+    period: "/ Month",
+    popular: true,
+    badge: "Popular",
+    features: [
+      "1 Location",
+      "3 Users",
+      "Unlimited Reports",
+      "Unlimited Invoices & Receipts",
+      "Multiple Branches"
+    ]
+  },
+  { 
+    id: "serengeti", 
+    name: "SERENGETI", 
+    price: "TSh 20,500", 
+    priceNum: 20500, 
+    period: "/ Month",
+    popular: false,
+    badge: "Enterprise",
+    features: [
+      "Unlimited Locations",
+      "Unlimited Users",
+      "Unlimited Products",
+      "Unlimited Reports",
+      "Unlimited Branches"
+    ]
+  }
+];
+
 export function MultiStepRegister({
   onSuccess,
   onSwitchToSignIn,
   inviteId,
   inviteRole = "cashier",
   inviteBranch = "",
-  inviteBusinessName
+  inviteBusinessName,
+  initialPackage
 }: MultiStepRegisterProps) {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [loading, setLoading] = useState(false);
@@ -101,7 +154,11 @@ export function MultiStepRegister({
   const [ownerName, setOwnerName] = useState("");
   const [businessType, setBusinessType] = useState("retail");
 
-  // Step 5: Verification State
+  // Step 4: Package Selection
+  const [selectedPackage, setSelectedPackage] = useState<string>(initialPackage || "kilimanjaro");
+
+  // Step 5: Verification & Payment State
+  const [paymentReference, setPaymentReference] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
@@ -206,6 +263,15 @@ export function MultiStepRegister({
 
   // Final Submission
   const handleCompleteRegistration = async () => {
+    const cleanRef = paymentReference.trim();
+    if (!cleanRef) {
+      toast.error("Please enter your payment transaction reference number.");
+      return;
+    }
+    if (cleanRef.length < 4) {
+      toast.error("Please enter a valid payment reference number (at least 4 characters).");
+      return;
+    }
     if (!acceptTerms || !acceptPrivacy) {
       toast.error("You must accept the Terms & Conditions and Privacy Policy to continue.");
       return;
@@ -245,30 +311,63 @@ export function MultiStepRegister({
 
       if (error) throw error;
 
-      // If user session is returned immediately, sync profile
-      if (data?.user) {
-        try {
-          await supabase.from("profiles").upsert({
-            id: data.user.id,
-            full_name: fullName,
-            phone: phone,
-            business_name: inviteId ? (inviteBusinessName || businessName) : businessName,
-          });
-        } catch (e) {
-          console.warn("Profile sync error on registration:", e);
-        }
-      }
-
-      // 1. Check if email was already registered (Supabase returns empty identities for duplicate emails)
+      // 1. Check duplicate email
       if (data?.user && data?.user?.identities?.length === 0) {
         toast.error("This email is already registered. Please sign in with your password.");
         onSwitchToSignIn();
         return;
       }
 
-      // 2. If user session is returned immediately (Email Confirmation disabled in Supabase Dashboard)
+      // Sync profile & submit payment record for business
+      if (data?.user) {
+        try {
+          const { data: userProf } = await supabase
+            .from("profiles")
+            .upsert({
+              id: data.user.id,
+              full_name: fullName,
+              phone: phone,
+              business_name: inviteId ? (inviteBusinessName || businessName) : businessName,
+            })
+            .select("business_id")
+            .single();
+
+          const bizId = userProf?.business_id;
+          if (bizId) {
+            const pkgObj = PACKAGES_CONFIG.find((p) => p.id === selectedPackage);
+            const amount = pkgObj ? pkgObj.priceNum : 10500;
+
+            await supabase
+              .from("businesses")
+              .update({
+                package: selectedPackage as any,
+                account_status: "pending",
+                rejection_reason: null,
+              })
+              .eq("id", bizId);
+
+            await supabase.from("payments").insert({
+              business_id: bizId,
+              amount: amount,
+              payment_reference: cleanRef,
+              verification_status: "waiting_verification",
+            });
+
+            await supabase.from("notifications").insert({
+              business_id: bizId,
+              title: "Payment Reference Submitted",
+              message: `Your payment reference (${cleanRef}) for ${pkgObj?.name || selectedPackage} has been submitted for admin verification.`,
+              type: "payment",
+            });
+          }
+        } catch (e) {
+          console.warn("Profile/Payment sync error on registration:", e);
+        }
+      }
+
+      // 2. If user session is returned immediately
       if (data?.session) {
-        toast.success("Registration successful! Account activated automatically.");
+        toast.success("Registration & Payment submitted! Awaiting admin verification.");
         onSuccess();
         return;
       }
@@ -290,8 +389,8 @@ export function MultiStepRegister({
     { number: 1, label: "User Account", icon: User },
     { number: 2, label: "Location", icon: MapPin },
     { number: 3, label: "Business", icon: Store },
-    { number: 4, label: "Awareness", icon: Sparkles },
-    { number: 5, label: "Verification", icon: ShieldCheck },
+    { number: 4, label: "Choose Package", icon: Package },
+    { number: 5, label: "Verification & Payment", icon: ShieldCheck },
   ];
 
   if (emailSentSuccess) {
@@ -313,27 +412,26 @@ export function MultiStepRegister({
           <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
             <li>Open your email inbox and click <strong>"Confirm Email"</strong>.</li>
             <li>Check your <strong>Spam or Junk</strong> folder if it does not appear in 1-2 minutes.</li>
-            <li>If email confirmation is disabled in your backend, you can log in directly.</li>
+            <li>Once confirmed, your payment reference will be processed by our admin team.</li>
           </ul>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
           <Button
             type="button"
-            variant="outline"
             onClick={handleResendEmail}
             disabled={resendingEmail}
             className="w-full font-semibold"
+            variant="outline"
           >
-            {resendingEmail ? "Sending Link..." : "Resend Activation Email"}
+            {resendingEmail ? "Sending..." : "Resend Activation Email"}
           </Button>
-
           <Button
             type="button"
             onClick={onSwitchToSignIn}
-            className="w-full font-bold bg-primary text-primary-foreground"
+            className="w-full font-semibold"
           >
-            Go to Sign In
+            Proceed to Sign In
           </Button>
         </div>
       </div>
@@ -341,112 +439,81 @@ export function MultiStepRegister({
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-2xl shadow-[var(--shadow-elevated)] overflow-hidden transition-all duration-300">
-      {/* Top Header & Step Indicator */}
-      <div className="p-6 md:p-8 bg-muted/40 border-b border-border">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <span className="text-xs font-semibold tracking-wider text-primary uppercase bg-primary/10 px-2.5 py-1 rounded-full">
-              Step {currentStep} of 5
-            </span>
-            <h2 className="text-xl md:text-2xl font-bold mt-2">
-              {currentStep === 1 && "Create Your Account"}
-              {currentStep === 2 && "Business Location Details"}
-              {currentStep === 3 && "Business Information"}
-              {currentStep === 4 && "Explore MauzoChap Features"}
-              {currentStep === 5 && "Account Verification"}
-            </h2>
-            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-              {currentStep === 1 && "Set up your admin credentials to get started."}
-              {currentStep === 2 && "Where is your store or business physically located?"}
-              {currentStep === 3 && "Tell us about your store name and industry."}
-              {currentStep === 4 && "Explore powerful tools and capabilities included in MauzoChap POS."}
-              {currentStep === 5 && "Review your account details & accept policy terms to launch your POS store."}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onSwitchToSignIn}
-            className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors hidden sm:block"
-          >
-            Already registered? <span className="text-primary font-semibold underline">Sign In</span>
-          </button>
+    <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 md:p-8 shadow-[var(--shadow-elevated)]">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-6 border-b border-border mb-6">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">
+            {currentStep === 1 && "Create Your Account"}
+            {currentStep === 2 && "Physical Store Location"}
+            {currentStep === 3 && "Business Information"}
+            {currentStep === 4 && "Select Subscription Plan"}
+            {currentStep === 5 && "Payment & Account Verification"}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Step {currentStep} of 5 — {STEPS_CONFIG.find((s) => s.number === currentStep)?.label}
+          </p>
         </div>
-
-        {/* Step Progress Bar */}
-        <div className="relative mb-2">
-          <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all duration-500 ease-out"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
+        <div className="text-right hidden sm:block">
+          <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full uppercase tracking-wider">
+            POS Setup
+          </span>
         </div>
+      </div>
 
-        {/* Step Indicators Grid */}
-        <div className="grid grid-cols-5 gap-1 pt-4 text-center">
+      {/* Step Stepper Indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
           {STEPS_CONFIG.map((step) => {
-            const Icon = step.icon;
+            const IconComponent = step.icon;
             const isCompleted = currentStep > step.number;
-            const isActive = currentStep === step.number;
-
+            const isCurrent = currentStep === step.number;
             return (
-              <div
-                key={step.number}
-                className="flex flex-col items-center gap-1.5 cursor-default group"
-              >
+              <div key={step.number} className="flex flex-col items-center gap-1.5 flex-1">
                 <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                     isCompleted
                       ? "bg-primary text-primary-foreground shadow-sm"
-                      : isActive
-                      ? "bg-primary/20 text-primary ring-2 ring-primary ring-offset-2 ring-offset-background"
-                      : "bg-muted text-muted-foreground"
+                      : isCurrent
+                      ? "bg-primary/20 text-primary border-2 border-primary ring-4 ring-primary/10"
+                      : "bg-muted text-muted-foreground border border-border"
                   }`}
                 >
-                  {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                  {isCompleted ? <Check className="w-4 h-4" /> : <IconComponent className="w-4 h-4" />}
                 </div>
-                <span
-                  className={`text-[11px] font-medium hidden sm:block truncate max-w-full ${
-                    isActive ? "text-primary font-bold" : isCompleted ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                >
+                <span className={`text-[10px] font-semibold text-center hidden md:block truncate max-w-[80px] ${
+                  isCurrent ? "text-primary" : "text-muted-foreground"
+                }`}>
                   {step.label}
                 </span>
               </div>
             );
           })}
         </div>
+        {/* Progress Line */}
+        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-300 ease-out"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
       </div>
 
-      {/* Step Form Body */}
-      <div className="p-6 md:p-8 space-y-6">
+      {/* Form Content */}
+      <div className="space-y-6">
         {/* STEP 1: USER ACCOUNT */}
         {currentStep === 1 && (
           <div className="space-y-4 animate-in fade-in-50 duration-300">
-            {inviteId && inviteBusinessName && (
-              <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl flex items-center gap-3 text-sm">
-                <Building2 className="w-5 h-5 text-primary shrink-0" />
-                <div>
-                  <p className="font-semibold text-foreground">Invited to join {inviteBusinessName}</p>
-                  <p className="text-xs text-muted-foreground">Role: <span className="capitalize font-medium text-primary">{inviteRole}</span></p>
-                </div>
-              </div>
-            )}
-
             <div>
               <Label htmlFor="fullName" className="text-sm font-semibold">Full Name *</Label>
-              <div className="relative mt-1.5">
-                <User className="absolute left-3.5 top-3 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="fullName"
-                  placeholder="e.g. Baraka Joseph"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
+              <Input
+                id="fullName"
+                placeholder="e.g. Baraka Joseph"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="mt-1.5"
+                required
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -455,7 +522,7 @@ export function MultiStepRegister({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@business.co.tz"
+                  placeholder="e.g. baraka@store.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1.5"
@@ -465,53 +532,44 @@ export function MultiStepRegister({
 
               <div>
                 <Label htmlFor="phone" className="text-sm font-semibold">Phone Number *</Label>
-                <div className="relative mt-1.5">
-                  <Smartphone className="absolute left-3.5 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="0754 123 456"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="e.g. 0754123456"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="mt-1.5"
+                  required
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="password" className="text-sm font-semibold">Password *</Label>
-                <div className="relative mt-1.5">
-                  <Lock className="absolute left-3.5 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="At least 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                    minLength={8}
-                  />
-                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="At least 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1.5"
+                  required
+                  minLength={8}
+                />
               </div>
 
               <div>
                 <Label htmlFor="confirmPassword" className="text-sm font-semibold">Confirm Password *</Label>
-                <div className="relative mt-1.5">
-                  <Lock className="absolute left-3.5 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Repeat password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="mt-1.5"
+                  required
+                />
               </div>
             </div>
           </div>
@@ -522,29 +580,22 @@ export function MultiStepRegister({
           <div className="space-y-4 animate-in fade-in-50 duration-300">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="country" className="text-sm font-semibold">Country</Label>
-                <div className="relative mt-1.5">
-                  <Globe className="absolute left-3.5 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="country"
-                    value={country}
-                    readOnly
-                    className="pl-10 bg-muted/50 cursor-not-allowed font-medium text-foreground"
-                  />
+                <Label className="text-sm font-semibold">Country *</Label>
+                <div className="mt-1.5 p-2.5 rounded-lg border border-border bg-muted/40 font-bold text-xs text-foreground flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-primary" /> {country}
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-1">Default region set to Tanzania</p>
               </div>
 
               <div>
-                <Label htmlFor="region" className="text-sm font-semibold">Region *</Label>
+                <Label htmlFor="region" className="text-sm font-semibold">Region / Region *</Label>
                 <Select value={region} onValueChange={setRegion}>
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder="Select region" />
                   </SelectTrigger>
                   <SelectContent>
-                    {TANZANIA_REGIONS.map((reg) => (
-                      <SelectItem key={reg} value={reg}>
-                        {reg}
+                    {TANZANIA_REGIONS.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -552,30 +603,28 @@ export function MultiStepRegister({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="district" className="text-sm font-semibold">City / District *</Label>
-                <Input
-                  id="district"
-                  placeholder="e.g. Kinondoni, Ilala, Arusha Urban"
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  className="mt-1.5"
-                  required
-                />
-              </div>
+            <div>
+              <Label htmlFor="district" className="text-sm font-semibold">City / District / Area *</Label>
+              <Input
+                id="district"
+                placeholder="e.g. Kinondoni, Kariakoo, Arusha Urban"
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+                className="mt-1.5"
+                required
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="address" className="text-sm font-semibold">Business Physical Address *</Label>
-                <Input
-                  id="address"
-                  placeholder="e.g. Sam Nujoma Rd, Kariakoo Market, Plaza 3rd Fl"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="mt-1.5"
-                  required
-                />
-              </div>
+            <div>
+              <Label htmlFor="address" className="text-sm font-semibold">Physical Street / Building Address *</Label>
+              <Input
+                id="address"
+                placeholder="e.g. Swahili Street, House No. 12, Floor 1"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="mt-1.5"
+                required
+              />
             </div>
           </div>
         )}
@@ -637,125 +686,155 @@ export function MultiStepRegister({
           </div>
         )}
 
-        {/* STEP 4: AWARENESS SHOWCASE */}
+        {/* STEP 4: PACKAGE SELECTION */}
         {currentStep === 4 && (
-          <div className="space-y-5 animate-in fade-in-50 duration-300">
-            {/* Core Features Grid */}
-            <h3 className="text-sm font-bold tracking-tight text-foreground">Included Features in MauzoChap POS</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3.5 rounded-xl border border-border bg-card flex items-start gap-3 hover:border-primary/40 transition-colors">
-                <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-600 shrink-0">
-                  <ShoppingCart className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Fast POS Sales</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Quick barcode checkout, invoice generation & thermal printing.</p>
-                </div>
-              </div>
+          <div className="space-y-4 animate-in fade-in-50 duration-300">
+            <div>
+              <h3 className="text-base font-bold text-foreground">Select Your POS Subscription Plan</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Choose the plan that best fits your shop requirements. You can upgrade anytime.
+              </p>
+            </div>
 
-              <div className="p-3.5 rounded-xl border border-border bg-card flex items-start gap-3 hover:border-primary/40 transition-colors">
-                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 shrink-0">
-                  <Package className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Smart Inventory</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Batch tracking, stock transfer between branches & low-stock alerts.</p>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+              {PACKAGES_CONFIG.map((pkg) => {
+                const isSelected = selectedPackage === pkg.id;
+                return (
+                  <div
+                    key={pkg.id}
+                    onClick={() => setSelectedPackage(pkg.id)}
+                    className={`rounded-2xl border-2 p-4 cursor-pointer transition-all flex flex-col justify-between space-y-3 relative ${
+                      isSelected
+                        ? "border-primary bg-primary/5 shadow-md scale-[1.01]"
+                        : "border-border bg-card hover:border-primary/40"
+                    }`}
+                  >
+                    {pkg.popular && (
+                      <span className="absolute -top-2.5 right-3 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                        Popular
+                      </span>
+                    )}
 
-              <div className="p-3.5 rounded-xl border border-border bg-card flex items-start gap-3 hover:border-primary/40 transition-colors">
-                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 shrink-0">
-                  <Receipt className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Expenses & Suppliers</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Track daily store costs, supplier payments & vendor balances.</p>
-                </div>
-              </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                          isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        }`}>
+                          {pkg.badge}
+                        </span>
+                        {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                      </div>
 
-              <div className="p-3.5 rounded-xl border border-border bg-card flex items-start gap-3 hover:border-primary/40 transition-colors">
-                <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 shrink-0">
-                  <BarChart3 className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Real-time Analytics</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Daily sales reports, profit margins, and top selling products.</p>
-                </div>
-              </div>
+                      <h4 className="text-lg font-extrabold text-foreground">{pkg.name}</h4>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xl font-black text-primary">{pkg.price}</span>
+                        <span className="text-xs text-muted-foreground">{pkg.period}</span>
+                      </div>
 
-              <div className="p-3.5 rounded-xl border border-border bg-card flex items-start gap-3 hover:border-primary/40 transition-colors">
-                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 shrink-0">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Customer Debt & Credit</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Customer profiles, debt collection logs & loyalty points.</p>
-                </div>
-              </div>
+                      <ul className="space-y-1.5 text-xs text-muted-foreground pt-2 border-t border-border/60">
+                        {pkg.features.map((feat, i) => (
+                          <li key={i} className="flex items-center gap-1.5">
+                            <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-              <div className="p-3.5 rounded-xl border border-border bg-card flex items-start gap-3 hover:border-primary/40 transition-colors">
-                <div className="p-2 rounded-lg bg-rose-500/10 text-rose-600 shrink-0">
-                  <Bell className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-foreground">Business Alerts</h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Automated SMS/email summaries and stock expiration warnings.</p>
-                </div>
-              </div>
+                    <Button
+                      type="button"
+                      variant={isSelected ? "default" : "outline"}
+                      className="w-full text-xs font-bold py-2 h-auto"
+                      onClick={() => setSelectedPackage(pkg.id)}
+                    >
+                      {isSelected ? "Selected Plan ✓" : `Choose ${pkg.name}`}
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* STEP 5: VERIFICATION */}
+        {/* STEP 5: VERIFICATION & PAYMENT */}
         {currentStep === 5 && (
           <div className="space-y-5 animate-in fade-in-50 duration-300">
-            {/* Account Instant Activation Box */}
-            <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-3">
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-sm text-foreground">Instant Account Activation</h3>
-                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                      Active
-                    </span>
+            {/* Selected Package Banner */}
+            {(() => {
+              const activePkg = PACKAGES_CONFIG.find((p) => p.id === selectedPackage) || PACKAGES_CONFIG[1];
+              return (
+                <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Chosen Subscription Plan</span>
+                    <h4 className="text-base font-extrabold text-foreground">{activePkg.name} PLAN</h4>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Direct access enabled for <span className="font-bold text-foreground">{email || "your email account"}</span>. Your store workspace will be initialized instantly upon submission.
-                  </p>
+                  <div className="text-right">
+                    <span className="text-xl font-black text-primary">{activePkg.price}</span>
+                    <span className="text-xs text-muted-foreground block">{activePkg.period}</span>
+                  </div>
                 </div>
+              );
+            })()}
+
+            {/* Payment Methods (Njia za Malipo) */}
+            <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+              <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                  <CreditCard className="w-4 h-4 text-primary" /> Payment Channels (Lipa Hapa)
+                </span>
+                <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  Instant Verification
+                </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-background/80 border border-border/60 text-xs text-muted-foreground space-y-1">
-                <div className="flex items-center gap-1.5 text-foreground font-semibold">
-                  <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
-                  <span>No Waiting or Extra Services Required</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
+                  <span className="font-bold text-rose-600 block">🔴 Vodacom M-Pesa (Lipa Namba)</span>
+                  <p className="font-mono text-xs font-semibold text-foreground">Till / Lipa Namba: 552109</p>
+                  <p className="text-[10px] text-muted-foreground">Name: MauzoChap Enterprise</p>
                 </div>
-                <p className="pl-5 text-[11px]">
-                  Clicking "Complete Registration & Launch POS" will launch your store workspace right away.
-                </p>
+
+                <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
+                  <span className="font-bold text-blue-600 block">🔵 TigoPesa / Yas (Lipa Namba)</span>
+                  <p className="font-mono text-xs font-semibold text-foreground">Lipa Namba: 982401</p>
+                  <p className="text-[10px] text-muted-foreground">Name: MauzoChap POS</p>
+                </div>
+
+                <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
+                  <span className="font-bold text-emerald-600 block">🟢 Airtel Money (Lipa Namba)</span>
+                  <p className="font-mono text-xs font-semibold text-foreground">Lipa Namba: 441092</p>
+                  <p className="text-[10px] text-muted-foreground">Name: MauzoChap System</p>
+                </div>
+
+                <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
+                  <span className="font-bold text-purple-600 block">🏦 NMB / CRDB Bank Account</span>
+                  <p className="font-mono text-xs font-semibold text-foreground">Acc: 20810098231</p>
+                  <p className="text-[10px] text-muted-foreground">Name: MauzoChap Tanzania Ltd</p>
+                </div>
               </div>
             </div>
 
-            {/* Account Contact Summary */}
-            <div className="p-4 rounded-xl border border-border bg-muted/20 space-y-2">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Account Information Summary</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-                <div>
-                  <span className="text-muted-foreground block text-[11px]">Email Address</span>
-                  <span className="font-semibold text-foreground truncate block">{email || "Not provided"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-[11px]">Phone Contact</span>
-                  <span className="font-semibold text-foreground truncate block">{phone || "Not provided"}</span>
-                </div>
-              </div>
+            {/* Payment Reference Input */}
+            <div className="space-y-1.5">
+              <Label htmlFor="paymentReference" className="text-xs font-bold text-foreground flex items-center justify-between">
+                <span>Payment Transaction Reference Code *</span>
+                <span className="text-[10px] font-normal text-muted-foreground">Required for verification</span>
+              </Label>
+              <Input
+                id="paymentReference"
+                placeholder="e.g. QGH89231KL or TXN-98210"
+                value={paymentReference}
+                onChange={(e) => setPaymentReference(e.target.value)}
+                className="font-mono font-bold tracking-wider text-sm"
+                required
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Enter the receipt transaction code from your M-Pesa / TigoPesa / Airtel Money / Bank payment confirmation SMS.
+              </p>
             </div>
 
-            {/* Checkboxes */}
-            <div className="space-y-3 pt-2">
+            {/* Terms & Privacy Checkboxes */}
+            <div className="space-y-2.5 pt-1">
               <div className="flex items-start space-x-2.5">
                 <Checkbox
                   id="terms"
@@ -764,7 +843,7 @@ export function MultiStepRegister({
                   className="mt-0.5"
                 />
                 <Label htmlFor="terms" className="text-xs leading-relaxed text-muted-foreground font-normal cursor-pointer">
-                  I have read and agree to the <span className="text-primary font-semibold underline">MauzoChap Terms & Conditions</span> governing POS store operations and user accounts.
+                  I have read and agree to the <span className="text-primary font-semibold underline">MauzoChap Terms & Conditions</span> governing POS operations and account access.
                 </Label>
               </div>
 
@@ -776,7 +855,7 @@ export function MultiStepRegister({
                   className="mt-0.5"
                 />
                 <Label htmlFor="privacy" className="text-xs leading-relaxed text-muted-foreground font-normal cursor-pointer">
-                  I agree to the <span className="text-primary font-semibold underline">Privacy Policy</span> regarding data storage and inventory privacy protection.
+                  I agree to the <span className="text-primary font-semibold underline">Privacy Policy</span> regarding store inventory & transaction data privacy.
                 </Label>
               </div>
             </div>
@@ -816,10 +895,10 @@ export function MultiStepRegister({
             <Button
               type="button"
               onClick={handleCompleteRegistration}
-              disabled={loading || !acceptTerms || !acceptPrivacy}
+              disabled={loading || !paymentReference.trim() || !acceptTerms || !acceptPrivacy}
               className="flex items-center gap-2 ml-auto bg-primary text-primary-foreground font-bold shadow-md hover:opacity-90"
             >
-              {loading ? "Creating Account..." : "Complete Registration & Launch POS"}
+              {loading ? "Submitting Payment..." : "Complete Registration & Submit Payment"}
             </Button>
           )}
         </div>

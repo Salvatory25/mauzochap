@@ -29,9 +29,12 @@ function SuperAdminDashboard() {
     queryKey: ["super-admin-businesses"],
     enabled: isSuperAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.from("businesses").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("businesses")
+        .select("*, payments(id, payment_reference, verification_status, amount, created_at)")
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as Business[];
+      return data as any[];
     },
   });
 
@@ -226,39 +229,67 @@ function SuperAdminDashboard() {
                 <th className="px-4 py-3 text-left">Business Name</th>
                 <th className="px-4 py-3 text-left">Owner</th>
                 <th className="px-4 py-3 text-left">Contact</th>
-                <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-left">Package</th>
+                <th className="px-4 py-3 text-left">Payment Reference</th>
+                <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {bLoading ? <tr><td colSpan={6} className="p-4 text-center">Loading...</td></tr> : paginatedBusinesses.map(b => (
-                <tr key={b.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3 font-medium">{b.business_name}</td>
-                  <td className="px-4 py-3">{b.owner_name}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{b.email}<br/>{b.phone}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
-                      b.account_status === "approved" ? "bg-success/15 text-success" : 
-                      b.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
-                    }`}>
-                      {b.account_status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 capitalize">{b.package}</td>
-                  <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
-                    {b.account_status !== "approved" && (
-                      <Button size="sm" variant="outline" onClick={() => handleUpdateBusinessStatus(b.id, "approved")}>Approve</Button>
-                    )}
-                    {b.account_status !== "suspended" && (
-                      <Button size="sm" variant="outline" className="text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={() => handleUpdateBusinessStatus(b.id, "suspended")}>Suspend</Button>
-                    )}
-                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(b.id, b.business_name)}>
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {bLoading ? (
+                <tr><td colSpan={7} className="p-4 text-center">Loading...</td></tr>
+              ) : paginatedBusinesses.map(b => {
+                const latestP = b.payments?.[0];
+                return (
+                  <tr key={b.id} className="hover:bg-muted/30">
+                    <td className="px-4 py-3 font-semibold text-foreground">{b.business_name}</td>
+                    <td className="px-4 py-3">{b.owner_name}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{b.email}<br/>{b.phone}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-bold text-xs uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded">
+                        {b.package || "N/A"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs">
+                      {latestP?.payment_reference ? (
+                        <span className="font-bold bg-muted px-2.5 py-1 rounded text-foreground border border-border">
+                          {latestP.payment_reference}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground italic">No reference</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
+                        b.account_status === "approved" ? "bg-success/15 text-success" : 
+                        b.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
+                      }`}>
+                        {b.account_status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+                      {b.account_status !== "approved" && latestP && (
+                        <Button 
+                          size="sm" 
+                          className="bg-primary text-primary-foreground font-bold"
+                          onClick={() => handleApprovePayment(latestP.id, b.id, b.package || "kilimanjaro", b.email, b.business_name)}
+                        >
+                          Verify & Activate
+                        </Button>
+                      )}
+                      {b.account_status !== "approved" && !latestP && (
+                        <Button size="sm" variant="outline" onClick={() => handleUpdateBusinessStatus(b.id, "approved")}>Approve</Button>
+                      )}
+                      {b.account_status !== "suspended" && (
+                        <Button size="sm" variant="outline" className="text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={() => handleUpdateBusinessStatus(b.id, "suspended")}>Suspend</Button>
+                      )}
+                      <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(b.id, b.business_name)}>
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
