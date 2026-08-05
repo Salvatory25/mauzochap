@@ -25,6 +25,7 @@ import {
   Check,
   Clock,
   Sparkles,
+  X,
 } from "lucide-react";
 import {
   Sheet,
@@ -191,30 +192,49 @@ function NotificationCenter() {
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="fixed lg:absolute right-4 lg:right-auto lg:left-0 top-16 lg:top-12 lg:bottom-auto z-50 w-[calc(100vw-2rem)] lg:w-80 max-w-sm bg-card border border-border rounded-xl shadow-2xl overflow-hidden text-foreground">
-            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
-              <span className="font-bold text-sm">Notifications</span>
-              {unreadCount > 0 && (
+          <div className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px]" onClick={() => setIsOpen(false)} />
+          <div className="fixed right-4 top-20 lg:top-auto lg:bottom-12 lg:left-64 lg:right-auto z-[100] w-[calc(100vw-2rem)] sm:w-96 max-w-md bg-card border border-border/80 rounded-2xl shadow-2xl overflow-hidden text-foreground animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="p-4 border-b border-border/60 flex items-center justify-between bg-muted/40">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-primary" />
+                <span className="font-bold text-sm">Notifications</span>
+                {unreadCount > 0 && (
+                  <span className="bg-primary/10 text-primary text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {unreadCount} new
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllAsRead}
+                    className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Check className="h-3 w-3" /> Mark all read
+                  </button>
+                )}
                 <button
-                  onClick={handleMarkAllAsRead}
-                  className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                  title="Close"
                 >
-                  <Check className="h-3 w-3" /> Mark all read
+                  <X className="h-4 w-4" />
                 </button>
-              )}
+              </div>
             </div>
-            <div className="max-h-72 overflow-y-auto divide-y divide-border">
+
+            <div className="max-h-[75vh] sm:max-h-96 overflow-y-auto divide-y divide-border/50">
               {allNotifications.length === 0 ? (
-                <div className="p-8 text-center text-xs text-muted-foreground">
-                  No notifications yet.
+                <div className="p-10 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+                  <Bell className="h-8 w-8 opacity-30 text-muted-foreground" />
+                  <span>No notifications yet.</span>
                 </div>
               ) : (
                 allNotifications.map((n) => (
                   <div
                     key={n.id}
-                    className={`p-3.5 text-left transition-colors hover:bg-muted/30 flex flex-col gap-1 ${
-                      !n.is_read ? "bg-primary/5 font-medium" : ""
+                    className={`p-4 text-left transition-colors hover:bg-muted/30 flex flex-col gap-2 ${
+                      !n.is_read ? "bg-primary/5 font-medium border-l-4 border-l-primary" : ""
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -227,14 +247,14 @@ function NotificationCenter() {
                       {!n.is_read && (
                         <button
                           onClick={() => handleMarkAsRead(n.id)}
-                          className="text-[9px] text-muted-foreground hover:text-foreground cursor-pointer flex items-center gap-0.5 bg-muted px-1.5 py-0.5 rounded shrink-0"
+                          className="text-[10px] text-primary hover:bg-primary/10 font-semibold cursor-pointer flex items-center gap-1 px-2 py-0.5 rounded-md border border-primary/20 shrink-0"
                           title="Mark as read"
                         >
-                          <Check className="h-2.5 w-2.5" /> Read
+                          <Check className="h-3 w-3" /> Read
                         </button>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed whitespace-normal break-words">
                       {n.message.replace(/Your 14-day free trial has been activated\.?/gi, "Welcome to MauzoChap POS!")}
                     </p>
                   </div>
