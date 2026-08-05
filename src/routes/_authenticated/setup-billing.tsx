@@ -16,6 +16,20 @@ export const Route = createFileRoute("/_authenticated/setup-billing")({
 
 const PACKAGES = [
   { 
+    id: "starter", 
+    name: "Starter", 
+    price: 8500, 
+    duration: "1 Month",
+    features: [
+      "1 Location",
+      "1 User",
+      "100 Products",
+      "Basic Reports",
+      "Unlimited Invoices",
+      "Unlimited Receipts"
+    ]
+  },
+  { 
     id: "kilimanjaro", 
     name: "Kilimanjaro", 
     price: 10500, 
@@ -261,7 +275,7 @@ function SetupBilling() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {PACKAGES.map((pkg) => (
           <div 
             key={pkg.id}

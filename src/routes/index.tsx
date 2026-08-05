@@ -214,14 +214,14 @@ function Landing() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full">
-                    14-Day Free Trial
+                    Starter
                   </span>
                 </div>
                 <h3 className="text-2xl font-bold">STARTER</h3>
                 <p className="text-sm text-muted-foreground mt-1">Get started with basic features</p>
                 <div className="mt-6 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold tracking-tight">Free</span>
-                  <span className="text-muted-foreground">/ 14 days</span>
+                  <span className="text-3xl font-extrabold tracking-tight">TSh 8,500</span>
+                  <span className="text-muted-foreground">/ Month</span>
                 </div>
                 
                 <ul className="mt-8 space-y-4 text-sm text-muted-foreground">
@@ -255,7 +255,7 @@ function Landing() {
                 to="/auth"
                 className="mt-8 block w-full rounded-lg bg-muted text-center py-3 text-sm font-semibold hover:bg-muted/80 transition-colors"
               >
-                Start Free Trial
+                Choose Starter
               </Link>
             </div>
 
