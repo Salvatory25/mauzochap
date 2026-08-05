@@ -105,6 +105,29 @@ export function MultiStepRegister({
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
+  // Email Sent Screen State
+  const [emailSentSuccess, setEmailSentSuccess] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+
+  const handleResendEmail = async () => {
+    setResendingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      if (error) throw error;
+      toast.success(`Activation link re-sent to ${email}! Check your inbox and spam folder.`);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to resend activation link. Please try again.");
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   // Step Validation logic
   const validateStep1 = () => {
     if (!fullName.trim()) {
@@ -236,8 +259,23 @@ export function MultiStepRegister({
         }
       }
 
-      toast.success("Registration successful! Welcome to MauzoChap.");
-      onSuccess();
+      // 1. Check if email was already registered (Supabase returns empty identities for duplicate emails)
+      if (data?.user && data?.user?.identities?.length === 0) {
+        toast.error("This email is already registered. Please sign in with your password.");
+        onSwitchToSignIn();
+        return;
+      }
+
+      // 2. If user session is returned immediately (Email Confirmation disabled in Supabase Dashboard)
+      if (data?.session) {
+        toast.success("Registration successful! Account activated automatically.");
+        onSuccess();
+        return;
+      }
+
+      // 3. Email activation link sent by Supabase
+      setEmailSentSuccess(true);
+      toast.success(`Activation link sent to ${email}`);
     } catch (err: any) {
       toast.error(err?.message ?? "Registration failed. Please try again.");
     } finally {
@@ -255,6 +293,52 @@ export function MultiStepRegister({
     { number: 4, label: "Awareness", icon: Sparkles },
     { number: 5, label: "Verification", icon: ShieldCheck },
   ];
+
+  if (emailSentSuccess) {
+    return (
+      <div className="w-full max-w-lg mx-auto bg-card border border-border rounded-2xl p-6 md:p-8 shadow-[var(--shadow-elevated)] text-center space-y-6 animate-in fade-in-50 duration-300">
+        <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto ring-8 ring-primary/5">
+          <Mail className="w-8 h-8" />
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-foreground">Check Your Email Inbox</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">
+            We sent an account activation link to <span className="font-bold text-foreground">{email}</span>.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-xl bg-muted/40 border border-border text-xs text-left text-muted-foreground space-y-2">
+          <p className="font-semibold text-foreground">Important Next Steps:</p>
+          <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
+            <li>Open your email inbox and click <strong>"Confirm Email"</strong>.</li>
+            <li>Check your <strong>Spam or Junk</strong> folder if it does not appear in 1-2 minutes.</li>
+            <li>If email confirmation is disabled in your backend, you can log in directly.</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleResendEmail}
+            disabled={resendingEmail}
+            className="w-full font-semibold"
+          >
+            {resendingEmail ? "Sending Link..." : "Resend Activation Email"}
+          </Button>
+
+          <Button
+            type="button"
+            onClick={onSwitchToSignIn}
+            className="w-full font-bold bg-primary text-primary-foreground"
+          >
+            Go to Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-2xl shadow-[var(--shadow-elevated)] overflow-hidden transition-all duration-300">
