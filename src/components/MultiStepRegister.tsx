@@ -361,7 +361,7 @@ export function MultiStepRegister({
               {currentStep === 2 && "Where is your store or business physically located?"}
               {currentStep === 3 && "Tell us about your store name and industry."}
               {currentStep === 4 && "Discover powerful POS tools included in your 14-day free trial."}
-              {currentStep === 5 && "Review your email verification details & accept terms to complete registration."}
+              {currentStep === 5 && "Review your account details & accept policy terms to launch your POS store."}
             </p>
           </div>
           <button
@@ -725,32 +725,32 @@ export function MultiStepRegister({
         {/* STEP 5: VERIFICATION */}
         {currentStep === 5 && (
           <div className="space-y-5 animate-in fade-in-50 duration-300">
-            {/* Email Verification Box */}
-            <div className="p-5 rounded-2xl border border-primary/30 bg-primary/5 space-y-3">
+            {/* Account Instant Activation Box */}
+            <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-3">
               <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                  <Mail className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-sm text-foreground">Email Activation Verification</h3>
+                    <h3 className="font-bold text-sm text-foreground">Instant Account Activation</h3>
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                      Standard Setup
+                      Active
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    An account activation link will be sent to <span className="font-bold text-foreground">{email || "your registered email"}</span> upon completing registration.
+                    Direct access enabled for <span className="font-bold text-foreground">{email || "your email account"}</span>. Your store workspace will be initialized instantly upon submission.
                   </p>
                 </div>
               </div>
 
               <div className="p-3 rounded-xl bg-background/80 border border-border/60 text-xs text-muted-foreground space-y-1">
                 <div className="flex items-center gap-1.5 text-foreground font-semibold">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>Direct Email Activation (No extra SMS service needed)</span>
+                  <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+                  <span>No Waiting or Extra Services Required</span>
                 </div>
                 <p className="pl-5 text-[11px]">
-                  Clicking the activation link in your email inbox will verify your owner account and grant access to your MauzoChap POS store workspace.
+                  Clicking "Complete Registration & Launch POS" will launch your store workspace right away.
                 </p>
               </div>
             </div>
