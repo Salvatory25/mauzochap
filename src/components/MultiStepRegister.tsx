@@ -25,7 +25,8 @@ import {
   Check,
   Building2,
   Globe,
-  Mail
+  Mail,
+  CreditCard
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -342,7 +343,7 @@ export function MultiStepRegister({
               .update({
                 package: selectedPackage as any,
                 account_status: "pending",
-                rejection_reason: null,
+                rejection_reason: null as any,
               })
               .eq("id", bizId);
 
@@ -353,7 +354,7 @@ export function MultiStepRegister({
               verification_status: "waiting_verification",
             });
 
-            await supabase.from("notifications").insert({
+            await supabase.from("notifications" as any).insert({
               business_id: bizId,
               title: "Payment Reference Submitted",
               message: `Your payment reference (${cleanRef}) for ${pkgObj?.name || selectedPackage} has been submitted for admin verification.`,
@@ -790,7 +791,7 @@ export function MultiStepRegister({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
                   <span className="font-bold text-blue-600 block">🔵 Mix By Yas</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">Number: 0674673493</p>
+                  <p className="font-mono text-xs font-semibold text-foreground">Number: 0674673494</p>
                 </div>
 
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">

@@ -87,7 +87,7 @@ function NotificationCenter() {
     return [];
   });
 
-  const { data: dbNotifications = [], refetch: refetchNotifications } = useQuery({
+  const { data: dbNotifications = [], refetch: refetchNotifications } = useQuery<any[]>({
     queryKey: ["notifications-list", business?.id],
     enabled: !!business?.id,
     queryFn: async () => {
@@ -97,7 +97,7 @@ function NotificationCenter() {
         .eq("business_id", business!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data || []) as any[];
     }
   });
 
@@ -113,7 +113,7 @@ function NotificationCenter() {
     }
   });
 
-  const lowStockNotifications = productsData
+  const lowStockNotifications: any[] = productsData
     .map(p => {
       const branchStock = (p.branch_inventory as any)?.find((bi: any) => bi.branch_id === branchId);
       const qty = branchStock?.stock_quantity || 0;
@@ -132,7 +132,7 @@ function NotificationCenter() {
       };
     });
 
-  const allNotifications = [...dbNotifications, ...lowStockNotifications].sort(
+  const allNotifications: any[] = [...dbNotifications, ...lowStockNotifications].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
@@ -318,7 +318,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return (
         <Blocker
           title="Account Rejected"
-          message={`Your application to use MauzoChap was rejected. Reason: ${business.rejection_reason || "Verification failed."}`}
+          message={`Your application to use MauzoChap was rejected. Reason: ${(business as any).rejection_reason || "Verification failed."}`}
           icon={ShieldAlert}
           action={
             <Button className="w-full" onClick={() => navigate({ to: "/setup-billing" })}>

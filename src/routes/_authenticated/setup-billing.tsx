@@ -90,7 +90,7 @@ function SetupBilling() {
   // Find if there is a pending payment reference
   const pendingPayment = payments.find(p => p.verification_status === "waiting_verification");
   const latestPayment = payments[0];
-  const isRejected = latestPayment && latestPayment.verification_status === "rejected";
+  const isRejected = latestPayment && (latestPayment.verification_status as string) === "rejected";
 
   const handleRefresh = async () => {
     toast.promise(
@@ -142,7 +142,7 @@ function SetupBilling() {
         .update({ 
           package: selectedPackage as any,
           account_status: "pending",
-          rejection_reason: null // Clear any previous rejection reason
+          rejection_reason: null as any // Clear any previous rejection reason
         })
         .eq("id", business.id);
       
@@ -169,7 +169,7 @@ function SetupBilling() {
       });
 
       // 4. Send in-app notification (we insert into the database table public.notifications)
-      await supabase.from("notifications").insert({
+      await supabase.from("notifications" as any).insert({
         business_id: business.id,
         title: "Payment Submitted Successfully",
         message: `Your payment reference for ${selectedInfo.name} has been submitted and is currently pending verification.`,
@@ -204,7 +204,7 @@ function SetupBilling() {
           <div className="bg-muted/40 p-5 rounded-xl text-left space-y-3 border border-border text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Selected Plan:</span>
-              <span className="font-bold capitalize">{pendingPayment.package || selectedPackage}</span>
+              <span className="font-bold capitalize">{(pendingPayment as any).package || selectedPackage}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Amount:</span>
@@ -262,7 +262,7 @@ function SetupBilling() {
           <div>
             <strong className="block font-bold">Payment Verification Rejected</strong>
             <p className="text-muted-foreground mt-1">
-              {latestPayment.rejection_reason || "Payment reference could not be verified. Please check your transaction reference and submit the correct reference."}
+              {(latestPayment as any).rejection_reason || "Payment reference could not be verified. Please check your transaction reference and submit the correct reference."}
             </p>
           </div>
         </div>
@@ -340,7 +340,7 @@ function SetupBilling() {
               </div>
               <div className="bg-background/50 p-3 rounded-lg border border-primary/10">
                 <span className="font-bold block text-muted-foreground">Mix By Yass:</span>
-                <span className="font-mono font-bold text-sm block mt-0.5">0674673493</span>
+                <span className="font-mono font-bold text-sm block mt-0.5">0674673494</span>
               </div>
               <div className="bg-background/50 p-3 rounded-lg border border-primary/10">
                 <span className="font-bold block text-muted-foreground">Airtel Money:</span>

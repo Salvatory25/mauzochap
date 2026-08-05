@@ -22,6 +22,7 @@ export type Database = {
           account_status: Database["public"]["Enums"]["account_status"]
           package: Database["public"]["Enums"]["subscription_package"]
           expiry_date: string | null
+          rejection_reason: string | null
           created_at: string
           updated_at: string
         }
@@ -34,6 +35,7 @@ export type Database = {
           account_status?: Database["public"]["Enums"]["account_status"]
           package?: Database["public"]["Enums"]["subscription_package"]
           expiry_date?: string | null
+          rejection_reason?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -46,8 +48,39 @@ export type Database = {
           account_status?: Database["public"]["Enums"]["account_status"]
           package?: Database["public"]["Enums"]["subscription_package"]
           expiry_date?: string | null
+          rejection_reason?: string | null
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          id: string
+          business_id: string | null
+          title: string
+          message: string
+          type: string
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          business_id?: string | null
+          title: string
+          message: string
+          type?: string
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          business_id?: string | null
+          title?: string
+          message?: string
+          type?: string
+          is_read?: boolean
+          created_at?: string
         }
         Relationships: []
       }
@@ -1175,7 +1208,7 @@ export type Database = {
       sale_status: "completed" | "cancelled" | "pending"
       account_status: "pending" | "approved" | "suspended" | "rejected"
       subscription_package: "kilimanjaro" | "serengeti" | "zanzibar" | "uhuru" | "trial"
-      payment_status: "unpaid" | "paid" | "waiting_verification"
+      payment_status: "unpaid" | "paid" | "waiting_verification" | "rejected"
       stock_movement_type: "sale" | "purchase" | "adjustment" | "return"
     }
     CompositeTypes: {

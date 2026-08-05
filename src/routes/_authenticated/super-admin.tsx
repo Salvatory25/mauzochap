@@ -93,13 +93,13 @@ function SuperAdminDashboard() {
         account_status: "approved",
         package: pkg as any,
         expiry_date: expiry.toISOString().split("T")[0],
-        rejection_reason: null
+        rejection_reason: null as any
       }).eq("id", businessId);
       
       if (bErr) throw bErr;
 
       // 4. In-app notification
-      await supabase.from("notifications").insert({
+      await supabase.from("notifications" as any).insert({
         business_id: businessId,
         title: "Subscription Activated",
         message: `Your subscription to ${pkg.toUpperCase()} has been successfully activated. Expiry Date: ${expiry.toLocaleDateString()}`,
@@ -132,19 +132,19 @@ function SuperAdminDashboard() {
       // 1. Mark payment as rejected
       const { error: pErr } = await supabase.from("payments").update({ 
         verification_status: "rejected" as any,
-        rejection_reason: reason
-      }).eq("id", paymentId);
+        rejection_reason: reason as any
+      } as any).eq("id", paymentId);
       if (pErr) throw pErr;
 
       // 2. Set business account status to rejected and update rejection reason
       const { error: bErr } = await supabase.from("businesses").update({ 
         account_status: "rejected",
-        rejection_reason: reason
+        rejection_reason: reason as any
       }).eq("id", businessId);
       if (bErr) throw bErr;
 
       // 3. Notify the customer in-app
-      await supabase.from("notifications").insert({
+      await supabase.from("notifications" as any).insert({
         business_id: businessId,
         title: "Payment Verification Rejected",
         message: `Your payment reference was rejected. Reason: ${reason}`,
