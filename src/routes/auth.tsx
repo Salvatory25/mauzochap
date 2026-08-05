@@ -110,7 +110,14 @@ function AuthPage() {
       <div className="flex items-center justify-center p-4 md:p-8 overflow-y-auto">
         {mode === "signup" ? (
           <MultiStepRegister
-            onSuccess={() => navigate({ to: "/dashboard" })}
+            onSuccess={() => {
+              const pkg = params.get("package");
+              if (pkg) {
+                navigate({ to: `/setup-billing?package=${pkg}` as any, replace: true });
+              } else {
+                navigate({ to: "/setup-billing", replace: true });
+              }
+            }}
             onSwitchToSignIn={() => setMode("signin")}
             inviteId={inviteId}
             inviteRole={inviteRole}

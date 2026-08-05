@@ -317,7 +317,7 @@ function Landing() {
               </div>
               <Link
                 to="/auth"
-                search={{ mode: "signup" }}
+                search={{ mode: "signup", package: "starter" }}
                 className="mt-8 block w-full rounded-lg bg-muted text-center py-3 text-sm font-semibold hover:bg-muted/80 transition-colors"
               >
                 Choose Starter
@@ -371,7 +371,7 @@ function Landing() {
               </div>
               <Link
                 to="/auth"
-                search={{ mode: "signup" }}
+                search={{ mode: "signup", package: "kilimanjaro" }}
                 className="mt-8 block w-full rounded-lg text-center py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all active:scale-[0.98]"
                 style={{ background: "var(--gradient-primary)" }}
               >
@@ -427,7 +427,7 @@ function Landing() {
               </div>
               <Link
                 to="/auth"
-                search={{ mode: "signup" }}
+                search={{ mode: "signup", package: "serengeti" }}
                 className="mt-8 block w-full rounded-lg bg-muted text-center py-3 text-sm font-semibold hover:bg-muted/80 transition-colors"
               >
                 Choose Serengeti
