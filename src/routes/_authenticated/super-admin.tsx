@@ -169,6 +169,11 @@ function SuperAdminDashboard() {
   const totalRevenue = payments.filter(p => p.verification_status === "paid").reduce((acc, curr) => acc + Number(curr.amount), 0);
   const activeSubs = businesses.filter(b => b.account_status === "approved").length;
   const pendingApprovals = businesses.filter(b => b.account_status === "pending").length;
+  const expiringSoon = businesses.filter(b => {
+    if (b.account_status !== "approved" || !b.expiry_date) return false;
+    const daysLeft = Math.ceil((new Date(b.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+    return daysLeft > 0 && daysLeft <= 5;
+  }).length;
 
   const totalBPages = Math.ceil(businesses.length / ITEMS_PER_PAGE);
   const paginatedBusinesses = businesses.slice((bPage - 1) * ITEMS_PER_PAGE, bPage * ITEMS_PER_PAGE);
@@ -186,7 +191,7 @@ function SuperAdminDashboard() {
         <p className="text-muted-foreground mt-1">Manage tenants, subscriptions, and verify payments.</p>
       </div>
 
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid md:grid-cols-5 gap-4">
         <div className="bg-card border border-border p-5 rounded-xl shadow-sm">
           <div className="text-muted-foreground text-sm font-medium mb-1 flex items-center"><Building2 className="h-4 w-4 mr-2" /> Total Businesses</div>
           <div className="text-3xl font-bold">{businesses.length}</div>
@@ -198,6 +203,10 @@ function SuperAdminDashboard() {
         <div className="bg-card border border-border p-5 rounded-xl shadow-sm">
           <div className="text-muted-foreground text-sm font-medium mb-1 flex items-center"><Clock className="h-4 w-4 mr-2" /> Pending</div>
           <div className="text-3xl font-bold text-amber-500">{pendingApprovals}</div>
+        </div>
+        <div className="bg-card border border-border p-5 rounded-xl shadow-sm">
+          <div className="text-muted-foreground text-sm font-medium mb-1 flex items-center"><Activity className="h-4 w-4 mr-2 text-amber-600" /> Expiring Soon</div>
+          <div className="text-3xl font-bold text-amber-600">{expiringSoon}</div>
         </div>
         <div className="bg-card border border-border p-5 rounded-xl shadow-sm">
           <div className="text-muted-foreground text-sm font-medium mb-1 flex items-center"><CreditCard className="h-4 w-4 mr-2" /> Total Revenue</div>
@@ -231,6 +240,7 @@ function SuperAdminDashboard() {
                 <th className="px-4 py-3 text-left">Contact</th>
                 <th className="px-4 py-3 text-left">Package</th>
                 <th className="px-4 py-3 text-left">Payment Reference</th>
+                <th className="px-4 py-3 text-left">Expiry</th>
                 <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
@@ -258,6 +268,21 @@ function SuperAdminDashboard() {
                       ) : (
                         <span className="text-muted-foreground italic">No reference</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      {b.expiry_date ? (() => {
+                        const expiry = new Date(b.expiry_date);
+                        const daysLeft = Math.ceil((expiry.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+                        const isExpiringSoon = daysLeft > 0 && daysLeft <= 5;
+                        const isExpired = daysLeft <= 0;
+                        return (
+                          <span className={`font-semibold ${isExpired ? 'text-destructive' : isExpiringSoon ? 'text-amber-500' : 'text-foreground'}`}>
+                            {expiry.toLocaleDateString()}
+                            {isExpiringSoon && <span className="ml-1 text-[10px] uppercase bg-amber-500/10 px-1 py-0.5 rounded animate-pulse">({daysLeft} days left)</span>}
+                            {isExpired && <span className="ml-1 text-[10px] uppercase bg-destructive/10 px-1 py-0.5 rounded">Expired</span>}
+                          </span>
+                        );
+                      })() : <span className="text-muted-foreground italic">N/A</span>}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
