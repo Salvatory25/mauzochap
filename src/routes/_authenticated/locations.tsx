@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/locations")({
 });
 
 const PACKAGE_LIMITS: Record<string, number> = {
-  trial: 1,
+  starter: 1,
   kilimanjaro: 1,
   serengeti: 9999,
 };
@@ -47,7 +47,7 @@ function LocationsPage() {
     return <div className="p-8 text-center text-muted-foreground">You do not have permission to view this page.</div>;
   }
 
-  const currentPackage = business?.package || "trial";
+  const currentPackage = business?.package || "kilimanjaro";
   const limit = PACKAGE_LIMITS[currentPackage] || 1;
   const canAddMore = locations.length < limit;
 

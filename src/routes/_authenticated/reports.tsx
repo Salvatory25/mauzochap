@@ -469,7 +469,7 @@ function ReportsPage() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button disabled={isExportingPDF || business?.package === "trial"}>
+              <Button disabled={isExportingPDF}>
                 <DownloadCloud className={`mr-2 h-4 w-4 ${isExportingPDF ? 'animate-bounce' : ''}`} />
                 {isExportingPDF ? "Generating PDF..." : "Export Reports"}
               </Button>
@@ -505,25 +505,8 @@ function ReportsPage() {
           </div>
         ))}
       </div>
-      
-      {business?.package === "trial" ? (
-        <div className="relative border border-dashed border-border rounded-xl p-10 bg-card text-center space-y-4 shadow-sm max-w-4xl mx-auto mt-6">
-          <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Lock className="h-6 w-6 text-primary animate-pulse" />
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-lg font-bold">Advanced Analytics Locked</h3>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto">
-              You are currently on the <strong>Starter (Free Trial)</strong> plan. Upgrade to the Kilimanjaro or Serengeti plan to unlock advanced charts, customer/supplier debts, cashier performance, and detailed PDF exports.
-            </p>
-          </div>
-          <Button onClick={() => navigate({ to: "/setup-billing" })} className="font-semibold shadow-md active:scale-95 transition-transform">
-            Upgrade Plan
-          </Button>
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 mt-4">
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 mt-4">
             <div className="rounded-xl border border-border bg-card p-5 bg-muted/10">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Customer Debt (To Collect)</div>
               <div className="mt-2 text-xl font-bold text-warning">{formatTZS(data.customerDebt)}</div>
@@ -659,10 +642,8 @@ function ReportsPage() {
                   ))
                 )}
               </div>
-            </div>
           </div>
-        </>
-      )}
+        </div>
       </div>
     </div>
   );

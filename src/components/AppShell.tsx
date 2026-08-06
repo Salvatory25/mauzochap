@@ -255,7 +255,7 @@ function NotificationCenter() {
                       )}
                     </div>
                     <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed whitespace-normal break-words">
-                      {n.message.replace(/Your 14-day free trial has been activated\.?/gi, "Welcome to MauzoChap POS!")}
+                      {n.message}
                     </p>
                   </div>
                 ))
@@ -294,12 +294,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (business.account_status === "pending") {
       return (
         <Blocker
-          title="Payment Verification Pending"
-          message="Your payment details have been received and are currently being reviewed by our administration team. Please check verification status."
+          title="Subscription Setup & Verification"
+          message="Please complete your subscription setup, or wait if you have already submitted your payment reference for administration verification."
           icon={Clock}
           action={
             <Button className="w-full" onClick={() => navigate({ to: "/setup-billing" })}>
-              View Verification Status
+              Continue to Billing Setup
             </Button>
           }
         />

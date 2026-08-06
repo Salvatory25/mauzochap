@@ -240,18 +240,18 @@ function SetupBilling() {
     );
   }
 
-  const isTrialExpired = business.package === "trial" && business.expiry_date && new Date(business.expiry_date) < new Date();
+  const isExpired = business.expiry_date && new Date(business.expiry_date) < new Date();
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
-      {isTrialExpired && (
+      {isExpired && (
         <div className="bg-destructive/10 text-destructive p-6 rounded-2xl border border-destructive/20 max-w-4xl mx-auto text-center space-y-3">
           <div className="mx-auto h-12 w-12 rounded-full bg-destructive/25 flex items-center justify-center">
             <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
-          <h2 className="text-xl font-bold">Your 14-Day Free Trial Has Ended</h2>
+          <h2 className="text-xl font-bold">Your Subscription Has Expired</h2>
           <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-            Thank you for using MauzoChap POS. Your free trial period has ended. To continue using MauzoChap POS and access your business features, please choose a subscription plan that suits your business.
+            Thank you for using MauzoChap POS. Your subscription period has ended. To continue using MauzoChap POS and access your business features, please choose a subscription plan below to renew.
           </p>
         </div>
       )}
