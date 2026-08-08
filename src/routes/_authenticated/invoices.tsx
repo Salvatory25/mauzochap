@@ -54,7 +54,7 @@ type InvoiceItem = {
     name: string;
     sku: string | null;
     unit: string | null;
-    cost_price: number | null;
+    cost: number | null;
   } | null;
 };
 
@@ -128,7 +128,7 @@ function InvoicesPage() {
             profiles:created_by(full_name),
             invoice_items(
               id, product_id, quantity, unit_price, subtotal,
-              products(name, sku, unit, cost_price)
+              products(name, sku, unit, cost)
             )
           `)
           .gte("created_at", startDate)
@@ -150,7 +150,7 @@ function InvoicesPage() {
             customers(name, phone, email, address),
             invoice_items(
               id, product_id, quantity, unit_price, subtotal,
-              products(name, sku, unit, cost_price)
+              products(name, sku, unit, cost)
             )
           `)
           .gte("created_at", startDate)
@@ -162,7 +162,8 @@ function InvoicesPage() {
 
         const { data, error } = await q;
         if (error) {
-          toast.error("Failed to load invoices");
+          console.error("Fallback query failed:", error);
+          toast.error(`Failed to load invoices: ${error.message || JSON.stringify(error)}`);
           throw error;
         }
         return (data ?? []) as unknown as Invoice[];
@@ -544,7 +545,7 @@ function InvoicesPage() {
                   <td className="px-4 py-3 text-right font-medium">
                     <div>{formatTZS(inv.total_amount)}</div>
                     {(() => {
-                      const cost = (inv.invoice_items || []).reduce((acc, item) => acc + (item.quantity * (item.products?.cost_price || 0)), 0);
+                      const cost = (inv.invoice_items || []).reduce((acc, item) => acc + (item.quantity * (item.products?.cost || 0)), 0);
                       const profit = inv.total_amount - cost;
                       return (
                         <div className={`text-xs ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
@@ -840,7 +841,7 @@ function A4InvoiceView({ invoice, business }: { invoice: Invoice; business: any 
           <div className="flex justify-between text-xs font-bold pt-2 border-t border-gray-200 text-gray-950">
             <span>Estimated Profit</span>
             {(() => {
-              const totalCost = (invoice.invoice_items || []).reduce((acc, item) => acc + (item.quantity * (item.products?.cost_price || 0)), 0);
+              const totalCost = (invoice.invoice_items || []).reduce((acc, item) => acc + (item.quantity * (item.products?.cost || 0)), 0);
               const estProfit = invoice.total_amount - totalCost;
               return (
                 <span className={estProfit >= 0 ? "text-emerald-600" : "text-red-600"}>
