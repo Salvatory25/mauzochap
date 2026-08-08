@@ -1,0 +1,101 @@
+Name,Category,Barcode,Price,Cost,Stock,Low Stock Alert,Unit
+Unga wa Sembe 10kg,Groceries,10000000100,28000,22500,80,10,kg
+Unga wa Ngano 2kg,Groceries,10000000101,11500,9500,36,5,kg
+Mchele Mbeya 1kg,Groceries,10000000102,28500,21000,17,5,kg
+Mchele Super 25kg,Groceries,10000000103,11500,9000,16,10,kg
+Sukari Kilombero 1kg,Groceries,10000000104,36000,25000,149,20,kg
+Chumvi ya Mawe 1kg,Groceries,10000000105,13000,9500,81,5,kg
+Mafuta Korie 1L,Groceries,10000000106,11000,7500,97,15,bottle
+Mafuta Mo 5L,Groceries,10000000107,9000,7000,96,5,bottle
+Maharage 1kg,Groceries,10000000108,6500,5000,101,15,kg
+Njegere 1kg,Groceries,10000000109,28000,21500,21,20,kg
+Dagaa Mwanza 1kg,Groceries,10000000110,24000,19500,106,5,kg
+Tambi Lion,Groceries,10000000111,26000,20000,102,10,bottle
+Blueband 250g,Groceries,10000000112,30500,25000,68,15,pcs
+Asali 500ml,Groceries,10000000113,7500,5000,35,20,bottle
+Maziwa Asas 500ml,Groceries,10000000114,15000,11000,103,10,bottle
+Tende 1kg,Groceries,10000000115,18500,14000,78,5,kg
+Karanga 1kg,Groceries,10000000116,31000,21500,146,10,kg
+Korosho 500g,Groceries,10000000117,10000,7500,79,10,pcs
+Tomato Sauce,Groceries,10000000118,31500,24000,24,10,pcs
+Chili Sauce,Groceries,10000000119,5000,3500,112,15,pcs
+Coca Cola 500ml,Beverages,10000000120,5500,4500,90,10,bottle
+Pepsi 500ml,Beverages,10000000121,32000,23000,127,10,bottle
+Mirinda Fruity 500ml,Beverages,10000000122,13000,10500,147,15,bottle
+Fanta Orange 500ml,Beverages,10000000123,28500,21000,112,15,bottle
+Maji Kilimanjaro 1.5L,Beverages,10000000124,15000,9500,45,20,bottle
+Maji Uhai 1L,Beverages,10000000125,7500,5000,38,10,bottle
+Afia Juice Mango,Beverages,10000000126,28000,22500,118,5,pcs
+Azam Embe Juice,Beverages,10000000127,19500,14500,129,15,pcs
+Red Bull 250ml,Beverages,10000000128,30500,20000,12,5,bottle
+Mo Energy,Beverages,10000000129,37000,24000,78,15,pcs
+Azam Malti,Beverages,10000000130,7500,6000,50,20,pcs
+Grand Malt,Beverages,10000000131,3500,2500,77,10,pcs
+Serengeti Lager,Beverages,10000000132,28500,18500,86,10,bottle
+Kilimanjaro Lager,Beverages,10000000133,9000,7000,51,5,bottle
+Safari Lager,Beverages,10000000134,28500,21500,14,5,bottle
+Konyagi 250ml,Beverages,10000000135,21500,14000,88,10,bottle
+Amarula,Beverages,10000000136,5000,4000,30,5,pcs
+Savanna Dry,Beverages,10000000137,27000,18000,146,10,pcs
+Pen BIC Blue,Stationery,10000000138,9500,6500,150,10,pcs
+Pen BIC Red,Stationery,10000000139,14500,10500,118,10,pcs
+Pencil HB,Stationery,10000000140,29000,19500,61,15,pcs
+Notebook A5,Stationery,10000000141,23500,15000,105,20,pcs
+Notebook A4,Stationery,10000000142,26000,19000,73,10,pcs
+A4 Paper Ream Double A,Stationery,10000000143,6000,4500,68,10,pcs
+Stapler,Stationery,10000000144,3000,2500,25,10,pcs
+Staple Pins,Stationery,10000000145,7000,4500,94,5,pcs
+Ruler 30cm,Stationery,10000000146,23500,18500,134,10,pcs
+Eraser,Stationery,10000000147,24000,19500,131,10,pcs
+Marker Pen Black,Stationery,10000000148,26500,17500,58,5,pcs
+Highlighter Yellow,Stationery,10000000149,8000,5500,100,20,pcs
+Sticky Notes,Stationery,10000000150,21000,15500,23,5,pcs
+Envelopes A4,Stationery,10000000151,5000,4000,96,5,pcs
+Calculator Casio,Stationery,10000000152,12500,10000,147,20,pcs
+Glue Stick,Stationery,10000000153,8500,6500,81,20,pcs
+Sellotape,Stationery,10000000154,15000,10000,29,20,pcs
+Scissors,Stationery,10000000155,24500,20000,148,5,pcs
+USB Flash Drive 32GB,Electronics,10000000156,7500,5000,70,10,pcs
+USB Flash Drive 64GB,Electronics,10000000157,21500,15500,64,20,pcs
+MicroSD Card 32GB,Electronics,10000000158,5000,4000,10,20,pcs
+iPhone Charger,Electronics,10000000159,16000,10500,126,15,pcs
+Type-C Cable,Electronics,10000000160,23500,16000,134,10,pcs
+Micro-USB Cable,Electronics,10000000161,11000,8500,24,5,pcs
+Powerbank 10000mAh,Electronics,10000000162,15000,12500,132,10,pcs
+Bluetooth Earphones,Electronics,10000000163,6000,4000,30,10,pcs
+Wired Headphones,Electronics,10000000164,6000,4500,70,20,pcs
+Wireless Mouse,Electronics,10000000165,9000,6000,73,5,pcs
+Keyboard,Electronics,10000000166,27000,22000,143,15,pcs
+HDMI Cable 2m,Electronics,10000000167,13000,10500,90,10,pcs
+Extension Cable 3m,Electronics,10000000168,14000,10500,86,20,pcs
+Laptop Sleeve,Electronics,10000000169,19500,12500,28,5,bottle
+Screen Protector,Electronics,10000000170,24500,17000,35,5,pcs
+Phone Case Universal,Electronics,10000000171,25000,19500,77,10,pcs
+Bluetooth Speaker,Electronics,10000000172,20500,13500,72,15,pcs
+Sabuni ya Kufulia Jamaa,Household & Toiletries,10000000173,14500,11500,149,15,pcs
+Sabuni ya Omo 500g,Household & Toiletries,10000000174,35000,22000,145,5,pcs
+Sabuni ya Foma 1kg,Household & Toiletries,10000000175,35500,23500,86,5,kg
+Dawa ya Meno Whitedent,Household & Toiletries,10000000176,8000,6500,37,10,pcs
+Dawa ya Meno Colgate,Household & Toiletries,10000000177,14000,11000,63,15,pcs
+Miswaki,Household & Toiletries,10000000178,13000,9000,77,20,pcs
+Tissue Paper White Dent,Household & Toiletries,10000000179,16000,10500,23,5,pcs
+Pads HC,Household & Toiletries,10000000180,30500,22500,80,5,pcs
+Pads Mo Girl,Household & Toiletries,10000000181,3000,2500,43,15,pcs
+Deodorant Nivea,Household & Toiletries,10000000182,11000,7500,119,5,pcs
+Deodorant Axe,Household & Toiletries,10000000183,7000,6000,48,5,pcs
+Body Lotion Vaseline,Household & Toiletries,10000000184,20000,14000,47,20,bottle
+Mafuta ya Nazi,Household & Toiletries,10000000185,7500,6500,103,5,pcs
+Dettol Soap,Household & Toiletries,10000000186,17000,13500,73,5,pcs
+Protex Soap,Household & Toiletries,10000000187,20000,13500,114,10,pcs
+Jik 500ml,Household & Toiletries,10000000188,15000,10000,55,20,bottle
+Vim Lemon,Household & Toiletries,10000000189,3500,3000,95,20,bottle
+Mop,Household & Toiletries,10000000190,36000,23500,73,15,pcs
+Broom,Household & Toiletries,10000000191,11000,7500,37,20,pcs
+Trash Bags,Household & Toiletries,10000000192,5000,3500,66,10,pcs
+Engine Oil Castrol 5L,Hardware & Auto,10000000193,22500,17000,68,10,bottle
+Brake Fluid 500ml,Hardware & Auto,10000000194,4000,3000,112,15,bottle
+Spark Plugs,Hardware & Auto,10000000195,17000,11000,81,15,pcs
+Car Wash Shampoo,Hardware & Auto,10000000196,32000,23000,147,15,pcs
+Screwdriver Set,Hardware & Auto,10000000197,3500,3000,76,10,pcs
+Hammer,Hardware & Auto,10000000198,33000,21000,77,5,pcs
+Pliers,Hardware & Auto,10000000199,7500,5500,98,15,pcs
