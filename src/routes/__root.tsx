@@ -79,8 +79,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Modern POS and business management for shops, pharmacies and restaurants in Tanzania.",
       },
-      { property: "og:title", content: "MauzoChap" },
-      { property: "og:description", content: "POS & Business Management for African SMEs." },
+      // Open Graph (Social Sharing)
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://mauzochap.vercel.app/" },
+      { property: "og:site_name", content: "MauzoChap" },
+      { property: "og:title", content: "MauzoChap — POS & Business Management" },
+      { property: "og:description", content: "Modern POS and business management for shops, pharmacies and restaurants in Tanzania." },
+      { property: "og:image", content: "https://mauzochap.vercel.app/logo.png" },
+      // Twitter Cards
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "MauzoChap — POS & Business Management" },
+      { name: "twitter:description", content: "Modern POS and business management for shops, pharmacies and restaurants in Tanzania." },
+      { name: "twitter:image", content: "https://mauzochap.vercel.app/logo.png" },
       // PWA / iOS meta tags
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },

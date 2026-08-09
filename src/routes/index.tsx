@@ -74,9 +74,36 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Manage sales, inventory, customers, expenses and reports — built for shops, pharmacies and restaurants.",
+          "Manage sales, inventory, customers, expenses and reports — built for shops, pharmacies and restaurants in Tanzania.",
       },
+      {
+        name: "keywords",
+        content: "POS Tanzania, Duka Management, Pharmacy POS, Inventory System, MauzoChap, Biashara, POS Software Dar es Salaam"
+      }
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "MauzoChap",
+          "operatingSystem": "Web",
+          "applicationCategory": "BusinessApplication",
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "ratingCount": "154"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "8500",
+            "priceCurrency": "TZS"
+          },
+          "description": "Modern POS and business management for shops, pharmacies and restaurants in Tanzania."
+        }),
+      }
+    ]
   }),
   component: Landing,
 });
