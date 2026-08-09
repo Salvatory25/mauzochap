@@ -85,12 +85,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "MauzoChap" },
       { property: "og:title", content: "MauzoChap — POS & Business Management" },
       { property: "og:description", content: "Modern POS and business management for shops, pharmacies and restaurants in Tanzania." },
-      { property: "og:image", content: "https://mauzochap.vercel.app/logo.png" },
+      { property: "og:image", content: "https://mauzochap.vercel.app/og-image.png" },
       // Twitter Cards
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "MauzoChap — POS & Business Management" },
       { name: "twitter:description", content: "Modern POS and business management for shops, pharmacies and restaurants in Tanzania." },
-      { name: "twitter:image", content: "https://mauzochap.vercel.app/logo.png" },
+      { name: "twitter:image", content: "https://mauzochap.vercel.app/og-image.png" },
       // PWA / iOS meta tags
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
