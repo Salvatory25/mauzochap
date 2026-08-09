@@ -73,6 +73,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "google-site-verification", content: "google1573a499851838be" },
       { title: "MauzoChap — POS & Business Management" },
       {
         name: "description",
@@ -81,16 +82,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       // Open Graph (Social Sharing)
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://mauzochap.vercel.app/" },
+      { property: "og:url", content: "https://www.mauzochap.co.tz/" },
       { property: "og:site_name", content: "MauzoChap" },
       { property: "og:title", content: "MauzoChap — POS & Business Management" },
       { property: "og:description", content: "Modern POS and business management for shops, pharmacies and restaurants in Tanzania." },
-      { property: "og:image", content: "https://mauzochap.vercel.app/og-image.png" },
+      { property: "og:image", content: "https://www.mauzochap.co.tz/og-image.png" },
       // Twitter Cards
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "MauzoChap — POS & Business Management" },
       { name: "twitter:description", content: "Modern POS and business management for shops, pharmacies and restaurants in Tanzania." },
-      { name: "twitter:image", content: "https://mauzochap.vercel.app/og-image.png" },
+      { name: "twitter:image", content: "https://www.mauzochap.co.tz/og-image.png" },
       // PWA / iOS meta tags
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },

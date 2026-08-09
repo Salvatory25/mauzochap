@@ -16,4 +16,4 @@ Disallow: /settings/
 Disallow: /super-admin/
 Disallow: /auth/
 
-Sitemap: https://mauzochap.vercel.app/sitemap.xml
+Sitemap: https://www.mauzochap.co.tz/sitemap.xml
