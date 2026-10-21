@@ -379,8 +379,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const sidebarContent = (
     <>
       <div className="px-6 py-5 border-b border-sidebar-border flex flex-col gap-1 shrink-0">
-        <Link to="/dashboard" className="flex items-center gap-2 -ml-2" onClick={() => setMobileMenuOpen(false)}>
-          <img src="/logo.png" alt="MauzoChap" className="w-[220px] h-auto object-contain" />
+        <Link to="/dashboard" className="flex items-center gap-3" onClick={() => setMobileMenuOpen(false)}>
+          <img src="/logo.png" alt="MauzoChap" className="w-9 h-9 object-contain" />
+          <span className="font-bold text-xl leading-tight tracking-tight text-sidebar-foreground">MauzoChap</span>
         </Link>
         {business && !isSuperAdmin && (
           <div className="mt-2">
@@ -488,8 +489,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 inset-x-0 z-40 h-20 flex items-center justify-between bg-sidebar text-sidebar-foreground px-4 border-b border-sidebar-border shadow-sm">
-        <Link to="/dashboard" className="flex items-center gap-2 -ml-2 h-full py-2">
-          <img src="/logo.png" alt="MauzoChap" className="w-[180px] h-full object-contain scale-[1.15] origin-left" />
+        <Link to="/dashboard" className="flex items-center gap-2.5 h-full py-2">
+          <img src="/logo.png" alt="MauzoChap" className="w-8 h-8 object-contain" />
+          <span className="font-bold text-lg leading-tight tracking-tight text-sidebar-foreground">MauzoChap</span>
         </Link>
         <div className="flex items-center gap-2">
           {business && !isSuperAdmin && <NotificationCenter />}

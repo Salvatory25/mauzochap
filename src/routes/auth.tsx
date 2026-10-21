@@ -89,8 +89,9 @@ function AuthPage() {
         style={{ background: "var(--sidebar)" }}
       >
         <div className="relative z-10 flex flex-col items-center text-center max-w-lg">
-          <Link to="/" className="mb-12 transition-transform hover:scale-105 duration-300">
-            <img src="/logo.png" alt="MauzoChap" className="w-[340px] max-w-full h-auto object-contain" />
+          <Link to="/" className="mb-8 flex flex-col items-center gap-3 transition-transform hover:scale-105 duration-300">
+            <img src="/logo.png" alt="MauzoChap" className="w-20 h-20 object-contain" />
+            <span className="text-3xl font-extrabold tracking-tight text-sidebar-foreground">MauzoChap</span>
           </Link>
           
           <h2 className="text-4xl font-extrabold tracking-tight leading-[1.15]">
@@ -126,8 +127,9 @@ function AuthPage() {
           />
         ) : (
           <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-soft)]">
-            <Link to="/" className="lg:hidden flex items-center justify-center gap-2 mb-10">
-              <img src="/logo.png" alt="MauzoChap" className="w-[280px] max-w-full h-auto object-contain" />
+            <Link to="/" className="lg:hidden flex items-center justify-center gap-2.5 mb-8">
+              <img src="/logo.png" alt="MauzoChap" className="w-10 h-10 object-contain" />
+              <span className="text-2xl font-bold tracking-tight">MauzoChap</span>
             </Link>
             <h1 className="text-2xl font-bold">
               {mode === "signin" ? t("signIn") : "Reset Password"}

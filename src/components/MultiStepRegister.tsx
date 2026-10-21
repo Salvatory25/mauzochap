@@ -2,23 +2,29 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { 
-  User, 
-  MapPin, 
-  Store, 
-  Sparkles, 
-  ShieldCheck, 
-  ArrowLeft, 
-  ArrowRight, 
-  CheckCircle2, 
-  ShoppingCart, 
-  Package, 
-  BarChart3, 
-  Receipt, 
-  Users, 
+import {
+  User,
+  MapPin,
+  Store,
+  Sparkles,
+  ShieldCheck,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  ShoppingCart,
+  Package,
+  BarChart3,
+  Receipt,
+  Users,
   Bell,
   Smartphone,
   Lock,
@@ -26,7 +32,7 @@ import {
   Building2,
   Globe,
   Mail,
-  CreditCard
+  CreditCard,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -59,7 +65,7 @@ const TANZANIA_REGIONS = [
   "Ruvuma (Songea)",
   "Shinyanga",
   "Tabora",
-  "Other / Outside Tanzania"
+  "Other / Outside Tanzania",
 ];
 
 const BUSINESS_TYPES = [
@@ -75,11 +81,11 @@ const BUSINESS_TYPES = [
 ];
 
 const PACKAGES_CONFIG = [
-  { 
-    id: "starter", 
-    name: "STARTER", 
-    price: "TSh 8,500", 
-    priceNum: 8500, 
+  {
+    id: "starter",
+    name: "STARTER",
+    price: "TSh 10,500",
+    priceNum: 10500,
     period: "/ Month",
     popular: false,
     badge: "Basic",
@@ -88,14 +94,14 @@ const PACKAGES_CONFIG = [
       "1 User",
       "100 Products",
       "Basic Reports",
-      "Unlimited Invoices & Receipts"
-    ]
+      "Unlimited Invoices & Receipts",
+    ],
   },
-  { 
-    id: "kilimanjaro", 
-    name: "KILIMANJARO", 
-    price: "TSh 10,500", 
-    priceNum: 10500, 
+  {
+    id: "kilimanjaro",
+    name: "KILIMANJARO",
+    price: "TSh 15,500",
+    priceNum: 15500,
     period: "/ Month",
     popular: true,
     badge: "Popular",
@@ -104,14 +110,14 @@ const PACKAGES_CONFIG = [
       "3 Users",
       "Unlimited Reports",
       "Unlimited Invoices & Receipts",
-      "Multiple Branches"
-    ]
+      "Multiple Branches",
+    ],
   },
-  { 
-    id: "serengeti", 
-    name: "SERENGETI", 
-    price: "TSh 20,500", 
-    priceNum: 20500, 
+  {
+    id: "serengeti",
+    name: "SERENGETI",
+    price: "TSh 25,500",
+    priceNum: 25500,
     period: "/ Month",
     popular: false,
     badge: "Enterprise",
@@ -120,9 +126,9 @@ const PACKAGES_CONFIG = [
       "Unlimited Users",
       "Unlimited Products",
       "Unlimited Reports",
-      "Unlimited Branches"
-    ]
-  }
+      "Unlimited Branches",
+    ],
+  },
 ];
 
 export function MultiStepRegister({
@@ -132,7 +138,7 @@ export function MultiStepRegister({
   inviteRole = "cashier",
   inviteBranch = "",
   inviteBusinessName,
-  initialPackage
+  initialPackage,
 }: MultiStepRegisterProps) {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [loading, setLoading] = useState(false);
@@ -328,7 +334,7 @@ export function MultiStepRegister({
               id: data.user.id,
               full_name: fullName,
               phone: phone,
-              business_name: inviteId ? (inviteBusinessName || businessName) : businessName,
+              business_name: inviteId ? inviteBusinessName || businessName : businessName,
             })
             .select("business_id")
             .single();
@@ -336,7 +342,7 @@ export function MultiStepRegister({
           const bizId = userProf?.business_id;
           if (bizId) {
             const pkgObj = PACKAGES_CONFIG.find((p) => p.id === selectedPackage);
-            const amount = pkgObj ? pkgObj.priceNum : 10500;
+            const amount = pkgObj ? pkgObj.priceNum : 15500;
 
             await supabase
               .from("businesses")
@@ -404,15 +410,20 @@ export function MultiStepRegister({
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-foreground">Check Your Email Inbox</h2>
           <p className="text-xs md:text-sm text-muted-foreground">
-            We sent an account activation link to <span className="font-bold text-foreground">{email}</span>.
+            We sent an account activation link to{" "}
+            <span className="font-bold text-foreground">{email}</span>.
           </p>
         </div>
 
         <div className="p-4 rounded-xl bg-muted/40 border border-border text-xs text-left text-muted-foreground space-y-2">
           <p className="font-semibold text-foreground">Important Next Steps:</p>
           <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
-            <li>Open your email inbox and click <strong>"Confirm Email"</strong>.</li>
-            <li>Check your <strong>Spam or Junk</strong> folder if it does not appear in 1-2 minutes.</li>
+            <li>
+              Open your email inbox and click <strong>"Confirm Email"</strong>.
+            </li>
+            <li>
+              Check your <strong>Spam or Junk</strong> folder if it does not appear in 1-2 minutes.
+            </li>
             <li>Once confirmed, your payment reference will be processed by our admin team.</li>
           </ul>
         </div>
@@ -427,11 +438,7 @@ export function MultiStepRegister({
           >
             {resendingEmail ? "Sending..." : "Resend Activation Email"}
           </Button>
-          <Button
-            type="button"
-            onClick={onSwitchToSignIn}
-            className="w-full font-semibold"
-          >
+          <Button type="button" onClick={onSwitchToSignIn} className="w-full font-semibold">
             Proceed to Sign In
           </Button>
         </div>
@@ -476,15 +483,21 @@ export function MultiStepRegister({
                     isCompleted
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : isCurrent
-                      ? "bg-primary/20 text-primary border-2 border-primary ring-4 ring-primary/10"
-                      : "bg-muted text-muted-foreground border border-border"
+                        ? "bg-primary/20 text-primary border-2 border-primary ring-4 ring-primary/10"
+                        : "bg-muted text-muted-foreground border border-border"
                   }`}
                 >
-                  {isCompleted ? <Check className="w-4 h-4" /> : <IconComponent className="w-4 h-4" />}
+                  {isCompleted ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <IconComponent className="w-4 h-4" />
+                  )}
                 </div>
-                <span className={`text-[10px] font-semibold text-center hidden md:block truncate max-w-[80px] ${
-                  isCurrent ? "text-primary" : "text-muted-foreground"
-                }`}>
+                <span
+                  className={`text-[10px] font-semibold text-center hidden md:block truncate max-w-[80px] ${
+                    isCurrent ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
                   {step.label}
                 </span>
               </div>
@@ -506,7 +519,9 @@ export function MultiStepRegister({
         {currentStep === 1 && (
           <div className="space-y-4 animate-in fade-in-50 duration-300">
             <div>
-              <Label htmlFor="fullName" className="text-sm font-semibold">Full Name *</Label>
+              <Label htmlFor="fullName" className="text-sm font-semibold">
+                Full Name *
+              </Label>
               <Input
                 id="fullName"
                 placeholder="e.g. Baraka Joseph"
@@ -519,7 +534,9 @@ export function MultiStepRegister({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="email" className="text-sm font-semibold">Email Address *</Label>
+                <Label htmlFor="email" className="text-sm font-semibold">
+                  Email Address *
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -532,7 +549,9 @@ export function MultiStepRegister({
               </div>
 
               <div>
-                <Label htmlFor="phone" className="text-sm font-semibold">Phone Number *</Label>
+                <Label htmlFor="phone" className="text-sm font-semibold">
+                  Phone Number *
+                </Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -547,7 +566,9 @@ export function MultiStepRegister({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="password" className="text-sm font-semibold">Password *</Label>
+                <Label htmlFor="password" className="text-sm font-semibold">
+                  Password *
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -561,7 +582,9 @@ export function MultiStepRegister({
               </div>
 
               <div>
-                <Label htmlFor="confirmPassword" className="text-sm font-semibold">Confirm Password *</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-semibold">
+                  Confirm Password *
+                </Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -588,7 +611,9 @@ export function MultiStepRegister({
               </div>
 
               <div>
-                <Label htmlFor="region" className="text-sm font-semibold">Region / Region *</Label>
+                <Label htmlFor="region" className="text-sm font-semibold">
+                  Region / Region *
+                </Label>
                 <Select value={region} onValueChange={setRegion}>
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder="Select region" />
@@ -605,7 +630,9 @@ export function MultiStepRegister({
             </div>
 
             <div>
-              <Label htmlFor="district" className="text-sm font-semibold">City / District / Area *</Label>
+              <Label htmlFor="district" className="text-sm font-semibold">
+                City / District / Area *
+              </Label>
               <Input
                 id="district"
                 placeholder="e.g. Kinondoni, Kariakoo, Arusha Urban"
@@ -617,7 +644,9 @@ export function MultiStepRegister({
             </div>
 
             <div>
-              <Label htmlFor="address" className="text-sm font-semibold">Physical Street / Building Address *</Label>
+              <Label htmlFor="address" className="text-sm font-semibold">
+                Physical Street / Building Address *
+              </Label>
               <Input
                 id="address"
                 placeholder="e.g. Swahili Street, House No. 12, Floor 1"
@@ -635,7 +664,9 @@ export function MultiStepRegister({
           <div className="space-y-4 animate-in fade-in-50 duration-300">
             {!inviteId ? (
               <div>
-                <Label htmlFor="businessName" className="text-sm font-semibold">Business / Store Name *</Label>
+                <Label htmlFor="businessName" className="text-sm font-semibold">
+                  Business / Store Name *
+                </Label>
                 <div className="relative mt-1.5">
                   <Store className="absolute left-3.5 top-3 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -650,14 +681,20 @@ export function MultiStepRegister({
               </div>
             ) : (
               <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl">
-                <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Assigned Business</Label>
-                <p className="text-base font-bold text-foreground mt-0.5">{inviteBusinessName || "Invited Store"}</p>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                  Assigned Business
+                </Label>
+                <p className="text-base font-bold text-foreground mt-0.5">
+                  {inviteBusinessName || "Invited Store"}
+                </p>
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="ownerName" className="text-sm font-semibold">Business Owner Name *</Label>
+                <Label htmlFor="ownerName" className="text-sm font-semibold">
+                  Business Owner Name *
+                </Label>
                 <Input
                   id="ownerName"
                   placeholder="e.g. Baraka Joseph"
@@ -669,7 +706,9 @@ export function MultiStepRegister({
               </div>
 
               <div>
-                <Label htmlFor="businessType" className="text-sm font-semibold">Business Category / Type *</Label>
+                <Label htmlFor="businessType" className="text-sm font-semibold">
+                  Business Category / Type *
+                </Label>
                 <Select value={businessType} onValueChange={setBusinessType}>
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder="Select business type" />
@@ -691,7 +730,9 @@ export function MultiStepRegister({
         {currentStep === 4 && (
           <div className="space-y-4 animate-in fade-in-50 duration-300">
             <div>
-              <h3 className="text-base font-bold text-foreground">Select Your POS Subscription Plan</h3>
+              <h3 className="text-base font-bold text-foreground">
+                Select Your POS Subscription Plan
+              </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Choose the plan that best fits your shop requirements. You can upgrade anytime.
               </p>
@@ -718,9 +759,13 @@ export function MultiStepRegister({
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                          isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                        }`}>
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
                           {pkg.badge}
                         </span>
                         {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
@@ -762,12 +807,17 @@ export function MultiStepRegister({
           <div className="space-y-5 animate-in fade-in-50 duration-300">
             {/* Selected Package Banner */}
             {(() => {
-              const activePkg = PACKAGES_CONFIG.find((p) => p.id === selectedPackage) || PACKAGES_CONFIG[1];
+              const activePkg =
+                PACKAGES_CONFIG.find((p) => p.id === selectedPackage) || PACKAGES_CONFIG[1];
               return (
                 <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Chosen Subscription Plan</span>
-                    <h4 className="text-base font-extrabold text-foreground">{activePkg.name} PLAN</h4>
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+                      Chosen Subscription Plan
+                    </span>
+                    <h4 className="text-base font-extrabold text-foreground">
+                      {activePkg.name} PLAN
+                    </h4>
                   </div>
                   <div className="text-right">
                     <span className="text-xl font-black text-primary">{activePkg.price}</span>
@@ -781,7 +831,8 @@ export function MultiStepRegister({
             <div className="p-4 rounded-xl border border-border bg-card space-y-3">
               <div className="flex items-center justify-between border-b border-border/60 pb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-                  <CreditCard className="w-4 h-4 text-primary" /> Tanzanian Payment Channels (Lipa Hapa)
+                  <CreditCard className="w-4 h-4 text-primary" /> Tanzanian Payment Channels (Lipa
+                  Hapa)
                 </span>
                 <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-500/20">
                   Instant Verification
@@ -791,31 +842,44 @@ export function MultiStepRegister({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
                   <span className="font-bold text-blue-600 block">🔵 Mix By Yas</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">Number: 0674673494</p>
+                  <p className="font-mono text-xs font-semibold text-foreground">
+                    Number: 0674673494
+                  </p>
                 </div>
 
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
                   <span className="font-bold text-emerald-600 block">🟢 Airtel Money</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">Number: 0668632187</p>
+                  <p className="font-mono text-xs font-semibold text-foreground">
+                    Number: 0668632187
+                  </p>
                 </div>
 
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
                   <span className="font-bold text-amber-600 block">🟠 Halopesa</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">Number: 0627274168</p>
+                  <p className="font-mono text-xs font-semibold text-foreground">
+                    Number: 0627274168
+                  </p>
                 </div>
 
                 <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
                   <span className="font-bold text-purple-600 block">🏦 NMB Bank</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">Acc: 40310127484</p>
+                  <p className="font-mono text-xs font-semibold text-foreground">
+                    Acc: 40310127484
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Payment Reference Input */}
             <div className="space-y-1.5">
-              <Label htmlFor="paymentReference" className="text-xs font-bold text-foreground flex items-center justify-between">
+              <Label
+                htmlFor="paymentReference"
+                className="text-xs font-bold text-foreground flex items-center justify-between"
+              >
                 <span>Payment Transaction Reference Code *</span>
-                <span className="text-[10px] font-normal text-muted-foreground">Required for verification</span>
+                <span className="text-[10px] font-normal text-muted-foreground">
+                  Required for verification
+                </span>
               </Label>
               <Input
                 id="paymentReference"
@@ -826,7 +890,8 @@ export function MultiStepRegister({
                 required
               />
               <p className="text-[11px] text-muted-foreground">
-                Enter the receipt transaction code from your M-Pesa / TigoPesa / Airtel Money / Bank payment confirmation SMS.
+                Enter the receipt transaction code from your M-Pesa / TigoPesa / Airtel Money / Bank
+                payment confirmation SMS.
               </p>
             </div>
 
@@ -839,8 +904,15 @@ export function MultiStepRegister({
                   onCheckedChange={(checked) => setAcceptTerms(!!checked)}
                   className="mt-0.5"
                 />
-                <Label htmlFor="terms" className="text-xs leading-relaxed text-muted-foreground font-normal cursor-pointer">
-                  I have read and agree to the <span className="text-primary font-semibold underline">MauzoChap Terms & Conditions</span> governing POS operations and account access.
+                <Label
+                  htmlFor="terms"
+                  className="text-xs leading-relaxed text-muted-foreground font-normal cursor-pointer"
+                >
+                  I have read and agree to the{" "}
+                  <span className="text-primary font-semibold underline">
+                    MauzoChap Terms & Conditions
+                  </span>{" "}
+                  governing POS operations and account access.
                 </Label>
               </div>
 
@@ -851,8 +923,13 @@ export function MultiStepRegister({
                   onCheckedChange={(checked) => setAcceptPrivacy(!!checked)}
                   className="mt-0.5"
                 />
-                <Label htmlFor="privacy" className="text-xs leading-relaxed text-muted-foreground font-normal cursor-pointer">
-                  I agree to the <span className="text-primary font-semibold underline">Privacy Policy</span> regarding store inventory & transaction data privacy.
+                <Label
+                  htmlFor="privacy"
+                  className="text-xs leading-relaxed text-muted-foreground font-normal cursor-pointer"
+                >
+                  I agree to the{" "}
+                  <span className="text-primary font-semibold underline">Privacy Policy</span>{" "}
+                  regarding store inventory & transaction data privacy.
                 </Label>
               </div>
             </div>

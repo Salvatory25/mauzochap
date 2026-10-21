@@ -18,7 +18,7 @@ const PACKAGES = [
   { 
     id: "starter", 
     name: "Starter", 
-    price: 8500, 
+    price: 12500, 
     duration: "1 Month",
     features: [
       "1 Location",
@@ -32,7 +32,7 @@ const PACKAGES = [
   { 
     id: "kilimanjaro", 
     name: "Kilimanjaro", 
-    price: 10500, 
+    price: 15500, 
     duration: "1 Month",
     features: [
       "1 Location",

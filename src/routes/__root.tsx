@@ -85,12 +85,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:url", content: "https://www.mauzochap.co.tz/" },
       { property: "og:site_name", content: "MauzoChap" },
       { property: "og:title", content: "MauzoChap — POS & Business Management" },
-      { property: "og:description", content: "Modern POS and business management for shops, pharmacies and restaurants in Tanzania." },
+      {
+        property: "og:description",
+        content:
+          "Modern POS and business management for shops, pharmacies and restaurants in Tanzania.",
+      },
       { property: "og:image", content: "https://www.mauzochap.co.tz/og-image.png" },
       // Twitter Cards
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "MauzoChap — POS & Business Management" },
-      { name: "twitter:description", content: "Modern POS and business management for shops, pharmacies and restaurants in Tanzania." },
+      {
+        name: "twitter:description",
+        content:
+          "Modern POS and business management for shops, pharmacies and restaurants in Tanzania.",
+      },
       { name: "twitter:image", content: "https://www.mauzochap.co.tz/og-image.png" },
       // PWA / iOS meta tags
       { name: "mobile-web-app-capable", content: "yes" },
@@ -101,6 +109,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "application-name", content: "MauzoChap" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap",
+      },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: "/logo.png" },
       // PWA manifest

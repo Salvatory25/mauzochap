@@ -40,9 +40,12 @@
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --font-display: "Inter", "ui-sans-serif", system-ui, sans-serif;
-  --font-sans: "Inter", "ui-sans-serif", system-ui, sans-serif;
+  --font-display:
+    "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans:
+    "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 :root {
@@ -175,4 +178,68 @@
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+/* Hero and Glow Utilities */
+.hero-radial-glow {
+  background: radial-gradient(
+    ellipse 70% 60% at 50% -10%,
+    oklch(0.55 0.22 265 / 0.18),
+    transparent
+  );
+}
+
+.dark .hero-radial-glow {
+  background: radial-gradient(
+    ellipse 70% 60% at 50% -10%,
+    oklch(0.72 0.18 235 / 0.14),
+    transparent
+  );
+}
+
+.glass-panel {
+  background: color-mix(in oklch, var(--card) 85%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Tech Grid & Ambient Patterns */
+.bg-grid-white {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.bg-grid-dark {
+  background-image: radial-gradient(rgba(1, 24, 76, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.bg-mesh-dark {
+  background:
+    radial-gradient(at 0% 0%, rgba(1, 24, 76, 0.95) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(14, 116, 144, 0.2) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(2, 6, 23, 1) 0px, transparent 50%), #010e2e;
+}
+
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image:
+    linear-gradient(to right, rgba(124, 58, 237, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(124, 58, 237, 0.05) 1px, transparent 1px);
+}
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 4s ease-in-out infinite;
 }
