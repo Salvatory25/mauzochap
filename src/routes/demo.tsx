@@ -513,7 +513,7 @@ function DemoPage() {
           className="flex items-center gap-3 text-left group"
         >
           <img
-            src="/logo.png"
+            src="/images/logo.png"
             alt="MauzoChap"
             className="w-9 h-9 object-contain transition-transform group-hover:scale-105"
           />
@@ -685,7 +685,7 @@ function DemoPage() {
             onClick={() => setActiveView("dashboard")}
             className="flex items-center gap-2.5"
           >
-            <img src="/logo.png" alt="MauzoChap" className="w-8 h-8 object-contain" />
+            <img src="/images/logo.png" alt="MauzoChap" className="w-8 h-8 object-contain" />
             <span className="font-bold text-lg leading-tight tracking-tight text-sidebar-foreground">
               MauzoChap
             </span>

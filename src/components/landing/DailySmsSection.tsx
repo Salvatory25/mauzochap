@@ -70,7 +70,7 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
   return (
     <section
       id="daily-sms"
-      className="py-20 sm:py-24 bg-[#08173e] text-white relative overflow-hidden border-b border-blue-950 scroll-mt-12"
+      className="py-20 sm:py-24 bg-[#01184c] text-white relative overflow-hidden border-b border-blue-950 scroll-mt-12"
     >
       {/* Ambient Blue/Violet Glows matching the official logo */}
       <div
@@ -94,16 +94,16 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
               />
 
               {/* Floating Top Notification Badge */}
-              <div className="absolute -top-3 right-4 sm:right-8 z-10 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-blue-200 text-slate-900 shadow-2xl text-[11px] font-mono font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2">
+              <div className="absolute -top-3 right-4 sm:right-8 z-10 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-blue-200 text-[#01184c] shadow-2xl text-[11px] font-mono font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2">
                 <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-blue-900 font-extrabold">Delivered 20:30 PM</span>
+                <span className="text-[#01184c] font-extrabold">Delivered 20:30 PM</span>
               </div>
 
               {/* Phone Image: Big, Clean, Zero Background Color */}
               <img
                 src="/images/iphone-sms-transparent.png"
                 alt="MauzoChap Nightly 20:30 PM SMS Report on iPhone (Transparent, No Background)"
-                className="w-full h-auto object-contain filter drop-shadow-[0_30px_50px_rgba(8,23,62,0.6)] transform group-hover:scale-[1.015] group-hover:-translate-y-1 transition-all duration-500"
+                className="w-full h-auto object-contain filter drop-shadow-[0_30px_50px_rgba(1,24,76,0.6)] transform group-hover:scale-[1.015] group-hover:-translate-y-1 transition-all duration-500"
                 loading="lazy"
                 width={900}
                 height={1200}
@@ -111,7 +111,6 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
 
               {/* Sub-Phone Verified Sender & Offline SMS Delivery Badge */}
               <div className="mt-3 mx-auto px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-xs font-mono flex items-center justify-center gap-3 max-w-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>
                   Sender ID: <strong className="text-blue-300">MAUZOCHAP</strong>
                 </span>
@@ -125,8 +124,7 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
           {/* Right Column: Copy & 4 Glassmorphism Cards */}
           <div className="lg:col-span-7 space-y-8 text-left">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-blue-400/30 bg-blue-950/60 text-blue-300 text-xs font-mono font-bold tracking-wider uppercase">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+              <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-blue-400/30 bg-blue-950/60 text-blue-300 text-xs font-mono font-bold tracking-wider uppercase">
                 <span>
                   {isSwahili ? "KILA JIONI SAA 20:30 USIKU" : "EVERY EVENING AT 20:30 PM"}
                 </span>

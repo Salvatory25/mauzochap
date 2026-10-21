@@ -39,19 +39,19 @@ export function HomepageHeader({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
-        {/* Brand: MauzoChap with purple rounded square icon (M) */}
+        {/* Brand: MauzoChap with official logo icon */}
         <Link
           to="/"
           className="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 rounded-lg"
         >
           <img
-            src="/logo.png"
-            alt="MauzoChap POS Official Logo"
-            className="w-9 h-9 rounded-xl object-contain shadow-md shadow-blue-900/25 group-hover:scale-105 transition-transform"
-            width={36}
-            height={36}
+            src="/images/logo.png"
+            alt="MauzoChap"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-contain shadow-md shadow-blue-950/20 group-hover:scale-105 transition-transform"
+            width={44}
+            height={44}
           />
-          <span className="text-xl font-black tracking-tight text-slate-950">
+          <span className="text-xl sm:text-2xl font-black tracking-tight text-[#01184c]">
             MauzoChap
           </span>
         </Link>
@@ -81,9 +81,8 @@ export function HomepageHeader({
           </a>
           <a
             href="#daily-sms"
-            className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600 text-violet-700 font-extrabold flex items-center gap-1"
+            className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600 text-violet-700 font-extrabold"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-600 animate-pulse" />
             <span>{t.nav.dailySms}</span>
           </a>
         </nav>

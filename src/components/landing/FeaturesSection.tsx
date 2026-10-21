@@ -186,12 +186,11 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-purple-200 bg-purple-50 text-violet-700 text-xs font-mono font-bold tracking-wider uppercase">
-            <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-purple-200 bg-purple-50 text-violet-700 text-xs font-mono font-bold tracking-wider uppercase">
             <span>{c.eyebrow}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
             {c.headline}
           </h2>
 
@@ -215,15 +214,14 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                     <Icon className="w-6 h-6" />
                   </div>
 
-                  <h3 className="text-xl font-black text-slate-950 tracking-tight">{item.title}</h3>
+                  <h3 className="text-xl font-black text-[#01184c] tracking-tight">{item.title}</h3>
 
                   <p className="text-sm text-slate-600 leading-relaxed font-normal">
                     {item.description}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-purple-50 text-[11px] font-mono font-bold text-violet-600 uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-600" />
+                <div className="pt-4 border-t border-purple-50 text-[11px] font-mono font-bold text-violet-600 uppercase tracking-wider">
                   <span>Ready for Tanzanian Commerce</span>
                 </div>
               </div>
@@ -237,11 +235,10 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
         <div className="mt-20 rounded-[32px] border border-purple-200 bg-gradient-to-b from-purple-50/70 via-white to-purple-50/30 p-6 sm:p-10 lg:p-12 shadow-xl shadow-purple-950/5 overflow-hidden">
           {/* Eyebrow & Headline */}
           <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-100 border border-violet-200 text-violet-800 text-[11px] font-mono font-bold uppercase tracking-widest">
-              <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+            <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-violet-100 border border-violet-200 text-violet-800 text-[11px] font-mono font-bold uppercase tracking-widest">
               <span>SOFTWARE IN ACTION</span>
             </div>
-            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#01184c] tracking-tight">
               {isSwahili
                 ? "Mfumo Unavyofanya Kazi kwa Vitendo"
                 : "Designed for Speed. Engineered for Tanzanian Retail."}
@@ -297,7 +294,7 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                   <div>
                     <h4
                       className={`text-sm sm:text-base font-black tracking-tight ${
-                        isActive ? "text-white" : "text-slate-950"
+                        isActive ? "text-white" : "text-[#01184c]"
                       }`}
                     >
                       {tab.tabLabel}
@@ -320,16 +317,26 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-center">
               {/* Visual Showcase: macOS/SaaS Window Frame (7 cols) */}
               <div className="lg:col-span-7 space-y-3">
-                <div className="rounded-2xl border border-slate-200/80 bg-slate-900/5 shadow-2xl overflow-hidden group">
-                  {/* Window Chrome Header Bar */}
-                  <div className="px-4 py-3 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
-                    <div className="flex items-center gap-2">
+                <div className="rounded-2xl border border-blue-900/40 bg-[#01184c] shadow-2xl overflow-hidden group">
+                  {/* Window Chrome Header Bar with Official MauzoChap Logo */}
+                  <div className="px-4 py-3 bg-[#01184c] text-white flex items-center justify-between border-b border-white/10">
+                    <div className="flex items-center gap-2.5">
                       <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 rounded-full bg-[#ff5f56] inline-block" />
                         <span className="w-3 h-3 rounded-full bg-[#ffbd2e] inline-block" />
                         <span className="w-3 h-3 rounded-full bg-[#27c93f] inline-block" />
                       </div>
-                      <div className="hidden sm:flex items-center gap-1.5 ml-3 px-3 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-300">
+                      <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/20">
+                        <img
+                          src="/images/logo.png"
+                          alt="MauzoChap"
+                          className="w-6 h-6 rounded-md object-contain bg-white/10 p-0.5 shadow-xs"
+                          width={24}
+                          height={24}
+                        />
+                        <span className="text-xs font-black text-white tracking-tight">MauzoChap POS</span>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-1.5 ml-2 px-3 py-1 rounded-md bg-white/10 border border-white/10 text-[11px] font-mono text-blue-100">
                         <Lock className="w-3 h-3 text-emerald-400" />
                         <span>https://{currentTab.urlBar}</span>
                       </div>
@@ -340,12 +347,12 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                       <span className="text-[10px] font-mono font-bold text-emerald-400 tracking-wider uppercase">
                         LIVE TZS
                       </span>
-                      <RotateCw className="w-3 h-3 text-slate-500 hidden sm:block ml-1" />
+                      <RotateCw className="w-3 h-3 text-slate-400 hidden sm:block ml-1" />
                     </div>
                   </div>
 
                   {/* High-Resolution Screenshot Image */}
-                  <div className="relative overflow-hidden bg-slate-950">
+                  <div className="relative overflow-hidden bg-[#01184c]">
                     <img
                       key={currentTab.id}
                       src={currentTab.image}
@@ -357,16 +364,16 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                     />
 
                     {/* Subtle Gradient Overlay at bottom */}
-                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/70 to-transparent pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#01184c]/80 to-transparent pointer-events-none" />
                   </div>
 
                   {/* Window Bottom Status Strip */}
-                  <div className="px-4 py-2.5 bg-slate-950 text-slate-300 flex items-center justify-between text-xs font-mono border-t border-slate-800">
+                  <div className="px-4 py-2.5 bg-[#01184c] text-slate-300 flex items-center justify-between text-xs font-mono border-t border-white/10">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                      <span className="text-slate-200 font-semibold">{currentTab.statusNote}</span>
+                      <span className="text-white font-semibold">{currentTab.statusNote}</span>
                     </div>
-                    <span className="text-[11px] text-violet-400 font-bold hidden sm:inline">
+                    <span className="text-[11px] text-violet-300 font-bold hidden sm:inline">
                       TZS 0 PAPER COST
                     </span>
                   </div>
@@ -376,12 +383,11 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
               {/* Feature Highlights & Value Story (5 cols) */}
               <div className="lg:col-span-5 space-y-6 text-left">
                 <div className="space-y-3">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-[10px] font-mono font-bold tracking-wider uppercase">
-                    <Sparkles className="w-3 h-3 text-violet-600" />
+                  <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-violet-100 text-violet-700 text-[10px] font-mono font-bold tracking-wider uppercase">
                     <span>{currentTab.badge}</span>
                   </div>
 
-                  <h3 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight leading-snug">
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#01184c] tracking-tight leading-snug">
                     {currentTab.headline}
                   </h3>
 
@@ -404,7 +410,7 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <h5 className="text-xs sm:text-sm font-black text-slate-950 tracking-tight">
+                            <h5 className="text-xs sm:text-sm font-black text-[#01184c] tracking-tight">
                               {h.title}
                             </h5>
                             <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 shrink-0">

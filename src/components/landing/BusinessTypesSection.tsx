@@ -38,12 +38,11 @@ export function BusinessTypesSection({ t }: BusinessTypesSectionProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-purple-200 bg-white text-violet-700 text-xs font-mono font-bold tracking-wider uppercase shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-purple-200 bg-white text-violet-700 text-xs font-mono font-bold tracking-wider uppercase shadow-2xs">
             <span>{bt.eyebrow}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
             {bt.headline}
           </h2>
 
@@ -67,7 +66,7 @@ export function BusinessTypesSection({ t }: BusinessTypesSectionProps) {
                     <Icon className="w-5 h-5" />
                   </div>
 
-                  <h3 className="text-sm sm:text-base font-black text-slate-950 tracking-tight leading-snug">
+                  <h3 className="text-sm sm:text-base font-black text-[#01184c] tracking-tight leading-snug">
                     {type.title}
                   </h3>
 
@@ -76,8 +75,7 @@ export function BusinessTypesSection({ t }: BusinessTypesSectionProps) {
                   </p>
                 </div>
 
-                <div className="pt-2 text-[10px] font-mono font-bold text-emerald-700 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <div className="pt-2 text-[10px] font-mono font-bold text-emerald-700">
                   <span>Pre-configured</span>
                 </div>
               </div>

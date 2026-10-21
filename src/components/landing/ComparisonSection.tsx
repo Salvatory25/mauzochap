@@ -111,12 +111,11 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header (Inspired by Image 1) */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-purple-200 bg-purple-50 text-violet-700 text-xs font-mono font-bold tracking-wider uppercase">
-            <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-purple-200 bg-purple-50 text-violet-700 text-xs font-mono font-bold tracking-wider uppercase">
             <span>{isSwahili ? "KWA NINI UACHANE NA DAFTARI?" : "WHY SWITCH"}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
             {isSwahili ? (
               <>
                 BADO UNAENDESHA DUKA KWA{" "}
@@ -162,7 +161,7 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
                 className="grid grid-cols-12 px-6 py-5 hover:bg-purple-50/30 transition-colors items-center gap-3 sm:gap-0"
               >
                 {/* Category Column */}
-                <div className="col-span-12 sm:col-span-3 font-bold text-sm text-slate-950">
+                <div className="col-span-12 sm:col-span-3 font-bold text-sm text-[#01184c]">
                   {row.category}
                 </div>
 
@@ -179,7 +178,7 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
                     <div className="w-5 h-5 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center shrink-0 mt-0.5">
                       <Check className="w-3.5 h-3.5 text-violet-600 stroke-[2.5]" />
                     </div>
-                    <span className="text-xs sm:text-sm font-medium text-slate-900 leading-relaxed">
+                    <span className="text-xs sm:text-sm font-medium text-[#01184c] leading-relaxed">
                       {row.mauzochap}
                     </span>
                   </div>
@@ -193,11 +192,10 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
         <div className="mt-12 rounded-[28px] border border-violet-200 bg-gradient-to-r from-purple-100/70 via-white to-purple-100/70 p-6 sm:p-8 shadow-sm">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-left max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-600 text-white text-[10px] font-mono font-bold tracking-wider uppercase">
-                <TrendingUp className="w-3 h-3" />
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-violet-600 text-white text-[10px] font-mono font-bold tracking-wider uppercase">
                 <span>{isSwahili ? "HESABU RAHISI YA FAIDA" : "THE SIMPLE PROFIT MATH"}</span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">
+              <h3 className="text-xl sm:text-2xl font-black text-[#01184c] tracking-tight">
                 {isSwahili
                   ? "Daftari linakugharimu ~TZS 320,000/mwezi. MauzoChap ni TZS 10,500 tu."
                   : "The notebook costs ~TZS 320,000/mo in losses. MauzoChap is just TZS 10,500."}

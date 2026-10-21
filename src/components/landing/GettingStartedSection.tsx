@@ -45,12 +45,11 @@ export function GettingStartedSection({ t, onOpenRegisterModal }: GettingStarted
         {/* Header Row with Title and Right CTA Link (Image 3 Style) */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 pb-6 border-b border-purple-100">
           <div className="space-y-3 max-w-2xl text-left">
-            <div className="inline-flex items-center gap-2 text-violet-700 text-xs font-mono font-bold tracking-wider uppercase">
-              <span className="w-6 h-[1.5px] bg-violet-600 inline-block" />
+            <div className="inline-flex items-center text-violet-700 text-xs font-mono font-bold tracking-wider uppercase">
               <span>{isSwahili ? "JINSI YA KUANZA" : "GETTING STARTED"}</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
               {isSwahili ? (
                 <>
                   ANZA KUUZA KWA{" "}
@@ -109,7 +108,7 @@ export function GettingStartedSection({ t, onOpenRegisterModal }: GettingStarted
                     </div>
                   </div>
 
-                  <h3 className="text-lg sm:text-xl font-black text-slate-950 tracking-tight group-hover:text-violet-700 transition-colors">
+                  <h3 className="text-lg sm:text-xl font-black text-[#01184c] tracking-tight group-hover:text-violet-700 transition-colors">
                     {item.title}
                   </h3>
 

@@ -19,35 +19,35 @@ export function HomepageFooter({
   const f = t.footer;
 
   return (
-    <footer className="bg-[#08173e] text-slate-300 py-16 sm:py-20 text-xs font-sans border-t border-blue-950">
+    <footer className="bg-[#01184c] text-slate-300 py-16 sm:py-20 text-xs font-sans border-t border-blue-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Top 3-Column Layout (DukaPOS Style for MauzoChap) */}
-        <div className="grid gap-12 lg:grid-cols-12 pb-14 border-b border-slate-800/80">
+        <div className="grid gap-12 lg:grid-cols-12 pb-14 border-b border-white/10">
           {/* Column 1: Brand & Coverage */}
           <div className="lg:col-span-6 space-y-5">
             <Link to="/" className="flex items-center gap-2.5">
               <img
-                src="/logo.png"
-                alt="MauzoChap POS Official Logo"
-                className="w-9 h-9 rounded-xl object-contain shadow-md shadow-blue-900/30"
-                width={36}
-                height={36}
+                src="/images/logo.png"
+                alt="MauzoChap"
+                className="w-10 h-10 rounded-xl object-contain shadow-md shadow-blue-950/30 bg-white/10 p-0.5"
+                width={40}
+                height={40}
               />
-              <span className="font-black text-xl text-white tracking-tight">MauzoChap</span>
+              <span className="font-black text-2xl text-white tracking-tight">MauzoChap</span>
             </Link>
 
-            <p className="text-slate-400 max-w-md text-xs sm:text-sm leading-relaxed">
+            <p className="text-slate-300 max-w-md text-xs sm:text-sm leading-relaxed">
               {f.brandBio}
             </p>
 
-            <div className="text-[11px] font-mono text-slate-400 bg-white/5 border border-white/10 p-3.5 rounded-2xl max-w-md">
+            <div className="text-[11px] font-mono text-slate-300 bg-white/5 border border-white/10 p-3.5 rounded-2xl max-w-md">
               <p className="italic leading-relaxed">{f.coverageText}</p>
             </div>
 
             <div className="pt-1">
               <Link
                 to="/auth"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white hover:bg-slate-100 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-white/10 cursor-pointer active:scale-95"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white hover:bg-slate-100 text-[#01184c] font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-white/10 cursor-pointer active:scale-95"
               >
                 <span>{f.ctaButton}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -158,7 +158,7 @@ export function HomepageFooter({
 
           <div className="flex items-center gap-4">
             {/* Interactive Language Switch Button [ EN | SW ] */}
-            <div className="inline-flex items-center rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs font-mono">
+            <div className="inline-flex items-center rounded-lg border border-white/20 bg-[#022166] p-0.5 text-xs font-mono">
               <button
                 onClick={() => lang !== "en" && onToggleLang()}
                 className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${

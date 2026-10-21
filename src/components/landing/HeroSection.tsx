@@ -96,15 +96,14 @@ export function HeroSection({ t }: HeroSectionProps) {
         aria-hidden="true"
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative text-center space-y-8">
-        {/* Top Eyebrow Pill: Built for Tanzania • 55+ Active Stores (No Emojis) */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-200 bg-white/95 text-violet-800 text-xs font-mono font-bold tracking-wider shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+      <div className="w-[90%] max-w-6xl mx-auto px-2 sm:px-4 relative text-center space-y-8">
+        {/* Top Eyebrow Pill: Built for Tanzania • 55+ Active Stores (Clean Words Only) */}
+        <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-purple-200 bg-white/95 text-violet-800 text-xs font-mono font-bold tracking-wider shadow-xs">
           <span>BUILT FOR TANZANIA • 55+ ACTIVE SHOPS</span>
         </div>
 
         {/* Main Headline with Typewriter Typing Effect */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-950 leading-[1.08] max-w-4xl mx-auto">
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-[#01184c] leading-[1.08] max-w-4xl mx-auto">
           <span>{h.headlinePrefix} </span>
           <br className="hidden sm:inline" />
           <span className="text-violet-600 font-serif italic relative inline-block">
@@ -130,9 +129,8 @@ export function HeroSection({ t }: HeroSectionProps) {
 
           <Link
             to="/demo"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl border border-purple-200 hover:border-slate-800 bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs uppercase tracking-wider transition-all shadow-xs"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl border border-purple-200 hover:border-[#01184c] bg-white hover:bg-purple-50/50 text-[#01184c] font-bold text-xs uppercase tracking-wider transition-all shadow-xs"
           >
-            <Sparkles className="w-4 h-4 text-violet-600" />
             <span>{h.secondaryCta}</span>
           </Link>
         </div>
@@ -158,9 +156,9 @@ export function HeroSection({ t }: HeroSectionProps) {
         </div>
 
         {/* 4 Feature Stat Cards (55+ Stores, < 2s Checkout, 0 TZS WhatsApp Receipts, 100% Anti-Theft) */}
-        <div className="pt-6 grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
+        <div className="pt-6 grid grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-5xl mx-auto text-left">
           <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
-            <div className="text-2xl font-black text-slate-950 font-mono tracking-tight">
+            <div className="text-2xl font-black text-[#01184c] font-mono tracking-tight">
               55+
             </div>
             <div className="text-xs text-slate-600 font-medium mt-1">
@@ -187,7 +185,7 @@ export function HeroSection({ t }: HeroSectionProps) {
           </div>
 
           <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
-            <div className="text-2xl font-black text-slate-950 font-mono tracking-tight">
+            <div className="text-2xl font-black text-[#01184c] font-mono tracking-tight">
               100%
             </div>
             <div className="text-xs text-slate-600 font-medium mt-1">

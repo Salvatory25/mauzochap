@@ -24,7 +24,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
             <span>{p.eyebrow}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
             {p.headline}
           </h2>
 
@@ -39,8 +39,8 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                 onClick={() => setBillingCycle("monthly")}
                 className={`px-5 py-2.5 rounded-xl transition-all cursor-pointer ${
                   billingCycle === "monthly"
-                    ? "bg-slate-950 text-white font-black shadow-xs"
-                    : "text-slate-600 hover:text-slate-950"
+                    ? "bg-[#01184c] text-white font-black shadow-xs"
+                    : "text-slate-600 hover:text-[#01184c]"
                 }`}
               >
                 {p.monthly}
@@ -50,8 +50,8 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                 onClick={() => setBillingCycle("yearly")}
                 className={`px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
                   billingCycle === "yearly"
-                    ? "bg-slate-950 text-white font-black shadow-xs"
-                    : "text-slate-600 hover:text-slate-950"
+                    ? "bg-[#01184c] text-white font-black shadow-xs"
+                    : "text-slate-600 hover:text-[#01184c]"
                 }`}
               >
                 <span>{p.annually}</span>
@@ -80,8 +80,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
               >
                 {/* Popular Pill */}
                 {isFeatured && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 px-3.5 py-1 rounded-full text-[10px] font-mono uppercase font-black tracking-widest shadow-md flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 fill-slate-950 text-slate-950" />
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-[#01184c] px-3.5 py-1 rounded-full text-[10px] font-mono uppercase font-black tracking-widest shadow-md">
                     <span>{plan.badge || "MOST POPULAR"}</span>
                   </div>
                 )}
@@ -90,7 +89,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                   {/* Card Header */}
                   <div className="flex items-center justify-between">
                     <h3
-                      className={`text-2xl font-black tracking-tight ${isFeatured ? "text-white" : "text-slate-950"}`}
+                      className={`text-2xl font-black tracking-tight ${isFeatured ? "text-white" : "text-[#01184c]"}`}
                     >
                       {plan.name}
                     </h3>
@@ -153,8 +152,8 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                     to="/auth"
                     className={`w-full py-4 rounded-2xl font-bold text-xs uppercase tracking-wider text-center transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
                       isFeatured
-                        ? "bg-white text-violet-900 hover:bg-slate-100 shadow-xl shadow-black/10 active:scale-95"
-                        : "bg-slate-950 hover:bg-slate-800 text-white active:scale-95"
+                        ? "bg-white text-[#01184c] hover:bg-slate-100 shadow-xl shadow-black/10 active:scale-95"
+                        : "bg-[#01184c] hover:bg-[#022166] text-white active:scale-95"
                     }`}
                   >
                     <span>{plan.ctaText}</span>
@@ -174,23 +173,23 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
 
         {/* Local Tanzanian Payment Badges */}
         <div className="mt-14 p-5 rounded-2xl bg-purple-50/50 border border-purple-100 max-w-3xl mx-auto text-center space-y-2">
-          <div className="text-xs font-mono font-bold uppercase text-slate-700">
+          <div className="text-xs font-mono font-bold uppercase text-[#01184c]">
             Local Tanzanian Payment Integrations
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs font-mono font-semibold text-slate-600">
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-900 shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
               Vodacom M-Pesa
             </span>
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-900 shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
               Tigo Pesa
             </span>
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-900 shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
               Airtel Money
             </span>
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-900 shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
               HaloPesa
             </span>
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-900 shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
               Visa / Mastercard
             </span>
           </div>

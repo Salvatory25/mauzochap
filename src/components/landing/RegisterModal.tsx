@@ -50,7 +50,7 @@ export function RegisterModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#01184c]/75 backdrop-blur-sm animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
     >
@@ -174,7 +174,7 @@ export function RegisterModal({
                   }`}
                 >
                   {pl.popular && (
-                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 text-[8px] font-black px-1.5 py-0.2 rounded-full uppercase">
+                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-400 text-[#01184c] text-[8px] font-black px-1.5 py-0.2 rounded-full uppercase">
                       Popular
                     </span>
                   )}
@@ -194,7 +194,7 @@ export function RegisterModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-[#01184c] transition-colors cursor-pointer"
             >
               {m.closeBtn}
             </button>
