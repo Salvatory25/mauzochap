@@ -40,16 +40,16 @@ export function GettingStartedSection({ t, onOpenRegisterModal }: GettingStarted
   ];
 
   return (
-    <section className="py-20 sm:py-24 bg-white border-b border-purple-100 scroll-mt-12">
+    <section className="py-10 sm:py-20 lg:py-24 bg-white border-b border-purple-100 scroll-mt-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        {/* Header Row with Title and Right CTA Link (Image 3 Style) */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 pb-6 border-b border-purple-100">
-          <div className="space-y-3 max-w-2xl text-left">
-            <div className="inline-flex items-center text-violet-700 text-xs font-mono font-bold tracking-wider uppercase">
+        {/* Header Row */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-8 sm:mb-16 pb-4 sm:pb-6 border-b border-purple-100">
+          <div className="space-y-2 sm:space-y-3 max-w-2xl text-left">
+            <div className="inline-flex items-center text-violet-700 text-[10px] sm:text-xs font-mono font-bold tracking-wider uppercase">
               <span>{isSwahili ? "JINSI YA KUANZA" : "GETTING STARTED"}</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
               {isSwahili ? (
                 <>
                   ANZA KUUZA KWA{" "}
@@ -65,17 +65,17 @@ export function GettingStartedSection({ t, onOpenRegisterModal }: GettingStarted
               )}
             </h2>
 
-            <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
+            <p className="text-xs sm:text-base text-slate-600 font-normal leading-relaxed">
               {isSwahili
                 ? "Hakuna mafunzo magumu yanayohitajika — kama unajua kutumia WhatsApp, unaweza kuendesha duka lako na MauzoChap kwa dakika 2 tu."
                 : "No training required — if you can use WhatsApp, you can run your shop on MauzoChap in under 2 minutes."}
             </p>
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 pt-1 sm:pt-0">
             <Link
               to="/auth"
-              className="inline-flex items-center gap-2 text-xs font-mono font-bold tracking-wider text-violet-700 hover:text-violet-900 border-b-2 border-violet-600 pb-1 uppercase transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-mono font-bold tracking-wider text-violet-700 hover:text-violet-900 border-b-2 border-violet-600 pb-0.5 uppercase transition-colors cursor-pointer"
             >
               <span>{isSwahili ? "FUNGUA AKAUNTI SASA" : "CREATE ACCOUNT"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -83,7 +83,7 @@ export function GettingStartedSection({ t, onOpenRegisterModal }: GettingStarted
           </div>
         </div>
 
-        {/* 3 Steps Horizontal Layout with Connecting Line */}
+        {/* 3 Steps: sleek timeline on mobile, 3-column cards on desktop */}
         <div className="relative">
           {/* Subtle Connecting Line on Desktop */}
           <div
@@ -91,30 +91,32 @@ export function GettingStartedSection({ t, onOpenRegisterModal }: GettingStarted
             aria-hidden="true"
           />
 
-          <div className="grid md:grid-cols-3 gap-8 relative z-10">
+          <div className="grid md:grid-cols-3 gap-5 sm:gap-8 relative z-10">
             {steps.map((item, idx) => {
               const StepIcon = item.icon;
 
               return (
-                <div key={idx} className="space-y-4 text-left group">
-                  {/* Step Bubble Row */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 rounded-full border-2 border-violet-600 bg-white flex items-center justify-center font-mono font-black text-sm text-violet-700 shadow-md shadow-violet-600/10 group-hover:scale-105 group-hover:bg-violet-600 group-hover:text-white transition-all duration-200">
+                <div key={idx} className="flex sm:flex-col items-start gap-4 sm:gap-0 sm:space-y-4 text-left group">
+                  {/* Step Bubble */}
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 border-violet-600 bg-white flex items-center justify-center font-mono font-black text-xs sm:text-sm text-violet-700 shadow-sm shadow-violet-600/10 group-hover:scale-105 group-hover:bg-violet-600 group-hover:text-white transition-all duration-200">
                       {item.step}
                     </div>
 
-                    <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200/80 flex items-center justify-center text-violet-600">
-                      <StepIcon className="w-5 h-5" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-purple-50 border border-purple-200/80 flex items-center justify-center text-violet-600">
+                      <StepIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                   </div>
 
-                  <h3 className="text-lg sm:text-xl font-black text-[#01184c] tracking-tight group-hover:text-violet-700 transition-colors">
-                    {item.title}
-                  </h3>
+                  <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
+                    <h3 className="text-sm sm:text-xl font-black text-[#01184c] tracking-tight group-hover:text-violet-700 transition-colors">
+                      {item.title}
+                    </h3>
 
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                    {item.desc}
-                  </p>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                      {item.desc}
+                    </p>
+                  </div>
                 </div>
               );
             })}

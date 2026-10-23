@@ -181,47 +181,56 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
   return (
     <section
       id="features"
-      className="py-20 sm:py-24 bg-white border-b border-purple-100 scroll-mt-12"
+      className="py-10 sm:py-20 lg:py-24 bg-white border-b border-purple-100 scroll-mt-12"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-purple-200 bg-purple-50 text-violet-700 text-xs font-mono font-bold tracking-wider uppercase">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-16 space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full border border-purple-200 bg-purple-50 text-violet-700 text-[10px] sm:text-xs font-mono font-bold tracking-wider uppercase">
             <span>{c.eyebrow}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
             {c.headline}
           </h2>
 
-          <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
+          <p className="text-sm sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
             {c.subheadline}
           </p>
         </div>
 
-        {/* 6 Capabilities Rounded Cards Grid with Purple Icon Backgrounds */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Mobile Swipe Hint */}
+        <div className="flex sm:hidden items-center justify-between text-[11px] font-mono text-violet-700 font-bold px-1 mb-2">
+          <span>{isSwahili ? "UWEZO WA MFUMO (6)" : "CORE CAPABILITIES (6)"}</span>
+          <span className="flex items-center gap-1 text-slate-400">
+            <span>{isSwahili ? "Telezesha" : "Swipe"}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </span>
+        </div>
+
+        {/* 6 Capabilities Rounded Cards Grid: Swipeable carousel on mobile, 3-col grid on desktop */}
+        <div className="flex sm:grid overflow-x-auto sm:overflow-visible snap-x snap-mandatory no-scrollbar gap-3.5 sm:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid-cols-2 lg:grid-cols-3 pb-3 sm:pb-0">
           {c.items.map((item) => {
             const Icon = iconMap[item.id] || Zap;
 
             return (
               <div
                 key={item.id}
-                className="rounded-[28px] border border-purple-100 bg-white p-7 sm:p-8 flex flex-col justify-between space-y-5 shadow-xs hover:border-violet-300 hover:shadow-xl hover:shadow-purple-950/5 transition-all duration-200 group"
+                className="w-[82vw] max-w-[310px] sm:w-auto shrink-0 snap-center rounded-2xl sm:rounded-[28px] border border-purple-100 bg-white p-5 sm:p-8 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xs hover:border-violet-300 hover:shadow-xl hover:shadow-purple-950/5 transition-all duration-200 group"
               >
-                <div className="space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-100/70 border border-purple-200/60 flex items-center justify-center text-violet-600 group-hover:scale-105 group-hover:bg-violet-600 group-hover:text-white transition-all duration-200">
-                    <Icon className="w-6 h-6" />
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-purple-100/70 border border-purple-200/60 flex items-center justify-center text-violet-600 group-hover:scale-105 group-hover:bg-violet-600 group-hover:text-white transition-all duration-200">
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
 
-                  <h3 className="text-xl font-black text-[#01184c] tracking-tight">{item.title}</h3>
+                  <h3 className="text-lg sm:text-xl font-black text-[#01184c] tracking-tight">{item.title}</h3>
 
-                  <p className="text-sm text-slate-600 leading-relaxed font-normal">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                     {item.description}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-purple-50 text-[11px] font-mono font-bold text-violet-600 uppercase tracking-wider">
+                <div className="pt-3 sm:pt-4 border-t border-purple-50 text-[10px] sm:text-[11px] font-mono font-bold text-violet-600 uppercase tracking-wider">
                   <span>Ready for Tanzanian Commerce</span>
                 </div>
               </div>
@@ -232,26 +241,26 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
         {/* =========================================================================
             SOFTWARE IN ACTION: World-Class Interactive Product Showcase
            ========================================================================= */}
-        <div className="mt-20 rounded-[32px] border border-purple-200 bg-gradient-to-b from-purple-50/70 via-white to-purple-50/30 p-6 sm:p-10 lg:p-12 shadow-xl shadow-purple-950/5 overflow-hidden">
+        <div className="mt-10 sm:mt-20 rounded-2xl sm:rounded-[32px] border border-purple-200 bg-gradient-to-b from-purple-50/70 via-white to-purple-50/30 p-4 sm:p-10 lg:p-12 shadow-xl shadow-purple-950/5 overflow-hidden">
           {/* Eyebrow & Headline */}
-          <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
-            <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-violet-100 border border-violet-200 text-violet-800 text-[11px] font-mono font-bold uppercase tracking-widest">
+          <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10 space-y-2 sm:space-y-3">
+            <div className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-violet-100 border border-violet-200 text-violet-800 text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-widest">
               <span>SOFTWARE IN ACTION</span>
             </div>
-            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#01184c] tracking-tight">
+            <h3 className="text-xl sm:text-3xl lg:text-4xl font-black text-[#01184c] tracking-tight">
               {isSwahili
                 ? "Mfumo Unavyofanya Kazi kwa Vitendo"
                 : "Designed for Speed. Engineered for Tanzanian Retail."}
             </h3>
-            <p className="text-sm sm:text-base text-slate-600 font-normal max-w-2xl mx-auto">
+            <p className="text-xs sm:text-base text-slate-600 font-normal max-w-2xl mx-auto">
               {isSwahili
                 ? "Gundua jinsi maduka zaidi ya 55+ nchini Tanzania yanavyouza kwa haraka, kutoa risiti za WhatsApp na kulinda stoo zao kila siku."
                 : "High-resolution interactive previews of your counter sales, WhatsApp receipts, batch expiry radar, and automated nightly reconciliation."}
             </p>
           </div>
 
-          {/* Interactive Navigation Tabs (2 Core Management Modules) */}
-          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">
+          {/* Interactive Navigation Tabs */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 max-w-2xl mx-auto mb-6 sm:mb-8">
             {tabs.map((tab) => {
               const TabIcon = tab.tabIcon;
               const isActive = activeTab === tab.id;
@@ -260,9 +269,9 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`text-left p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-2.5 ${
+                  className={`text-left p-3 sm:p-5 rounded-xl sm:rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-1.5 sm:space-y-2.5 ${
                     isActive
-                      ? "bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-600/25 scale-[1.02]"
+                      ? "bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-600/25 sm:scale-[1.02]"
                       : "bg-white hover:bg-purple-50/70 border-purple-200/80 text-slate-700 shadow-2xs hover:border-purple-300"
                   }`}
                 >

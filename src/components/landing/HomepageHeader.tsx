@@ -47,9 +47,9 @@ export function HomepageHeader({
           <img
             src="/images/logo.png"
             alt="MauzoChap"
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-contain shadow-md shadow-blue-950/20 group-hover:scale-105 transition-transform"
-            width={44}
-            height={44}
+            className="w-9 h-9 sm:w-10 sm:h-10 object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
+            width={40}
+            height={40}
           />
           <span className="text-xl sm:text-2xl font-black tracking-tight text-[#01184c]">
             MauzoChap

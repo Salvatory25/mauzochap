@@ -71,57 +71,57 @@ export function HeroSection({ t }: HeroSectionProps) {
   }, [displayText, isDeleting, phraseIndex, phrases]);
 
   return (
-    <section className="relative overflow-hidden pt-12 pb-16 sm:pt-18 sm:pb-24 lg:pt-20 lg:pb-28 bg-white bg-grid-pattern border-b border-purple-100">
-      {/* Left, Right & Vertical White Gradient Masks to softly fade grid pattern into clean white borders */}
+    <section className="relative overflow-hidden pt-8 pb-10 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28 bg-white bg-grid-pattern border-b border-purple-100">
+      {/* Left, Right & Vertical White Gradient Masks */}
       <div
-        className="absolute inset-y-0 left-0 w-24 sm:w-48 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-0"
+        className="absolute inset-y-0 left-0 w-16 sm:w-48 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none z-0"
         aria-hidden="true"
       />
       <div
-        className="absolute inset-y-0 right-0 w-24 sm:w-48 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-0"
+        className="absolute inset-y-0 right-0 w-16 sm:w-48 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none z-0"
         aria-hidden="true"
       />
       <div
-        className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none z-0"
+        className="absolute inset-x-0 bottom-0 h-16 sm:h-20 bg-gradient-to-t from-white to-transparent pointer-events-none z-0"
         aria-hidden="true"
       />
       <div
-        className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-white to-transparent pointer-events-none z-0"
+        className="absolute inset-x-0 top-0 h-10 sm:h-12 bg-gradient-to-b from-white to-transparent pointer-events-none z-0"
         aria-hidden="true"
       />
 
       {/* Subtle Violet Center Glow */}
       <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[580px] h-[320px] bg-gradient-to-tr from-violet-600/10 via-purple-500/10 to-indigo-600/10 blur-3xl rounded-full pointer-events-none"
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[580px] h-[220px] sm:h-[320px] bg-gradient-to-tr from-violet-600/10 via-purple-500/10 to-indigo-600/10 blur-3xl rounded-full pointer-events-none"
         aria-hidden="true"
       />
 
-      <div className="w-[90%] max-w-6xl mx-auto px-2 sm:px-4 relative text-center space-y-8">
-        {/* Top Eyebrow Pill: Built for Tanzania • 55+ Active Stores (Clean Words Only) */}
-        <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-purple-200 bg-white/95 text-violet-800 text-xs font-mono font-bold tracking-wider shadow-xs">
+      <div className="w-[94%] sm:w-[90%] max-w-6xl mx-auto px-1 sm:px-4 relative text-center space-y-5 sm:space-y-8">
+        {/* Top Eyebrow Pill */}
+        <div className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-purple-200 bg-white/95 text-violet-800 text-[10px] sm:text-xs font-mono font-bold tracking-wider shadow-xs">
           <span>BUILT FOR TANZANIA • 55+ ACTIVE SHOPS</span>
         </div>
 
         {/* Main Headline with Typewriter Typing Effect */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-[#01184c] leading-[1.08] max-w-4xl mx-auto">
+        <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tight text-[#01184c] leading-[1.12] sm:leading-[1.08] max-w-4xl mx-auto">
           <span>{h.headlinePrefix} </span>
           <br className="hidden sm:inline" />
           <span className="text-violet-600 font-serif italic relative inline-block">
             {displayText}
-            <span className="inline-block w-[3px] h-[0.9em] bg-violet-600 animate-pulse ml-1 align-baseline translate-y-1" />
+            <span className="inline-block w-[2px] sm:w-[3px] h-[0.9em] bg-violet-600 animate-pulse ml-1 align-baseline translate-y-1" />
           </span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-base sm:text-xl text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
+        <p className="text-sm sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto px-2 sm:px-0">
           {h.subheadline}
         </p>
 
-        {/* CTA Buttons: Get Started navigates directly to /auth (Meeting the real login/register page) */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+        {/* CTA Buttons */}
+        <div className="pt-1 sm:pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-4">
           <Link
             to="/auth"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-xs uppercase tracking-wider shadow-xl shadow-violet-600/25 hover:shadow-violet-600/35 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-violet-600/25 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
           >
             <span>{h.primaryCta}</span>
             <ArrowRight className="w-4 h-4" />
@@ -129,67 +129,67 @@ export function HeroSection({ t }: HeroSectionProps) {
 
           <Link
             to="/demo"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl border border-purple-200 hover:border-[#01184c] bg-white hover:bg-purple-50/50 text-[#01184c] font-bold text-xs uppercase tracking-wider transition-all shadow-xs"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-purple-200 hover:border-[#01184c] bg-white hover:bg-purple-50/50 text-[#01184c] font-bold text-xs uppercase tracking-wider transition-all shadow-xs"
           >
             <span>{h.secondaryCta}</span>
           </Link>
         </div>
 
-        {/* Trust Badges: Clean professional typography, zero emojis */}
-        <div className="pt-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500 font-mono">
+        {/* Trust Badges */}
+        <div className="pt-1 flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-1.5 text-[11px] sm:text-xs text-slate-500 font-mono">
           <span className="flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>{isSwahili ? "Siku 5 za Majaribio Bure" : "Free 5-Day Trial"}</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>{isSwahili ? "Siku 5 za Bure" : "Free 5-Day Trial"}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <Lock className="w-4 h-4 text-emerald-600" />
-            <span>{isSwahili ? "Hakuna Kadi ya Benki" : "No Credit Card Needed"}</span>
+            <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>{isSwahili ? "Bila Kadi ya Benki" : "No Card Needed"}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <Smartphone className="w-4 h-4 text-emerald-600" />
-            <span>{isSwahili ? "Inafanya Kazi Kwenye Simu au PC" : "Works on Phone & PC"}</span>
+            <Smartphone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>{isSwahili ? "Kwenye Simu au PC" : "Phone & PC"}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-violet-600" />
-            <span>{isSwahili ? "Ripoti ya SMS Kila Jioni Saa 20:30" : "Nightly 20:30 PM SMS"}</span>
+            <Clock className="w-3.5 h-3.5 text-violet-600 shrink-0" />
+            <span>{isSwahili ? "SMS Saa 20:30 Usiku" : "Nightly 20:30 SMS"}</span>
           </span>
         </div>
 
-        {/* 4 Feature Stat Cards (55+ Stores, < 2s Checkout, 0 TZS WhatsApp Receipts, 100% Anti-Theft) */}
-        <div className="pt-6 grid grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-5xl mx-auto text-left">
-          <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
-            <div className="text-2xl font-black text-[#01184c] font-mono tracking-tight">
+        {/* 4 Feature Stat Cards */}
+        <div className="pt-3 sm:pt-6 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 w-full max-w-5xl mx-auto text-left">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
+            <div className="text-xl sm:text-2xl font-black text-[#01184c] font-mono tracking-tight">
               55+
             </div>
-            <div className="text-xs text-slate-600 font-medium mt-1">
-              {isSwahili ? "Maduka kote Tanzania" : "Active stores across Tanzania"}
+            <div className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5 sm:mt-1 leading-tight">
+              {isSwahili ? "Maduka kote Tanzania" : "Active stores in Tanzania"}
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
-            <div className="text-2xl font-black text-emerald-600 font-mono tracking-tight">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
+            <div className="text-xl sm:text-2xl font-black text-emerald-600 font-mono tracking-tight">
               &lt; 2s
             </div>
-            <div className="text-xs text-slate-600 font-medium mt-1">
-              {isSwahili ? "Muda wa kutoa risiti" : "Sub-second sales checkout"}
+            <div className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5 sm:mt-1 leading-tight">
+              {isSwahili ? "Kutoa risiti kaunta" : "Sub-second sales checkout"}
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
-            <div className="text-2xl font-black text-violet-600 font-mono tracking-tight">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
+            <div className="text-xl sm:text-2xl font-black text-violet-600 font-mono tracking-tight">
               0 TZS
             </div>
-            <div className="text-xs text-slate-600 font-medium mt-1">
-              {isSwahili ? "Gharama ya risiti za WhatsApp" : "Paper cost with WhatsApp"}
+            <div className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5 sm:mt-1 leading-tight">
+              {isSwahili ? "Risiti za WhatsApp" : "WhatsApp digital receipts"}
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
-            <div className="text-2xl font-black text-[#01184c] font-mono tracking-tight">
+          <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
+            <div className="text-xl sm:text-2xl font-black text-[#01184c] font-mono tracking-tight">
               100%
             </div>
-            <div className="text-xs text-slate-600 font-medium mt-1">
-              {isSwahili ? "Ulinzi dhidi ya wizi" : "Anti-theft blind shift audit"}
+            <div className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5 sm:mt-1 leading-tight">
+              {isSwahili ? "Ulinzi dhidi ya wizi" : "Anti-theft shift audit"}
             </div>
           </div>
         </div>

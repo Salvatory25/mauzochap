@@ -29,7 +29,7 @@ export function HomepageFooter({
               <img
                 src="/images/logo.png"
                 alt="MauzoChap"
-                className="w-10 h-10 rounded-xl object-contain shadow-md shadow-blue-950/30 bg-white/10 p-0.5"
+                className="w-10 h-10 object-contain bg-white rounded-xl p-1 shadow-md"
                 width={40}
                 height={40}
               />

@@ -70,73 +70,73 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
   return (
     <section
       id="daily-sms"
-      className="py-20 sm:py-24 bg-[#01184c] text-white relative overflow-hidden border-b border-blue-950 scroll-mt-12"
+      className="py-10 sm:py-20 lg:py-24 bg-[#01184c] text-white relative overflow-hidden border-b border-blue-950 scroll-mt-12"
     >
-      {/* Ambient Blue/Violet Glows matching the official logo */}
+      {/* Ambient Blue/Violet Glows */}
       <div
-        className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[550px] h-[550px] bg-blue-600/15 blur-[120px] rounded-full pointer-events-none"
+        className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[350px] sm:w-[550px] h-[350px] sm:h-[550px] bg-blue-600/15 blur-[120px] rounded-full pointer-events-none"
         aria-hidden="true"
       />
       <div
-        className="absolute bottom-10 right-1/4 w-[450px] h-[450px] bg-violet-600/15 blur-[120px] rounded-full pointer-events-none"
+        className="absolute bottom-10 right-1/4 w-[300px] sm:w-[450px] h-[300px] sm:h-[450px] bg-violet-600/15 blur-[120px] rounded-full pointer-events-none"
         aria-hidden="true"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-          {/* Left Column: Phone Mockup (2X Large Size, Transparent PNG) */}
+        <div className="grid lg:grid-cols-12 gap-6 lg:gap-14 items-center">
+          {/* Left Column: Phone Mockup */}
           <div className="lg:col-span-5 flex justify-center items-center">
-            <div className="relative w-full max-w-[460px] sm:max-w-[500px] lg:max-w-[530px] group">
+            <div className="relative w-full max-w-[280px] sm:max-w-[420px] lg:max-w-[530px] group">
               {/* Backlight Blue/Violet Glow */}
               <div
-                className="absolute -inset-4 rounded-full bg-gradient-to-r from-blue-600/25 via-violet-500/20 to-indigo-600/25 blur-3xl opacity-80 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                className="absolute -inset-3 sm:-inset-4 rounded-full bg-gradient-to-r from-blue-600/25 via-violet-500/20 to-indigo-600/25 blur-2xl sm:blur-3xl opacity-80 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                 aria-hidden="true"
               />
 
               {/* Floating Top Notification Badge */}
-              <div className="absolute -top-3 right-4 sm:right-8 z-10 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-blue-200 text-[#01184c] shadow-2xl text-[11px] font-mono font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2">
-                <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <div className="absolute -top-2.5 right-2 sm:right-8 z-10 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md border border-blue-200 text-[#01184c] shadow-xl text-[10px] sm:text-[11px] font-mono font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2">
+                <CheckCheck className="w-3 h-3 text-emerald-600" />
                 <span className="text-[#01184c] font-extrabold">Delivered 20:30 PM</span>
               </div>
 
-              {/* Phone Image: Big, Clean, Zero Background Color */}
+              {/* Phone Image */}
               <img
                 src="/images/iphone-sms-transparent.png"
                 alt="MauzoChap Nightly 20:30 PM SMS Report on iPhone (Transparent, No Background)"
-                className="w-full h-auto object-contain filter drop-shadow-[0_30px_50px_rgba(1,24,76,0.6)] transform group-hover:scale-[1.015] group-hover:-translate-y-1 transition-all duration-500"
+                className="w-full h-auto object-contain filter drop-shadow-[0_20px_40px_rgba(1,24,76,0.6)] transform group-hover:scale-[1.015] group-hover:-translate-y-1 transition-all duration-500"
                 loading="lazy"
                 width={900}
                 height={1200}
               />
 
               {/* Sub-Phone Verified Sender & Offline SMS Delivery Badge */}
-              <div className="mt-3 mx-auto px-4 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-xs font-mono flex items-center justify-center gap-3 max-w-sm">
+              <div className="mt-2.5 mx-auto px-3 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-[11px] sm:text-xs font-mono flex items-center justify-center gap-2 sm:gap-3 max-w-sm">
                 <span>
                   Sender ID: <strong className="text-blue-300">MAUZOCHAP</strong>
                 </span>
-                <span className="border-l border-white/20 pl-3 text-emerald-400 font-bold">
-                  SMS Inafika Bila Bando
+                <span className="border-l border-white/20 pl-2 sm:pl-3 text-emerald-400 font-bold">
+                  Bila Bando
                 </span>
               </div>
             </div>
           </div>
 
           {/* Right Column: Copy & 4 Glassmorphism Cards */}
-          <div className="lg:col-span-7 space-y-8 text-left">
-            <div className="space-y-4">
-              <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-blue-400/30 bg-blue-950/60 text-blue-300 text-xs font-mono font-bold tracking-wider uppercase">
+          <div className="lg:col-span-7 space-y-5 sm:space-y-8 text-left">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-blue-400/30 bg-blue-950/60 text-blue-300 text-[10px] sm:text-xs font-mono font-bold tracking-wider uppercase">
                 <span>
                   {isSwahili ? "KILA JIONI SAA 20:30 USIKU" : "EVERY EVENING AT 20:30 PM"}
                 </span>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
                 {isSwahili
                   ? "Ripoti Kamili ya Siku Kwenye Simu Yako, Kila Jioni."
                   : "The Day's Totals on Your Phone, Every Evening."}
               </h2>
 
-              <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-2xl">
+              <p className="text-sm sm:text-lg text-slate-300 font-normal leading-relaxed max-w-2xl">
                 {isSwahili
                   ? "Duka linapofungwa jioni, mmiliki anapokea ujumbe mmoja wa SMS wenye namba zote za siku. Unajua biashara iliendaje moja kwa moja kwenye simu yako hata kama huna bando la intaneti."
                   : "When the shop closes, the owner receives one standard SMS with the day in numbers. You know exactly how the store performed without opening the computer or needing internet bundles."}
@@ -144,7 +144,7 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
             </div>
 
             {/* 4 Glassmorphism Cards in 2x2 Grid */}
-            <div className="grid sm:grid-cols-2 gap-4 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 pt-1">
               {featureCards.map((card, idx) => {
                 const CardIcon = card.icon;
                 return (

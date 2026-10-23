@@ -11,33 +11,34 @@ interface PricingSectionProps {
 export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) {
   const p = t.pricing;
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [selectedPlanId, setSelectedPlanId] = useState<string>("kilimanjaro");
 
   return (
     <section
       id="pricing"
-      className="py-20 sm:py-24 bg-white border-b border-purple-100 scroll-mt-12 bg-grid-pattern relative"
+      className="py-10 sm:py-20 lg:py-24 bg-white border-b border-purple-100 scroll-mt-12 bg-grid-pattern relative"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-purple-200 bg-purple-50 text-violet-700 text-xs font-mono font-bold tracking-wider uppercase">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-14 space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-purple-200 bg-purple-50 text-violet-700 text-[10px] sm:text-xs font-mono font-bold tracking-wider uppercase">
             <span>{p.eyebrow}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
             {p.headline}
           </h2>
 
-          <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
+          <p className="text-sm sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl mx-auto">
             {p.subtext}
           </p>
 
           {/* Monthly / Annually (Save 20%) Switcher */}
-          <div className="pt-4 flex items-center justify-center">
+          <div className="pt-2 sm:pt-4 flex items-center justify-center">
             <div className="inline-flex items-center rounded-2xl border border-purple-200 p-1 bg-purple-50/70 text-xs font-mono font-bold shadow-2xs">
               <button
                 onClick={() => setBillingCycle("monthly")}
-                className={`px-5 py-2.5 rounded-xl transition-all cursor-pointer ${
+                className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all cursor-pointer ${
                   billingCycle === "monthly"
                     ? "bg-[#01184c] text-white font-black shadow-xs"
                     : "text-slate-600 hover:text-[#01184c]"
@@ -48,7 +49,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
 
               <button
                 onClick={() => setBillingCycle("yearly")}
-                className={`px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer ${
                   billingCycle === "yearly"
                     ? "bg-[#01184c] text-white font-black shadow-xs"
                     : "text-slate-600 hover:text-[#01184c]"
@@ -63,16 +64,42 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
           </div>
         </div>
 
-        {/* 3 Pricing Cards Grid (Nexus Style) */}
-        <div className="grid gap-8 lg:grid-cols-3 items-stretch max-w-6xl mx-auto pt-2">
+        {/* Mobile Plan Selector Tabs */}
+        <div className="flex lg:hidden items-center justify-center p-1 rounded-2xl bg-purple-100/70 border border-purple-200/80 mb-6 max-w-sm mx-auto">
+          {p.plans.map((plan) => {
+            const isSelected = selectedPlanId === plan.id;
+            return (
+              <button
+                key={plan.id}
+                onClick={() => setSelectedPlanId(plan.id)}
+                className={`flex-1 py-2 px-1.5 rounded-xl text-xs font-mono font-bold transition-all text-center relative ${
+                  isSelected
+                    ? "bg-[#01184c] text-white shadow-sm font-black"
+                    : "text-slate-600 hover:text-[#01184c]"
+                }`}
+              >
+                <span>{plan.name}</span>
+                {plan.featured && (
+                  <span className="block text-[8px] font-mono text-amber-300 font-extrabold uppercase leading-none mt-0.5">Popular</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Pricing Cards: 1 active card on mobile, 3-card grid on desktop */}
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-3 items-stretch max-w-6xl mx-auto pt-1 sm:pt-2">
           {p.plans.map((plan) => {
             const isFeatured = plan.featured;
             const price = billingCycle === "yearly" ? plan.annualPrice : plan.monthlyPrice;
+            const isVisibleOnMobile = selectedPlanId === plan.id;
 
             return (
               <div
                 key={plan.id}
-                className={`rounded-[32px] flex flex-col justify-between transition-all duration-200 p-8 sm:p-9 relative ${
+                className={`rounded-2xl sm:rounded-[32px] flex flex-col justify-between transition-all duration-200 p-6 sm:p-9 relative ${
+                  !isVisibleOnMobile ? "hidden lg:flex" : "flex"
+                } ${
                   isFeatured
                     ? "bg-violet-600 text-white shadow-2xl shadow-violet-600/30 lg:-translate-y-3 border-2 border-violet-500"
                     : "bg-white border border-purple-100 shadow-md shadow-purple-950/5 hover:border-violet-300 text-slate-900"
