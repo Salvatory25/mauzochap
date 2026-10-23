@@ -182,56 +182,139 @@ function SuperAdminDashboard() {
   const paginatedPayments = payments.slice((pPage - 1) * ITEMS_PER_PAGE, pPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-4 sm:space-y-6 pb-6 sm:pb-12">
       <div>
-        <h1 className="text-3xl font-bold flex items-center">
-          <ShieldAlert className="h-8 w-8 mr-3 text-primary" />
-          Super Admin Dashboard
+        <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center tracking-tight">
+          <ShieldAlert className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-primary shrink-0" />
+          <span>Super Admin Dashboard</span>
         </h1>
-        <p className="text-muted-foreground mt-1">Manage tenants, subscriptions, and verify payments.</p>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage tenants, subscriptions, and verify payments.</p>
       </div>
 
-      <div className="grid md:grid-cols-5 gap-4">
-        <div className="bg-card border border-border p-5 rounded-xl shadow-sm">
-          <div className="text-muted-foreground text-sm font-medium mb-1 flex items-center"><Building2 className="h-4 w-4 mr-2" /> Total Businesses</div>
-          <div className="text-3xl font-bold">{businesses.length}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-4">
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm">
+          <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 shrink-0" /> <span className="truncate">Businesses</span></div>
+          <div className="text-xl sm:text-3xl font-bold">{businesses.length}</div>
         </div>
-        <div className="bg-card border border-border p-5 rounded-xl shadow-sm">
-          <div className="text-muted-foreground text-sm font-medium mb-1 flex items-center"><Activity className="h-4 w-4 mr-2" /> Active Subs</div>
-          <div className="text-3xl font-bold text-success">{activeSubs}</div>
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm">
+          <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 shrink-0" /> <span className="truncate">Active Subs</span></div>
+          <div className="text-xl sm:text-3xl font-bold text-success">{activeSubs}</div>
         </div>
-        <div className="bg-card border border-border p-5 rounded-xl shadow-sm">
-          <div className="text-muted-foreground text-sm font-medium mb-1 flex items-center"><Clock className="h-4 w-4 mr-2" /> Pending</div>
-          <div className="text-3xl font-bold text-amber-500">{pendingApprovals}</div>
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm">
+          <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 shrink-0" /> <span className="truncate">Pending</span></div>
+          <div className="text-xl sm:text-3xl font-bold text-amber-500">{pendingApprovals}</div>
         </div>
-        <div className="bg-card border border-border p-5 rounded-xl shadow-sm">
-          <div className="text-muted-foreground text-sm font-medium mb-1 flex items-center"><Activity className="h-4 w-4 mr-2 text-amber-600" /> Expiring Soon</div>
-          <div className="text-3xl font-bold text-amber-600">{expiringSoon}</div>
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm">
+          <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 text-amber-600 shrink-0" /> <span className="truncate">Expiring Soon</span></div>
+          <div className="text-xl sm:text-3xl font-bold text-amber-600">{expiringSoon}</div>
         </div>
-        <div className="bg-card border border-border p-5 rounded-xl shadow-sm">
-          <div className="text-muted-foreground text-sm font-medium mb-1 flex items-center"><CreditCard className="h-4 w-4 mr-2" /> Total Revenue</div>
-          <div className="text-3xl font-bold">{totalRevenue.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">TZS</span></div>
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm col-span-2 sm:col-span-1">
+          <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 shrink-0" /> <span className="truncate">Total Revenue</span></div>
+          <div className="text-xl sm:text-3xl font-bold">{totalRevenue.toLocaleString()} <span className="text-xs sm:text-sm font-normal text-muted-foreground">TZS</span></div>
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-border mb-6">
+      <div className="flex gap-2 border-b border-border mb-4 overflow-x-auto no-scrollbar">
         <button 
           onClick={() => setActiveTab("businesses")}
-          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === "businesses" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          className={`px-3.5 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap ${activeTab === "businesses" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
         >
-          Businesses
+          Businesses ({businesses.length})
         </button>
         <button 
           onClick={() => setActiveTab("payments")}
-          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === "payments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          className={`px-3.5 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap ${activeTab === "payments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
         >
-          Payments & Verifications
+          Payments & Verifications ({payments.length})
         </button>
       </div>
 
       {activeTab === "businesses" && (
         <>
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {/* Mobile Cards View */}
+        <div className="md:hidden space-y-3">
+          {bLoading ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">Loading businesses...</div>
+          ) : paginatedBusinesses.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">No businesses registered yet.</div>
+          ) : (
+            paginatedBusinesses.map((b) => {
+              const latestP = b.payments?.[0];
+              const daysLeft = b.expiry_date ? Math.ceil((new Date(b.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : null;
+              const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 5;
+              const isExpired = daysLeft !== null && daysLeft <= 0;
+
+              return (
+                <div key={b.id} className="rounded-xl border border-border bg-card p-3.5 shadow-sm space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm sm:text-base text-foreground truncate">{b.business_name}</div>
+                      <div className="text-xs text-muted-foreground">{b.owner_name}</div>
+                    </div>
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0 ${
+                      b.account_status === "approved" ? "bg-success/15 text-success" : 
+                      b.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
+                    }`}>
+                      {b.account_status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-border">
+                    <div>
+                      <span className="text-muted-foreground block text-[10px] uppercase">Contact</span>
+                      <span className="truncate block font-medium">{b.email}</span>
+                      <span className="text-muted-foreground truncate block">{b.phone}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-[10px] uppercase">Plan & Expiry</span>
+                      <span className="font-bold text-primary uppercase text-[11px] block">{b.package || "N/A"}</span>
+                      {b.expiry_date ? (
+                        <span className={`text-[11px] font-semibold block ${isExpired ? 'text-destructive' : isExpiringSoon ? 'text-amber-500' : 'text-foreground'}`}>
+                          {new Date(b.expiry_date).toLocaleDateString()}
+                          {isExpiringSoon && ` (${daysLeft}d)`}
+                          {isExpired && ` (Exp)`}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground italic text-[11px]">No expiry</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {latestP?.payment_reference && (
+                    <div className="bg-muted/60 p-2 rounded-lg text-xs flex items-center justify-between">
+                      <span className="text-muted-foreground text-[10px] uppercase">Payment Ref:</span>
+                      <span className="font-mono font-bold">{latestP.payment_reference}</span>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border">
+                    {b.account_status !== "approved" && latestP && (
+                      <Button 
+                        size="sm" 
+                        className="flex-1 bg-primary text-primary-foreground font-bold h-8 text-xs"
+                        onClick={() => handleApprovePayment(latestP.id, b.id, b.package || "kilimanjaro", b.email, b.business_name)}
+                      >
+                        Verify & Activate
+                      </Button>
+                    )}
+                    {b.account_status !== "approved" && !latestP && (
+                      <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleUpdateBusinessStatus(b.id, "approved")}>Approve</Button>
+                    )}
+                    {b.account_status !== "suspended" && (
+                      <Button size="sm" variant="outline" className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={() => handleUpdateBusinessStatus(b.id, "suspended")}>Suspend</Button>
+                    )}
+                    <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(b.id, b.business_name)}>
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block rounded-xl border border-border bg-card overflow-x-auto shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
@@ -247,7 +330,7 @@ function SuperAdminDashboard() {
             </thead>
             <tbody className="divide-y divide-border">
               {bLoading ? (
-                <tr><td colSpan={7} className="p-4 text-center">Loading...</td></tr>
+                <tr><td colSpan={8} className="p-4 text-center">Loading...</td></tr>
               ) : paginatedBusinesses.map(b => {
                 const latestP = b.payments?.[0];
                 return (
@@ -319,9 +402,9 @@ function SuperAdminDashboard() {
           </table>
         </div>
         {totalBPages > 1 && (
-          <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4">
+          <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4 text-xs sm:text-sm">
             <Button variant="outline" size="sm" disabled={bPage === 1} onClick={() => setBPage(p => p - 1)}>Previous</Button>
-            <span className="text-sm text-muted-foreground">Page {bPage} of {totalBPages}</span>
+            <span className="text-muted-foreground">Page {bPage} of {totalBPages}</span>
             <Button variant="outline" size="sm" disabled={bPage === totalBPages} onClick={() => setBPage(p => p + 1)}>Next</Button>
           </div>
         )}
@@ -330,7 +413,66 @@ function SuperAdminDashboard() {
 
       {activeTab === "payments" && (
         <>
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {/* Mobile Payments Cards View */}
+        <div className="md:hidden space-y-3">
+          {pLoading ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">Loading payments...</div>
+          ) : paginatedPayments.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">No payments to display.</div>
+          ) : (
+            paginatedPayments.map((p) => (
+              <div key={p.id} className="rounded-xl border border-border bg-card p-3.5 shadow-sm space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm sm:text-base text-foreground truncate">{p.businesses?.business_name || "Unknown Business"}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</div>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0 ${
+                    p.verification_status === "paid" ? "bg-success/15 text-success" : 
+                    p.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-600"
+                  }`}>
+                    {p.verification_status === "paid" ? <CheckCircle2 className="h-3 w-3" /> : p.verification_status === "rejected" ? <XCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                    {p.verification_status.replace("_", " ")}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between bg-muted/60 p-2.5 rounded-lg text-xs">
+                  <div>
+                    <span className="text-muted-foreground text-[10px] uppercase block">Reference</span>
+                    <span className="font-mono font-bold text-foreground">{p.payment_reference}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-muted-foreground text-[10px] uppercase block">Amount</span>
+                    <span className="font-bold text-sm text-foreground">{Number(p.amount).toLocaleString()} TZS</span>
+                  </div>
+                </div>
+
+                {p.verification_status === "waiting_verification" && (
+                  <div className="flex gap-2 pt-2 border-t border-border">
+                    <Button 
+                      size="sm" 
+                      className="flex-1 bg-primary text-primary-foreground font-bold h-8 text-xs" 
+                      onClick={() => handleApprovePayment(p.id, p.business_id, p.businesses?.package || "kilimanjaro", p.businesses?.email, p.businesses?.business_name)}
+                    >
+                      Verify & Activate
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10 h-8 text-xs" 
+                      onClick={() => handleRejectPayment(p.id, p.business_id, p.businesses?.email, p.businesses?.business_name)}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Payments Table View */}
+        <div className="hidden md:block rounded-xl border border-border bg-card overflow-x-auto shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
@@ -376,9 +518,9 @@ function SuperAdminDashboard() {
           </table>
         </div>
         {totalPPages > 1 && (
-          <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4">
+          <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4 text-xs sm:text-sm">
             <Button variant="outline" size="sm" disabled={pPage === 1} onClick={() => setPPage(p => p - 1)}>Previous</Button>
-            <span className="text-sm text-muted-foreground">Page {pPage} of {totalPPages}</span>
+            <span className="text-muted-foreground">Page {pPage} of {totalPPages}</span>
             <Button variant="outline" size="sm" disabled={pPage === totalPPages} onClick={() => setPPage(p => p + 1)}>Next</Button>
           </div>
         )}

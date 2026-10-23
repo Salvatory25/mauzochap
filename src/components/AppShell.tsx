@@ -488,24 +488,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 inset-x-0 z-40 h-20 flex items-center justify-between bg-sidebar text-sidebar-foreground px-4 border-b border-sidebar-border shadow-sm">
-        <Link to="/dashboard" className="flex items-center gap-2.5 h-full py-2">
+      <div className="lg:hidden fixed top-0 inset-x-0 z-40 h-16 flex items-center justify-between bg-sidebar text-sidebar-foreground px-3 sm:px-4 border-b border-sidebar-border shadow-sm">
+        <Link to="/dashboard" className="flex items-center gap-2 h-full py-2">
           <img src="/images/logo.png" alt="MauzoChap" className="w-8 h-8 object-contain" />
-          <span className="font-bold text-lg leading-tight tracking-tight text-sidebar-foreground">MauzoChap</span>
+          <span className="font-bold text-base sm:text-lg leading-tight tracking-tight text-sidebar-foreground">MauzoChap</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {business && !isSuperAdmin && <NotificationCenter />}
           <button
             onClick={() => setLang(lang === "en" ? "sw" : "en")}
-            className="text-xs font-bold uppercase tracking-wider bg-sidebar-accent px-3 py-2 rounded-md"
+            className="text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-sidebar-accent px-2.5 py-1.5 rounded-md"
           >
             {lang}
           </button>
           
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <button className="p-2 -mr-2 text-sidebar-foreground hover:bg-sidebar-accent rounded-md">
-                <Menu className="h-6 w-6" />
+              <button className="p-2 text-sidebar-foreground hover:bg-sidebar-accent rounded-md" aria-label="Open navigation menu">
+                <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground border-r-sidebar-border flex flex-col">
@@ -516,25 +516,77 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <main className="flex-1 lg:ml-0 pt-20 lg:pt-0 bg-muted/20">
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
+      <main className="flex-1 lg:ml-0 pt-16 lg:pt-0 bg-muted/20">
+        <div className="px-3 py-4 sm:px-6 sm:py-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
         {/* Mobile bottom nav */}
-        <nav className="lg:hidden fixed bottom-0 inset-x-0 grid grid-cols-5 gap-1 border-t border-border bg-card p-2 z-40 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          {nav.slice(0, 5).map((item) => {
-            const active = location.pathname.startsWith(item.to);
-            return (
+        <nav className={`lg:hidden fixed bottom-0 inset-x-0 grid ${isSuperAdmin ? "grid-cols-3" : "grid-cols-5"} gap-1 border-t border-border bg-card/95 backdrop-blur-md px-1.5 py-1 z-40 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)]`}>
+          {isSuperAdmin ? (
+            <>
               <Link
-                key={item.to}
-                to={item.to}
-                className={`flex flex-col items-center justify-center gap-1 py-1 text-[10px] rounded-md transition-colors ${active ? "text-primary font-medium" : "text-muted-foreground"}`}
+                to="/super-admin"
+                className={`flex flex-col items-center justify-center gap-0.5 py-1 text-[11px] font-medium rounded-lg transition-colors ${location.pathname.startsWith("/super-admin") ? "text-primary font-bold bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
               >
-                <item.icon className="h-5 w-5" />
-                <span className="truncate w-full text-center px-1">{item.label}</span>
+                <ShieldAlert className="h-5 w-5" />
+                <span className="truncate w-full text-center px-1">Admin</span>
               </Link>
-            );
-          })}
+              <Link
+                to="/dashboard"
+                className={`flex flex-col items-center justify-center gap-0.5 py-1 text-[11px] font-medium rounded-lg transition-colors ${location.pathname.startsWith("/dashboard") ? "text-primary font-bold bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <LayoutDashboard className="h-5 w-5" />
+                <span className="truncate w-full text-center px-1">{t("dashboard")}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="flex flex-col items-center justify-center gap-0.5 py-1 text-[11px] font-medium rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="truncate w-full text-center px-1">Menu</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/dashboard"
+                className={`flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium rounded-lg transition-colors ${location.pathname === "/dashboard" ? "text-primary font-bold bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <LayoutDashboard className="h-5 w-5" />
+                <span className="truncate w-full text-center px-0.5">{t("dashboard")}</span>
+              </Link>
+              <Link
+                to="/pos"
+                className={`flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium rounded-lg transition-colors ${location.pathname.startsWith("/pos") ? "text-primary font-bold bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                <span className="truncate w-full text-center px-0.5">{t("pos")}</span>
+              </Link>
+              <Link
+                to="/sales"
+                className={`flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium rounded-lg transition-colors ${location.pathname.startsWith("/sales") ? "text-primary font-bold bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Receipt className="h-5 w-5" />
+                <span className="truncate w-full text-center px-0.5">{t("sales")}</span>
+              </Link>
+              <Link
+                to="/products"
+                className={`flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium rounded-lg transition-colors ${location.pathname.startsWith("/products") ? "text-primary font-bold bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Boxes className="h-5 w-5" />
+                <span className="truncate w-full text-center px-0.5">{t("products")}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="flex flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="truncate w-full text-center px-0.5">Menu</span>
+              </button>
+            </>
+          )}
         </nav>
-        <div className="lg:hidden h-20" />
+        <div className="lg:hidden h-16" />
       </main>
     </div>
   );

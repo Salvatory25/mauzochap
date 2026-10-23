@@ -208,57 +208,59 @@ function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6 pb-12">
-      <div>
-        <h1 className="text-3xl font-bold">{t("dashboard")}</h1>
-        <p className="text-sm text-muted-foreground">{t("dashboardSubtitle")}</p>
+    <div className="space-y-4 sm:space-y-6 pb-6 sm:pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{t("dashboard")}</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">{t("dashboardSubtitle")}</p>
+        </div>
       </div>
 
-      {/* Primary KPIs */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((c, i) => (
+      {/* Primary KPIs (2x2 grid on mobile, 4 cols on desktop) */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+        {cards.map((c) => (
           <div
             key={c.label}
-            className={`rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] ${isLoading ? 'animate-pulse' : ''}`}
+            className={`rounded-xl border border-border bg-card p-3 sm:p-5 shadow-[var(--shadow-soft)] transition-all flex flex-col justify-between ${isLoading ? 'animate-pulse' : ''}`}
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground truncate">
                 {c.label}
               </span>
               <div
-                className={`grid h-8 w-8 place-items-center rounded-md ${c.primary ? 'text-primary-foreground' : 'text-primary bg-primary/10'}`}
+                className={`grid h-7 w-7 sm:h-8 sm:w-8 shrink-0 place-items-center rounded-lg ${c.primary ? 'text-primary-foreground' : 'text-primary bg-primary/10'}`}
                 style={c.primary ? { background: c.accent } : undefined}
               >
-                <c.icon className={`h-4 w-4 ${c.color || ''}`} />
+                <c.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${c.color || ''}`} />
               </div>
             </div>
-            <div className="mt-3 text-2xl font-bold tracking-tight">{c.value}</div>
+            <div className="mt-2 sm:mt-3 text-base sm:text-2xl font-bold tracking-tight truncate">{c.value}</div>
           </div>
         ))}
       </div>
 
-      {/* Secondary KPIs */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* Secondary KPIs (3 cols on all screen sizes, compact mobile view) */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {secondaryCards.map((c) => (
           <div
             key={c.label}
-            className={`rounded-xl border border-border bg-card p-4 flex items-center gap-4 ${isLoading ? 'animate-pulse' : ''}`}
+            className={`rounded-xl border border-border bg-card p-2.5 sm:p-4 flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-4 text-center sm:text-left ${isLoading ? 'animate-pulse' : ''}`}
           >
-            <div className="p-3 bg-muted rounded-full text-muted-foreground">
-              <c.icon className="h-5 w-5" />
+            <div className="p-2 sm:p-3 bg-muted rounded-full text-muted-foreground shrink-0">
+              <c.icon className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">{c.label}</div>
-              <div className="text-xl font-bold">{c.value}</div>
+            <div className="min-w-0 w-full overflow-hidden">
+              <div className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate">{c.label}</div>
+              <div className="text-sm sm:text-xl font-bold truncate">{c.value}</div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Invoice Statistics */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-bold tracking-tight">{t("invoiceSummary")}</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Invoice Statistics (2x2 on mobile, 4 cols on desktop) */}
+      <div className="space-y-2 sm:space-y-3">
+        <h2 className="text-base sm:text-lg font-bold tracking-tight">{t("invoiceSummary")}</h2>
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           {[
             { label: t("totalInvoices"), value: String(stats?.totalInvoicesCount ?? 0), icon: FileText },
             { label: t("paidInvoices"), value: String(stats?.paidInvoicesCount ?? 0), icon: CheckCircle, color: "text-success bg-success/10" },
@@ -267,39 +269,39 @@ function Dashboard() {
           ].map((c) => (
             <div
               key={c.label}
-              className={`rounded-xl border border-border bg-card p-4 flex items-center gap-4 ${isLoading ? 'animate-pulse' : ''}`}
+              className={`rounded-xl border border-border bg-card p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3 ${isLoading ? 'animate-pulse' : ''}`}
             >
-              <div className={`p-3 rounded-full ${c.color || "bg-muted text-muted-foreground"}`}>
-                <c.icon className="h-5 w-5" />
+              <div className={`p-2 sm:p-3 rounded-full shrink-0 ${c.color || "bg-muted text-muted-foreground"}`}>
+                <c.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">{c.label}</div>
-                <div className="text-xl font-bold">{c.value}</div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate">{c.label}</div>
+                <div className="text-sm sm:text-xl font-bold truncate">{c.value}</div>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Sales Summary Chart */}
         <div className="lg:col-span-2 rounded-xl border border-border bg-card shadow-sm flex flex-col">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="font-semibold">{t("salesSummary7Days")}</h2>
+          <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-border flex items-center justify-between">
+            <h2 className="font-semibold text-sm sm:text-base">{t("salesSummary7Days")}</h2>
           </div>
-          <div className="p-5 flex-1 min-h-[300px]">
+          <div className="p-2 sm:p-5 flex-1 min-h-[220px] sm:min-h-[300px]">
             {stats?.chartData && stats.chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <BarChart data={stats.chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} tickFormatter={(val) => `TZS ${val / 1000}k`} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} dy={6} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickFormatter={(val) => `${val >= 1000 ? Math.round(val / 1000) + 'k' : val}`} />
                   <Tooltip 
                     cursor={{ fill: 'var(--muted)' }}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--card)', fontSize: '12px' }}
                     formatter={(value: number) => [formatTZS(value), "Revenue"]}
                   />
-                  <Bar dataKey="total" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                  <Bar dataKey="total" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={38} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -312,11 +314,11 @@ function Dashboard() {
 
         {/* Low Stock Alert */}
         <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col">
-          <div className="px-5 py-4 border-b border-border flex items-center gap-2 bg-warning/5 text-warning">
-            <AlertTriangle className="h-4 w-4" />
-            <h2 className="font-semibold">{t("lowStockAlerts")}</h2>
+          <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-border flex items-center gap-2 bg-warning/5 text-warning">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <h2 className="font-semibold text-sm sm:text-base">{t("lowStockAlerts")}</h2>
           </div>
-          <div className="divide-y divide-border overflow-y-auto max-h-[300px]">
+          <div className="divide-y divide-border overflow-y-auto max-h-[220px] sm:max-h-[300px]">
             {stats?.lowStock && stats.lowStock.length > 0 ? (
               stats.lowStock.map(
                 (p: {
@@ -325,10 +327,10 @@ function Dashboard() {
                   stock_quantity: number;
                   low_stock_threshold: number;
                 }) => (
-                  <div key={p.id} className="flex items-center justify-between px-5 py-3 text-sm">
+                  <div key={p.id} className="flex items-center justify-between px-3.5 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm">
                     <span className="font-medium truncate pr-2">{p.name}</span>
                     <span
-                      className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-bold whitespace-nowrap"
+                      className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0"
                       style={{ color: "var(--warning)" }}
                     >
                       {p.stock_quantity} {t("left")}
@@ -337,7 +339,7 @@ function Dashboard() {
                 ),
               )
             ) : (
-              <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+              <div className="px-5 py-8 text-center text-xs sm:text-sm text-muted-foreground">
                 {t("allWellStocked")}
               </div>
             )}
@@ -345,32 +347,32 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 mt-6">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2 mt-2 sm:mt-6">
         {/* Recent Transactions */}
-        <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col h-[400px]">
-          <div className="px-5 py-4 border-b border-border">
-            <h2 className="font-semibold">{t("recentSales")}</h2>
+        <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col h-[340px] sm:h-[400px]">
+          <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-border">
+            <h2 className="font-semibold text-sm sm:text-base">{t("recentSales")}</h2>
           </div>
           <div className="divide-y divide-border overflow-y-auto flex-1">
             {recent && recent.length > 0 ? (
               recent.map((s) => (
-                <div key={s.id} className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary">
-                      <TrendingUp className="h-5 w-5" />
+                <div key={s.id} className="flex items-center justify-between px-3.5 py-2.5 sm:px-5 sm:py-3.5 hover:bg-muted/30 transition-colors">
+                  <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+                    <div className="grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full bg-primary/10 text-primary shrink-0">
+                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                    <div>
-                      <div className="font-medium">{s.receipt_number}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
+                    <div className="min-w-0">
+                      <div className="font-medium text-xs sm:text-sm truncate">{s.receipt_number}</div>
+                      <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">
                         {formatDate(s.created_at)} · <span className="uppercase">{s.payment_method}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="font-bold text-base">{formatTZS(Number(s.total))}</div>
+                  <div className="font-bold text-xs sm:text-base shrink-0 ml-2">{formatTZS(Number(s.total))}</div>
                 </div>
               ))
             ) : (
-              <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+              <div className="px-5 py-8 text-center text-xs sm:text-sm text-muted-foreground">
                 {t("noData")}
               </div>
             )}
@@ -378,35 +380,35 @@ function Dashboard() {
         </div>
 
         {/* Top Selling Products This Month */}
-        <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col h-[400px]">
-          <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-primary/5">
-            <h2 className="font-semibold text-primary">{t("topProducts30Days")}</h2>
+        <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col h-[340px] sm:h-[400px]">
+          <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-border flex justify-between items-center bg-primary/5">
+            <h2 className="font-semibold text-primary text-sm sm:text-base">{t("topProducts30Days")}</h2>
             <div className="grid h-6 w-6 place-items-center rounded-full bg-primary/10 text-primary">
               <Activity className="h-3 w-3" />
             </div>
           </div>
-          <div className="divide-y divide-border overflow-y-auto flex-1 p-2">
+          <div className="divide-y divide-border overflow-y-auto flex-1 p-1.5 sm:p-2">
             {stats?.topProducts && stats.topProducts.length > 0 ? (
               stats.topProducts.map((p: any, i: number) => (
-                <div key={p.name} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                <div key={p.name} className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 hover:bg-muted/30 rounded-lg transition-colors">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-muted text-[10px] sm:text-xs font-bold text-muted-foreground shrink-0">
                       {i + 1}
                     </div>
-                    <div>
-                      <div className="font-medium text-sm">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">
+                    <div className="min-w-0">
+                      <div className="font-medium text-xs sm:text-sm truncate">{p.name}</div>
+                      <div className="text-[10px] sm:text-xs text-muted-foreground">
                         <span className="font-semibold text-foreground">{p.quantity}</span> {t("unitsSold")}
                       </div>
                     </div>
                   </div>
-                  <div className="font-semibold text-sm text-right">
+                  <div className="font-semibold text-xs sm:text-sm text-right shrink-0 ml-2">
                     {formatTZS(p.revenue)}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+              <div className="px-5 py-8 text-center text-xs sm:text-sm text-muted-foreground">
                 {isLoading ? t("loadingProducts") : t("noSales30Days")}
               </div>
             )}
