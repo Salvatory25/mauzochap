@@ -781,9 +781,9 @@ function DemoPage() {
       {/* ========================================================================= */}
       {/* REAL ACCOUNTSHELL SHELL STRUCTURE */}
       {/* ========================================================================= */}
-      <div className="flex flex-1 min-h-[calc(100vh-36px)]">
+      <div className="flex flex-1 min-h-[calc(100vh-36px)] w-full min-w-0">
         {/* Desktop Sticky Sidebar */}
-        <aside className="hidden lg:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-sm h-screen sticky top-0 overflow-hidden">
+        <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-sm h-screen sticky top-0 overflow-hidden z-30">
           {sidebarContent}
         </aside>
 
@@ -828,8 +828,8 @@ function DemoPage() {
         )}
 
         {/* Main Application Area (Dynamic based on activeView) */}
-        <main className="flex-1 lg:ml-0 pt-16 lg:pt-0 bg-muted/20 overflow-y-auto">
-          <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+        <main className="flex-1 min-w-0 w-full lg:ml-0 pt-16 lg:pt-0 bg-muted/20 overflow-y-auto overflow-x-hidden">
+          <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 w-full min-w-0">
 
             {/* =================================================================== */}
             {/* 1. DASHBOARD VIEW — IDENTICAL TO REAL _authenticated/dashboard.tsx */}

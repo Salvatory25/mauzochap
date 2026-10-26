@@ -482,8 +482,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden lg:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-sm h-screen sticky top-0 overflow-hidden">
+    <div className="flex min-h-screen bg-background w-full overflow-x-hidden">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-sm h-screen sticky top-0 overflow-hidden z-30">
         {sidebarContent}
       </aside>
 
@@ -516,8 +516,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <main className="flex-1 lg:ml-0 pt-16 lg:pt-0 bg-muted/20">
-        <div className="px-3 py-4 sm:px-6 sm:py-6 lg:p-8 max-w-7xl mx-auto pb-10 sm:pb-8">{children}</div>
+      <main className="flex-1 min-w-0 w-full lg:ml-0 pt-16 lg:pt-0 bg-muted/20 overflow-x-hidden">
+        <div className="px-3 py-4 sm:px-6 sm:py-6 lg:p-8 max-w-7xl mx-auto pb-10 sm:pb-8 w-full min-w-0">{children}</div>
         {/* Mobile bottom nav */}
         <nav className={`lg:hidden fixed bottom-0 inset-x-0 grid ${isSuperAdmin ? "grid-cols-3" : "grid-cols-5"} gap-1 border-t border-border bg-card/95 backdrop-blur-md px-1.5 py-1 z-40 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)]`}>
           {isSuperAdmin ? (

@@ -191,26 +191,26 @@ function SuperAdminDashboard() {
         <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage tenants, subscriptions, and verify payments.</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-4">
-        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-4">
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm min-w-0">
           <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 shrink-0" /> <span className="truncate">Businesses</span></div>
           <div className="text-xl sm:text-3xl font-bold">{businesses.length}</div>
         </div>
-        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm">
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm min-w-0">
           <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 shrink-0" /> <span className="truncate">Active Subs</span></div>
           <div className="text-xl sm:text-3xl font-bold text-success">{activeSubs}</div>
         </div>
-        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm">
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm min-w-0">
           <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 shrink-0" /> <span className="truncate">Pending</span></div>
           <div className="text-xl sm:text-3xl font-bold text-amber-500">{pendingApprovals}</div>
         </div>
-        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm">
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm min-w-0">
           <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 text-amber-600 shrink-0" /> <span className="truncate">Expiring Soon</span></div>
           <div className="text-xl sm:text-3xl font-bold text-amber-600">{expiringSoon}</div>
         </div>
-        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm col-span-2 sm:col-span-1">
+        <div className="bg-card border border-border p-3 sm:p-5 rounded-xl shadow-sm col-span-2 sm:col-span-1 min-w-0">
           <div className="text-muted-foreground text-xs sm:text-sm font-medium mb-1 flex items-center"><CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 shrink-0" /> <span className="truncate">Total Revenue</span></div>
-          <div className="text-xl sm:text-3xl font-bold">{totalRevenue.toLocaleString()} <span className="text-xs sm:text-sm font-normal text-muted-foreground">TZS</span></div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{totalRevenue.toLocaleString()} <span className="text-xs sm:text-sm font-normal text-muted-foreground">TZS</span></div>
         </div>
       </div>
 
@@ -315,17 +315,17 @@ function SuperAdminDashboard() {
 
         {/* Desktop Table View */}
         <div className="hidden md:block rounded-xl border border-border bg-card overflow-x-auto shadow-sm">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[950px]">
             <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
-                <th className="px-4 py-3 text-left">Business Name</th>
-                <th className="px-4 py-3 text-left">Owner</th>
-                <th className="px-4 py-3 text-left">Contact</th>
-                <th className="px-4 py-3 text-left">Package</th>
-                <th className="px-4 py-3 text-left">Payment Reference</th>
-                <th className="px-4 py-3 text-left">Expiry</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Business Name</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Owner</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Contact</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Package</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Payment Reference</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Expiry</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Status</th>
+                <th className="px-4 py-3 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -335,15 +335,15 @@ function SuperAdminDashboard() {
                 const latestP = b.payments?.[0];
                 return (
                   <tr key={b.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-semibold text-foreground">{b.business_name}</td>
-                    <td className="px-4 py-3">{b.owner_name}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{b.email}<br/>{b.phone}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{b.business_name}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{b.owner_name}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{b.email}<br/>{b.phone}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span className="font-bold text-xs uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded">
                         {b.package || "N/A"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs">
+                    <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">
                       {latestP?.payment_reference ? (
                         <span className="font-bold bg-muted px-2.5 py-1 rounded text-foreground border border-border">
                           {latestP.payment_reference}
@@ -352,7 +352,7 @@ function SuperAdminDashboard() {
                         <span className="text-muted-foreground italic">No reference</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-xs">
+                    <td className="px-4 py-3 text-xs whitespace-nowrap">
                       {b.expiry_date ? (() => {
                         const expiry = new Date(b.expiry_date);
                         const daysLeft = Math.ceil((expiry.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
@@ -367,7 +367,7 @@ function SuperAdminDashboard() {
                         );
                       })() : <span className="text-muted-foreground italic">N/A</span>}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
                         b.account_status === "approved" ? "bg-success/15 text-success" : 
                         b.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
@@ -473,25 +473,25 @@ function SuperAdminDashboard() {
 
         {/* Desktop Payments Table View */}
         <div className="hidden md:block rounded-xl border border-border bg-card overflow-x-auto shadow-sm">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[750px]">
             <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-left">Business</th>
-                <th className="px-4 py-3 text-left">Reference</th>
-                <th className="px-4 py-3 text-right">Amount</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-right">Action</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Date</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Business</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Reference</th>
+                <th className="px-4 py-3 text-right whitespace-nowrap">Amount</th>
+                <th className="px-4 py-3 text-left whitespace-nowrap">Status</th>
+                <th className="px-4 py-3 text-right whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {pLoading ? <tr><td colSpan={6} className="p-4 text-center">Loading...</td></tr> : paginatedPayments.map(p => (
                 <tr key={p.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3 text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 font-medium">{p.businesses?.business_name || "Unknown"}</td>
-                  <td className="px-4 py-3 font-mono text-xs">{p.payment_reference}</td>
-                  <td className="px-4 py-3 text-right font-semibold">{Number(p.amount).toLocaleString()}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(p.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 font-medium whitespace-nowrap">{p.businesses?.business_name || "Unknown"}</td>
+                  <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{p.payment_reference}</td>
+                  <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">{Number(p.amount).toLocaleString()}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
                       p.verification_status === "paid" ? "bg-success/15 text-success" : 
                       p.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-600"
