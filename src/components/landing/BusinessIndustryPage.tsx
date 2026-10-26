@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { formatTZS } from "@/lib/i18n";
 import { RegisterModal } from "./RegisterModal";
+import { LANDING_TRANSLATIONS } from "./landing-i18n";
 
 export type IndustryKey =
   | "shops"
@@ -1532,46 +1533,7 @@ export function BusinessIndustryPage({ industry }: { industry: IndustryKey }) {
       <RegisterModal
         isOpen={registerModalOpen}
         onClose={() => setRegisterModalOpen(false)}
-        t={{
-          modal: {
-            title: isSw ? "Sajili Duka Lako MauzoChap" : "Register Your Business",
-            subtitle: isSw ? "Jaribio la siku 5 bure • Bila kadi ya benki" : "5-day free trial • No credit card",
-            close: "Close",
-          },
-          multiStep: {
-            step1Badge: "Step 1",
-            step1Title: "Akaunti",
-            step2Badge: "Step 2",
-            step2Title: "Eneo",
-            step3Badge: "Step 3",
-            step3Title: "Biashara",
-            back: "Nyuma",
-            next: "Endelea",
-            createAccount: "Kamilisha Usajili",
-            fullName: "Jina Kamili",
-            fullNamePlaceholder: "mfano: Juma Hamisi",
-            phone: "Namba ya Simu",
-            phonePlaceholder: "07XXXXXXXX",
-            email: "Barua Pepe",
-            emailPlaceholder: "juma@gmail.com",
-            password: "Nenosiri",
-            passwordPlaceholder: "Angalau herufi 6",
-            region: "Mkoa",
-            district: "Wilaya",
-            districtPlaceholder: "Wilaya yako",
-            street: "Mtaa / Eneo",
-            streetPlaceholder: "Mtaa lilipo duka lako",
-            businessName: "Jina la Biashara",
-            businessNamePlaceholder: "mfano: Juma Mini Supermarket",
-            businessType: "Aina ya Biashara",
-            termsAgree: "Ninakubali Vigezo na Sera za MauzoChap",
-            termsLink: "Vigezo na Masharti",
-            privacyLink: "Sera ya Faragha",
-            creating: "Inatengeneza akaunti...",
-            alreadyHaveAccount: "Tayari una akaunti?",
-            signIn: "Ingia hapa",
-          },
-        } as any}
+        t={LANDING_TRANSLATIONS[lang]}
       />
     </div>
   );

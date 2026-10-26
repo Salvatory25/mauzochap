@@ -81,21 +81,51 @@ export function MultiStepRegister({
   const [loading, setLoading] = useState(false);
 
   // Step 1: User Account
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState(() => {
+    try {
+      return localStorage.getItem("mauzochap_reg_owner_name") || "";
+    } catch {
+      return "";
+    }
+  });
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(() => {
+    try {
+      return localStorage.getItem("mauzochap_reg_phone") || "";
+    } catch {
+      return "";
+    }
+  });
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   // Step 2: Location
   const [country] = useState("Tanzania");
-  const [region, setRegion] = useState("Dar es Salaam");
+  const [region, setRegion] = useState(() => {
+    try {
+      return localStorage.getItem("mauzochap_reg_region") || "Dar es Salaam";
+    } catch {
+      return "Dar es Salaam";
+    }
+  });
   const [district, setDistrict] = useState("");
   const [address, setAddress] = useState("");
 
   // Step 3: Business Information & Legal Consent
-  const [businessName, setBusinessName] = useState("");
-  const [ownerName, setOwnerName] = useState("");
+  const [businessName, setBusinessName] = useState(() => {
+    try {
+      return localStorage.getItem("mauzochap_reg_shop_name") || "";
+    } catch {
+      return "";
+    }
+  });
+  const [ownerName, setOwnerName] = useState(() => {
+    try {
+      return localStorage.getItem("mauzochap_reg_owner_name") || "";
+    } catch {
+      return "";
+    }
+  });
   const [businessType, setBusinessType] = useState("retail");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);

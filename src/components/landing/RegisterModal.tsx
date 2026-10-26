@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { X, Sparkles, Check, ArrowRight, Store, User, Phone, MapPin } from "lucide-react";
-import { LandingTranslation } from "./landing-i18n";
+import { LANDING_TRANSLATIONS, LandingTranslation } from "./landing-i18n";
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  t: LandingTranslation;
+  t?: LandingTranslation;
   defaultPlan?: "starter" | "kilimanjaro" | "serengeti";
 }
 
@@ -16,7 +16,12 @@ export function RegisterModal({
   t,
   defaultPlan = "kilimanjaro",
 }: RegisterModalProps) {
-  const m = t.modal;
+  const fallback = LANDING_TRANSLATIONS.sw;
+  const m = t?.modal || fallback.modal;
+  const regions: string[] =
+    Array.isArray(m?.regions) && m.regions.length > 0
+      ? (m.regions as string[])
+      : fallback.modal.regions;
   const navigate = useNavigate();
 
   const [shopName, setShopName] = useState("");
@@ -34,6 +39,16 @@ export function RegisterModal({
     e.preventDefault();
     setLoading(true);
 
+    try {
+      localStorage.setItem("mauzochap_reg_shop_name", shopName);
+      localStorage.setItem("mauzochap_reg_owner_name", ownerName);
+      localStorage.setItem("mauzochap_reg_phone", phone);
+      localStorage.setItem("mauzochap_reg_region", region);
+      localStorage.setItem("mauzochap_reg_plan", selectedPlan);
+    } catch {
+      // ignore
+    }
+
     setTimeout(() => {
       setLoading(false);
       onClose();
@@ -43,9 +58,9 @@ export function RegisterModal({
         search: {
           mode: "signup",
           package: selectedPlan,
-        },
+        } as any,
       });
-    }, 600);
+    }, 400);
   };
 
   return (
@@ -69,8 +84,8 @@ export function RegisterModal({
               height={36}
             />
             <div>
-              <h3 className="text-base font-black tracking-tight">{m.title}</h3>
-              <p className="text-xs text-violet-200">{m.subtitle}</p>
+              <h3 className="text-base font-black tracking-tight">{m?.title || fallback.modal.title}</h3>
+              <p className="text-xs text-violet-200">{m?.subtitle || fallback.modal.subtitle}</p>
             </div>
           </div>
 
@@ -89,14 +104,14 @@ export function RegisterModal({
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <Store className="w-3.5 h-3.5 text-violet-600" />
-              <span>{m.shopName}</span>
+              <span>{m?.shopName || fallback.modal.shopName}</span>
             </label>
             <input
               type="text"
               required
               value={shopName}
               onChange={(e) => setShopName(e.target.value)}
-              placeholder={m.shopPlaceholder}
+              placeholder={m?.shopPlaceholder || fallback.modal.shopPlaceholder}
               className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition-all"
             />
           </div>
@@ -105,14 +120,14 @@ export function RegisterModal({
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <User className="w-3.5 h-3.5 text-violet-600" />
-              <span>{m.ownerName}</span>
+              <span>{m?.ownerName || fallback.modal.ownerName}</span>
             </label>
             <input
               type="text"
               required
               value={ownerName}
               onChange={(e) => setOwnerName(e.target.value)}
-              placeholder={m.ownerPlaceholder}
+              placeholder={m?.ownerPlaceholder || fallback.modal.ownerPlaceholder}
               className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition-all"
             />
           </div>
@@ -122,14 +137,14 @@ export function RegisterModal({
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5 text-violet-600" />
-                <span>{m.phone}</span>
+                <span>{m?.phone || fallback.modal.phone}</span>
               </label>
               <input
                 type="tel"
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder={m.phonePlaceholder}
+                placeholder={m?.phonePlaceholder || fallback.modal.phonePlaceholder}
                 className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition-all font-mono"
               />
             </div>
@@ -137,14 +152,14 @@ export function RegisterModal({
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-violet-600" />
-                <span>{m.region}</span>
+                <span>{m?.region || fallback.modal.region}</span>
               </label>
               <select
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-violet-600 focus:border-transparent transition-all"
               >
-                {m.regions.map((reg) => (
+                {regions.map((reg: string) => (
                   <option key={reg} value={reg}>
                     {reg}
                   </option>
@@ -155,7 +170,7 @@ export function RegisterModal({
 
           {/* Plan Choice Pills */}
           <div className="space-y-1.5 pt-1">
-            <label className="text-xs font-bold text-slate-800">{m.selectPlan}</label>
+            <label className="text-xs font-bold text-slate-800">{m?.selectPlan || fallback.modal.selectPlan}</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { id: "starter" as const, name: "Starter", price: "TSh 10,500" },
@@ -200,7 +215,7 @@ export function RegisterModal({
               onClick={onClose}
               className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-black transition-colors cursor-pointer"
             >
-              {m.closeBtn}
+              {m?.closeBtn || fallback.modal.closeBtn}
             </button>
 
             <button
@@ -208,7 +223,7 @@ export function RegisterModal({
               disabled={loading}
               className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-bold shadow-md shadow-violet-600/25 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <span>{loading ? m.loadingBtn : m.submitBtn}</span>
+              <span>{loading ? (m?.loadingBtn || fallback.modal.loadingBtn) : (m?.submitBtn || fallback.modal.submitBtn)}</span>
               {!loading && <ArrowRight className="w-3.5 h-3.5" />}
             </button>
           </div>

@@ -635,3 +635,5 @@ export const landingTranslations: Record<Lang, LandingTranslation> = {
     },
   },
 };
+
+export const LANDING_TRANSLATIONS = landingTranslations;
