@@ -13,9 +13,17 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as ElectronicsRouteImport } from './routes/electronics'
+import { Route as FashionRouteImport } from './routes/fashion'
+import { Route as HardwareRouteImport } from './routes/hardware'
+import { Route as PharmaciesRouteImport } from './routes/pharmacies'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RestaurantsRouteImport } from './routes/restaurants'
+import { Route as ShopsRouteImport } from './routes/shops'
+import { Route as SupermarketsRouteImport } from './routes/supermarkets'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UpdatePasswordRouteImport } from './routes/update-password'
+import { Route as WholesaleRouteImport } from './routes/wholesale'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
@@ -32,6 +40,7 @@ import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
 import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as BusinessSlugRouteImport } from './routes/business.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,9 +61,44 @@ const DemoRoute = DemoRouteImport.update({
   path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ElectronicsRoute = ElectronicsRouteImport.update({
+  id: '/electronics',
+  path: '/electronics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FashionRoute = FashionRouteImport.update({
+  id: '/fashion',
+  path: '/fashion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HardwareRoute = HardwareRouteImport.update({
+  id: '/hardware',
+  path: '/hardware',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PharmaciesRoute = PharmaciesRouteImport.update({
+  id: '/pharmacies',
+  path: '/pharmacies',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RestaurantsRoute = RestaurantsRouteImport.update({
+  id: '/restaurants',
+  path: '/restaurants',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopsRoute = ShopsRouteImport.update({
+  id: '/shops',
+  path: '/shops',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupermarketsRoute = SupermarketsRouteImport.update({
+  id: '/supermarkets',
+  path: '/supermarkets',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -65,6 +109,11 @@ const TermsRoute = TermsRouteImport.update({
 const UpdatePasswordRoute = UpdatePasswordRouteImport.update({
   id: '/update-password',
   path: '/update-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WholesaleRoute = WholesaleRouteImport.update({
+  id: '/wholesale',
+  path: '/wholesale',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({
@@ -148,14 +197,27 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const BusinessSlugRoute = BusinessSlugRouteImport.update({
+  id: '/business/$slug',
+  path: '/business/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/electronics': typeof ElectronicsRoute
+  '/fashion': typeof FashionRoute
+  '/hardware': typeof HardwareRoute
+  '/pharmacies': typeof PharmaciesRoute
   '/privacy': typeof PrivacyRoute
+  '/restaurants': typeof RestaurantsRoute
+  '/shops': typeof ShopsRoute
+  '/supermarkets': typeof SupermarketsRoute
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/wholesale': typeof WholesaleRoute
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
@@ -172,14 +234,23 @@ export interface FileRoutesByFullPath {
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/business/$slug': typeof BusinessSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/electronics': typeof ElectronicsRoute
+  '/fashion': typeof FashionRoute
+  '/hardware': typeof HardwareRoute
+  '/pharmacies': typeof PharmaciesRoute
   '/privacy': typeof PrivacyRoute
+  '/restaurants': typeof RestaurantsRoute
+  '/shops': typeof ShopsRoute
+  '/supermarkets': typeof SupermarketsRoute
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/wholesale': typeof WholesaleRoute
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
@@ -196,6 +267,7 @@ export interface FileRoutesByTo {
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/business/$slug': typeof BusinessSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -203,9 +275,17 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/demo': typeof DemoRoute
+  '/electronics': typeof ElectronicsRoute
+  '/fashion': typeof FashionRoute
+  '/hardware': typeof HardwareRoute
+  '/pharmacies': typeof PharmaciesRoute
   '/privacy': typeof PrivacyRoute
+  '/restaurants': typeof RestaurantsRoute
+  '/shops': typeof ShopsRoute
+  '/supermarkets': typeof SupermarketsRoute
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/wholesale': typeof WholesaleRoute
   '/_authenticated/customers': typeof AuthenticatedCustomersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
@@ -222,6 +302,7 @@ export interface FileRoutesById {
   '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
   '/_authenticated/tools': typeof AuthenticatedToolsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/business/$slug': typeof BusinessSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -229,9 +310,17 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/demo'
+    | '/electronics'
+    | '/fashion'
+    | '/hardware'
+    | '/pharmacies'
     | '/privacy'
+    | '/restaurants'
+    | '/shops'
+    | '/supermarkets'
     | '/terms'
     | '/update-password'
+    | '/wholesale'
     | '/customers'
     | '/dashboard'
     | '/expenses'
@@ -248,14 +337,23 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/tools'
     | '/users'
+    | '/business/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/demo'
+    | '/electronics'
+    | '/fashion'
+    | '/hardware'
+    | '/pharmacies'
     | '/privacy'
+    | '/restaurants'
+    | '/shops'
+    | '/supermarkets'
     | '/terms'
     | '/update-password'
+    | '/wholesale'
     | '/customers'
     | '/dashboard'
     | '/expenses'
@@ -272,15 +370,24 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/tools'
     | '/users'
+    | '/business/$slug'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/demo'
+    | '/electronics'
+    | '/fashion'
+    | '/hardware'
+    | '/pharmacies'
     | '/privacy'
+    | '/restaurants'
+    | '/shops'
+    | '/supermarkets'
     | '/terms'
     | '/update-password'
+    | '/wholesale'
     | '/_authenticated/customers'
     | '/_authenticated/dashboard'
     | '/_authenticated/expenses'
@@ -297,6 +404,7 @@ export interface FileRouteTypes {
     | '/_authenticated/suppliers'
     | '/_authenticated/tools'
     | '/_authenticated/users'
+    | '/business/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -304,9 +412,18 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DemoRoute: typeof DemoRoute
+  ElectronicsRoute: typeof ElectronicsRoute
+  FashionRoute: typeof FashionRoute
+  HardwareRoute: typeof HardwareRoute
+  PharmaciesRoute: typeof PharmaciesRoute
   PrivacyRoute: typeof PrivacyRoute
+  RestaurantsRoute: typeof RestaurantsRoute
+  ShopsRoute: typeof ShopsRoute
+  SupermarketsRoute: typeof SupermarketsRoute
   TermsRoute: typeof TermsRoute
   UpdatePasswordRoute: typeof UpdatePasswordRoute
+  WholesaleRoute: typeof WholesaleRoute
+  BusinessSlugRoute: typeof BusinessSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -339,11 +456,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/electronics': {
+      id: '/electronics'
+      path: '/electronics'
+      fullPath: '/electronics'
+      preLoaderRoute: typeof ElectronicsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fashion': {
+      id: '/fashion'
+      path: '/fashion'
+      fullPath: '/fashion'
+      preLoaderRoute: typeof FashionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hardware': {
+      id: '/hardware'
+      path: '/hardware'
+      fullPath: '/hardware'
+      preLoaderRoute: typeof HardwareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pharmacies': {
+      id: '/pharmacies'
+      path: '/pharmacies'
+      fullPath: '/pharmacies'
+      preLoaderRoute: typeof PharmaciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/restaurants': {
+      id: '/restaurants'
+      path: '/restaurants'
+      fullPath: '/restaurants'
+      preLoaderRoute: typeof RestaurantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shops': {
+      id: '/shops'
+      path: '/shops'
+      fullPath: '/shops'
+      preLoaderRoute: typeof ShopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/supermarkets': {
+      id: '/supermarkets'
+      path: '/supermarkets'
+      fullPath: '/supermarkets'
+      preLoaderRoute: typeof SupermarketsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -358,6 +524,13 @@ declare module '@tanstack/react-router' {
       path: '/update-password'
       fullPath: '/update-password'
       preLoaderRoute: typeof UpdatePasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wholesale': {
+      id: '/wholesale'
+      path: '/wholesale'
+      fullPath: '/wholesale'
+      preLoaderRoute: typeof WholesaleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/customers': {
@@ -472,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/business/$slug': {
+      id: '/business/$slug'
+      path: '/business/$slug'
+      fullPath: '/business/$slug'
+      preLoaderRoute: typeof BusinessSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -521,9 +701,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DemoRoute: DemoRoute,
+  ElectronicsRoute: ElectronicsRoute,
+  FashionRoute: FashionRoute,
+  HardwareRoute: HardwareRoute,
+  PharmaciesRoute: PharmaciesRoute,
   PrivacyRoute: PrivacyRoute,
+  RestaurantsRoute: RestaurantsRoute,
+  ShopsRoute: ShopsRoute,
+  SupermarketsRoute: SupermarketsRoute,
   TermsRoute: TermsRoute,
   UpdatePasswordRoute: UpdatePasswordRoute,
+  WholesaleRoute: WholesaleRoute,
+  BusinessSlugRoute: BusinessSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

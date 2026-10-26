@@ -119,44 +119,44 @@ export function HomepageFooter({
             </div>
             <ul className="space-y-2 text-slate-400 text-xs">
               <li>
-                <a href="#for-business" className="hover:text-white transition-colors">
+                <Link to="/shops" className="hover:text-white transition-colors">
                   Shops and Maduka
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#for-business" className="hover:text-white transition-colors">
+                <Link to="/supermarkets" className="hover:text-white transition-colors">
                   Supermarkets & Retail
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#for-business" className="hover:text-white transition-colors">
+                <Link to="/pharmacies" className="hover:text-white transition-colors">
                   Pharmacies & Duka la Dawa
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#for-business" className="hover:text-white transition-colors">
+                <Link to="/hardware" className="hover:text-white transition-colors">
                   Hardware & Electricals
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#for-business" className="hover:text-white transition-colors">
+                <Link to="/wholesale" className="hover:text-white transition-colors">
                   Wholesale & Distribution
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#for-business" className="hover:text-white transition-colors">
+                <Link to="/restaurants" className="hover:text-white transition-colors">
                   Restaurants & Bars
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#for-business" className="hover:text-white transition-colors">
+                <Link to="/fashion" className="hover:text-white transition-colors">
                   Boutiques & Fashion
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#for-business" className="hover:text-white transition-colors">
+                <Link to="/electronics" className="hover:text-white transition-colors">
                   Phones & Electronics
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

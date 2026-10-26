@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
   Store,
   ShoppingCart,
@@ -8,7 +9,7 @@ import {
   Shirt,
   Smartphone,
   LucideIcon,
-  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { LandingTranslation } from "./landing-i18n";
 
@@ -28,6 +29,17 @@ export function BusinessTypesSection({ t }: BusinessTypesSectionProps) {
     restaurants: UtensilsCrossed,
     fashion: Shirt,
     electronics: Smartphone,
+  };
+
+  const pathMap: Record<string, string> = {
+    shops: "/shops",
+    supermarket: "/supermarkets",
+    pharmacy: "/pharmacies",
+    hardware: "/hardware",
+    wholesale: "/wholesale",
+    restaurants: "/restaurants",
+    fashion: "/fashion",
+    electronics: "/electronics",
   };
 
   return (
@@ -51,22 +63,24 @@ export function BusinessTypesSection({ t }: BusinessTypesSectionProps) {
           </p>
         </div>
 
-        {/* 8 Categories Grid */}
+        {/* 8 Categories Grid with Direct Links to Each Industry Page */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-6">
           {bt.types.map((type) => {
             const Icon = iconMap[type.id] || Store;
+            const path = pathMap[type.id] || "/shops";
 
             return (
-              <div
+              <Link
                 key={type.id}
-                className="rounded-xl sm:rounded-2xl border border-purple-100 bg-white p-3.5 sm:p-6 space-y-2.5 sm:space-y-3 shadow-xs hover:border-violet-400 hover:shadow-lg hover:shadow-purple-950/5 transition-all duration-200 flex flex-col justify-between group cursor-default"
+                to={path}
+                className="rounded-xl sm:rounded-2xl border border-purple-100 bg-white p-3.5 sm:p-6 space-y-2.5 sm:space-y-3 shadow-xs hover:border-violet-400 hover:shadow-lg hover:shadow-purple-950/5 hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between group text-left cursor-pointer"
               >
                 <div className="space-y-2 sm:space-y-3">
                   <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-purple-100/60 border border-purple-200/50 flex items-center justify-center text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-colors duration-200">
                     <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
 
-                  <h3 className="text-xs sm:text-base font-black text-slate-950 tracking-tight leading-snug">
+                  <h3 className="text-xs sm:text-base font-black text-slate-950 tracking-tight leading-snug group-hover:text-violet-700 transition-colors">
                     {type.title}
                   </h3>
 
@@ -75,10 +89,11 @@ export function BusinessTypesSection({ t }: BusinessTypesSectionProps) {
                   </p>
                 </div>
 
-                <div className="pt-1.5 sm:pt-2 text-[9px] sm:text-[10px] font-mono font-bold text-emerald-700">
-                  <span>Pre-configured</span>
+                <div className="pt-2 border-t border-purple-50 flex items-center justify-between text-[10px] sm:text-xs font-bold text-violet-600 group-hover:text-violet-700">
+                  <span>Tazama Suluhu</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
