@@ -49,7 +49,7 @@ export function GettingStartedSection({ t, onOpenRegisterModal }: GettingStarted
               <span>{isSwahili ? "JINSI YA KUANZA" : "GETTING STARTED"}</span>
             </div>
 
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
               {isSwahili ? (
                 <>
                   ANZA KUUZA KWA{" "}
@@ -109,7 +109,7 @@ export function GettingStartedSection({ t, onOpenRegisterModal }: GettingStarted
                   </div>
 
                   <div className="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
-                    <h3 className="text-sm sm:text-xl font-black text-[#01184c] tracking-tight group-hover:text-violet-700 transition-colors">
+                    <h3 className="text-sm sm:text-xl font-black text-slate-950 tracking-tight group-hover:text-violet-700 transition-colors">
                       {item.title}
                     </h3>
 

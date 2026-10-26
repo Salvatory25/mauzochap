@@ -94,9 +94,9 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
               />
 
               {/* Floating Top Notification Badge */}
-              <div className="absolute -top-2.5 right-2 sm:right-8 z-10 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md border border-blue-200 text-[#01184c] shadow-xl text-[10px] sm:text-[11px] font-mono font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2">
+              <div className="absolute -top-2.5 right-2 sm:right-8 z-10 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md border border-blue-200 text-black shadow-xl text-[10px] sm:text-[11px] font-mono font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2">
                 <CheckCheck className="w-3 h-3 text-emerald-600" />
-                <span className="text-[#01184c] font-extrabold">Delivered 20:30 PM</span>
+                <span className="text-black font-extrabold">Delivered 20:30 PM</span>
               </div>
 
               {/* Phone Image */}

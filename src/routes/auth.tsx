@@ -51,7 +51,8 @@ function AuthPage() {
   }, [inviteId, modeParam]);
 
   if (user) {
-    navigate({ to: "/dashboard" });
+    const redirectParam = params.get("redirect");
+    navigate({ to: (redirectParam || "/dashboard") as any, replace: true });
   }
 
   const handleEmail = async (e: React.FormEvent) => {
@@ -70,7 +71,8 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      navigate({ to: "/dashboard" });
+      const redirectParam = params.get("redirect");
+      navigate({ to: (redirectParam || "/dashboard") as any, replace: true });
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Auth failed");
     } finally {

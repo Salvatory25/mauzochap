@@ -32,6 +32,8 @@ import {
   Printer,
   MessageCircle,
   ArrowRight,
+  ArrowLeft,
+  Lock,
   MapPin,
   Calendar,
   Sparkles,
@@ -44,6 +46,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { formatTZS, formatDate } from "@/lib/i18n";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
@@ -502,6 +505,111 @@ function DemoPage() {
     { id: "reports", icon: BarChart3, label: lang === "sw" ? "Ripoti za Faida" : "Reports" },
     { id: "settings", icon: Settings, label: lang === "sw" ? "Mipangilio" : "Settings" },
   ];
+
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        <div className="flex flex-col items-center gap-3">
+          <img src="/images/logo-white.png" alt="MauzoChap" className="w-12 h-12 object-contain animate-pulse" />
+          <p className="text-xs font-mono text-slate-400">Inapakia Demo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between">
+        {/* Top Header */}
+        <header className="border-b border-white/10 px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src="/images/logo-white.png" alt="MauzoChap" className="w-8 h-8 object-contain" />
+            <span className="font-black text-xl text-white tracking-tight">MauzoChap</span>
+          </Link>
+          <Link
+            to="/"
+            className="text-xs font-semibold text-slate-400 hover:text-white transition-colors flex items-center gap-1.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Rudi Nyumbani
+          </Link>
+        </header>
+
+        {/* Hero Gate Card */}
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-6 my-8">
+          <div className="w-full max-w-xl bg-slate-900 border border-white/15 rounded-[28px] p-6 sm:p-10 shadow-2xl space-y-6 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-violet-600/20 border border-violet-500/30 text-violet-400 flex items-center justify-center mx-auto shadow-inner">
+              <Lock className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-300 text-[11px] font-mono font-bold uppercase tracking-wider">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span>Usajili Unahitajika / Registration Required</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-snug">
+                Jisajili Kwanza Ili Kufikia Demo Halisi ya MauzoChap
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
+                Ili kufanya majaribio ya kuuza, kutoa risiti za WhatsApp na kusimamia stoo, tafadhali fungua akaunti ya majaribio (Siku 5 bure bila malipo).
+              </p>
+            </div>
+
+            {/* Unlocked Features List */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-left text-xs bg-white/5 border border-white/10 rounded-2xl p-4">
+              <div className="space-y-1">
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-400" /> Mauzo ya Kaunta
+                </div>
+                <p className="text-[11px] text-slate-400">Kutoa risiti za WhatsApp papo hapo chini ya sekunde 2.</p>
+              </div>
+              <div className="space-y-1">
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-400" /> Ulinzi wa Stoo
+                </div>
+                <p className="text-[11px] text-slate-400">Kufuatilia hesabu na kuzuia upotevu au wizi wa wafanyakazi.</p>
+              </div>
+              <div className="space-y-1">
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-400" /> Ripoti ya Usiku
+                </div>
+                <p className="text-[11px] text-slate-400">Kupokea ujumbe wa SMS saa 20:30 kila siku kwenye simu yako.</p>
+              </div>
+            </div>
+
+            {/* CTA Actions */}
+            <div className="space-y-3 pt-2">
+              <Link
+                to="/auth"
+                search={{ mode: "signup", redirect: "/demo" }}
+                className="w-full py-4 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-violet-600/30 transition-all cursor-pointer"
+              >
+                <span>Fungua Akaunti ya Bure Kuanza Demo</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <div className="flex items-center justify-center gap-1 text-xs text-slate-400">
+                <span>Tayari una akaunti?</span>
+                <Link
+                  to="/auth"
+                  search={{ mode: "signin", redirect: "/demo" }}
+                  className="text-violet-400 hover:underline font-bold"
+                >
+                  Ingia Hapa / Sign In
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="text-center py-4 border-t border-white/10 text-[11px] font-mono text-slate-500">
+          © {new Date().getFullYear()} MauzoChap POS. Built exclusively for Tanzania.
+        </footer>
+      </div>
+    );
+  }
 
   // Common Sidebar Component
   const sidebarContent = (

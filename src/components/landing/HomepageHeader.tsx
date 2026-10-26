@@ -50,7 +50,7 @@ export function HomepageHeader({
             width={40}
             height={40}
           />
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-[#01184c]">
+          <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-950">
             MauzoChap
           </span>
         </Link>

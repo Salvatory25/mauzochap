@@ -99,6 +99,16 @@ export function HomepageFooter({
                   Create Account
                 </Link>
               </li>
+              <li>
+                <Link to="/terms" className="hover:text-white transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="hover:text-white transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -154,7 +164,17 @@ export function HomepageFooter({
 
         {/* Bottom Footer Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-mono text-slate-500">
-          <div>{f.copyright}</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span>{f.copyright}</span>
+            <span>•</span>
+            <Link to="/terms" className="hover:text-slate-300 transition-colors">
+              Terms
+            </Link>
+            <span>•</span>
+            <Link to="/privacy" className="hover:text-slate-300 transition-colors">
+              Privacy
+            </Link>
+          </div>
 
           <div className="flex items-center gap-4">
             {/* Interactive Language Switch Button [ EN | SW ] */}

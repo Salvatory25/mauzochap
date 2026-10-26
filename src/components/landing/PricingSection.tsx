@@ -25,7 +25,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
             <span>{p.eyebrow}</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
             {p.headline}
           </h2>
 
@@ -40,8 +40,8 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                 onClick={() => setBillingCycle("monthly")}
                 className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all cursor-pointer ${
                   billingCycle === "monthly"
-                    ? "bg-[#01184c] text-white font-black shadow-xs"
-                    : "text-slate-600 hover:text-[#01184c]"
+                    ? "bg-black text-white font-black shadow-xs"
+                    : "text-slate-600 hover:text-black"
                 }`}
               >
                 {p.monthly}
@@ -51,8 +51,8 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                 onClick={() => setBillingCycle("yearly")}
                 className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer ${
                   billingCycle === "yearly"
-                    ? "bg-[#01184c] text-white font-black shadow-xs"
-                    : "text-slate-600 hover:text-[#01184c]"
+                    ? "bg-black text-white font-black shadow-xs"
+                    : "text-slate-600 hover:text-black"
                 }`}
               >
                 <span>{p.annually}</span>
@@ -74,8 +74,8 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                 onClick={() => setSelectedPlanId(plan.id)}
                 className={`flex-1 py-2 px-1.5 rounded-xl text-xs font-mono font-bold transition-all text-center relative ${
                   isSelected
-                    ? "bg-[#01184c] text-white shadow-sm font-black"
-                    : "text-slate-600 hover:text-[#01184c]"
+                    ? "bg-black text-white shadow-sm font-black"
+                    : "text-slate-600 hover:text-black"
                 }`}
               >
                 <span>{plan.name}</span>
@@ -107,7 +107,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
               >
                 {/* Popular Pill */}
                 {isFeatured && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-[#01184c] px-3.5 py-1 rounded-full text-[10px] font-mono uppercase font-black tracking-widest shadow-md">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-black px-3.5 py-1 rounded-full text-[10px] font-mono uppercase font-black tracking-widest shadow-md">
                     <span>{plan.badge || "MOST POPULAR"}</span>
                   </div>
                 )}
@@ -116,7 +116,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                   {/* Card Header */}
                   <div className="flex items-center justify-between">
                     <h3
-                      className={`text-2xl font-black tracking-tight ${isFeatured ? "text-white" : "text-[#01184c]"}`}
+                      className={`text-2xl font-black tracking-tight ${isFeatured ? "text-white" : "text-slate-950"}`}
                     >
                       {plan.name}
                     </h3>
@@ -179,8 +179,8 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                     to="/auth"
                     className={`w-full py-4 rounded-2xl font-bold text-xs uppercase tracking-wider text-center transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ${
                       isFeatured
-                        ? "bg-white text-[#01184c] hover:bg-slate-100 shadow-xl shadow-black/10 active:scale-95"
-                        : "bg-[#01184c] hover:bg-[#022166] text-white active:scale-95"
+                        ? "bg-white text-black hover:bg-slate-100 shadow-xl shadow-black/10 active:scale-95"
+                        : "bg-black hover:bg-neutral-900 text-white active:scale-95"
                     }`}
                   >
                     <span>{plan.ctaText}</span>
@@ -200,23 +200,23 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
 
         {/* Local Tanzanian Payment Badges */}
         <div className="mt-14 p-5 rounded-2xl bg-purple-50/50 border border-purple-100 max-w-3xl mx-auto text-center space-y-2">
-          <div className="text-xs font-mono font-bold uppercase text-[#01184c]">
+          <div className="text-xs font-mono font-bold uppercase text-slate-950">
             Local Tanzanian Payment Integrations
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs font-mono font-semibold text-slate-600">
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-950 shadow-2xs">
               Vodacom M-Pesa
             </span>
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-950 shadow-2xs">
               Tigo Pesa
             </span>
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-950 shadow-2xs">
               Airtel Money
             </span>
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-950 shadow-2xs">
               HaloPesa
             </span>
-            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-[#01184c] shadow-2xs">
+            <span className="px-3 py-1 rounded-xl bg-white border border-purple-100 text-slate-950 shadow-2xs">
               Visa / Mastercard
             </span>
           </div>

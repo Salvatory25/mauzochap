@@ -42,7 +42,7 @@ export function BusinessTypesSection({ t }: BusinessTypesSectionProps) {
             <span>{bt.eyebrow}</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
             {bt.headline}
           </h2>
 
@@ -66,7 +66,7 @@ export function BusinessTypesSection({ t }: BusinessTypesSectionProps) {
                     <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
 
-                  <h3 className="text-xs sm:text-base font-black text-[#01184c] tracking-tight leading-snug">
+                  <h3 className="text-xs sm:text-base font-black text-slate-950 tracking-tight leading-snug">
                     {type.title}
                   </h3>
 

@@ -190,7 +190,7 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
             <span>{c.eyebrow}</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
             {c.headline}
           </h2>
 
@@ -223,7 +223,7 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                     <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
 
-                  <h3 className="text-lg sm:text-xl font-black text-[#01184c] tracking-tight">{item.title}</h3>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-950 tracking-tight">{item.title}</h3>
 
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                     {item.description}
@@ -247,14 +247,14 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
             <div className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-violet-100 border border-violet-200 text-violet-800 text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-widest">
               <span>SOFTWARE IN ACTION</span>
             </div>
-            <h3 className="text-xl sm:text-3xl lg:text-4xl font-black text-[#01184c] tracking-tight">
+            <h3 className="text-xl sm:text-3xl lg:text-4xl font-black text-slate-950 tracking-tight">
               {isSwahili
                 ? "Mfumo Unavyofanya Kazi kwa Vitendo"
                 : "Designed for Speed. Engineered for Tanzanian Retail."}
             </h3>
             <p className="text-xs sm:text-base text-slate-600 font-normal max-w-2xl mx-auto">
               {isSwahili
-                ? "Gundua jinsi maduka zaidi ya 55+ nchini Tanzania yanavyouza kwa haraka, kutoa risiti za WhatsApp na kulinda stoo zao kila siku."
+                ? "Gundua jinsi maduka zaidi ya 110+ nchini Tanzania yanavyouza kwa haraka, kutoa risiti za WhatsApp na kulinda stoo zao kila siku."
                 : "High-resolution interactive previews of your counter sales, WhatsApp receipts, batch expiry radar, and automated nightly reconciliation."}
             </p>
           </div>
@@ -303,7 +303,7 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                   <div>
                     <h4
                       className={`text-sm sm:text-base font-black tracking-tight ${
-                        isActive ? "text-white" : "text-[#01184c]"
+                        isActive ? "text-white" : "text-slate-950"
                       }`}
                     >
                       {tab.tabLabel}
@@ -396,7 +396,7 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                     <span>{currentTab.badge}</span>
                   </div>
 
-                  <h3 className="text-2xl sm:text-3xl font-black text-[#01184c] tracking-tight leading-snug">
+                  <h3 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight leading-snug">
                     {currentTab.headline}
                   </h3>
 
@@ -419,7 +419,7 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <h5 className="text-xs sm:text-sm font-black text-[#01184c] tracking-tight">
+                            <h5 className="text-xs sm:text-sm font-black text-slate-950 tracking-tight">
                               {h.title}
                             </h5>
                             <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 shrink-0">

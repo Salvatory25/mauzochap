@@ -208,7 +208,7 @@ function Dashboard() {
   ];
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-6 sm:pb-12">
+    <div className="space-y-4 sm:space-y-6 pb-24 sm:pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{t("dashboard")}</h1>
@@ -234,24 +234,24 @@ function Dashboard() {
                 <c.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${c.color || ''}`} />
               </div>
             </div>
-            <div className="mt-2 sm:mt-3 text-base sm:text-2xl font-bold tracking-tight truncate">{c.value}</div>
+            <div className="mt-2 sm:mt-3 text-sm sm:text-xl lg:text-2xl font-bold tracking-tight truncate" title={c.value}>{c.value}</div>
           </div>
         ))}
       </div>
 
-      {/* Secondary KPIs (3 cols on all screen sizes, compact mobile view) */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        {secondaryCards.map((c) => (
+      {/* Secondary KPIs (Mobile responsive: 2-col with first full-width for TZS currency, 3-col on desktop) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+        {secondaryCards.map((c, idx) => (
           <div
             key={c.label}
-            className={`rounded-xl border border-border bg-card p-2.5 sm:p-4 flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-4 text-center sm:text-left ${isLoading ? 'animate-pulse' : ''}`}
+            className={`rounded-xl border border-border bg-card p-2.5 sm:p-4 flex items-center gap-2.5 sm:gap-4 ${idx === 0 ? "col-span-2 sm:col-span-1" : "col-span-1"} ${isLoading ? 'animate-pulse' : ''}`}
           >
-            <div className="p-2 sm:p-3 bg-muted rounded-full text-muted-foreground shrink-0">
+            <div className="p-2 sm:p-3 bg-muted rounded-xl text-muted-foreground shrink-0">
               <c.icon className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div className="min-w-0 w-full overflow-hidden">
-              <div className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate">{c.label}</div>
-              <div className="text-sm sm:text-xl font-bold truncate">{c.value}</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate">{c.label}</div>
+              <div className="text-sm sm:text-xl font-bold truncate" title={c.value}>{c.value}</div>
             </div>
           </div>
         ))}
@@ -259,7 +259,7 @@ function Dashboard() {
 
       {/* Invoice Statistics (2x2 on mobile, 4 cols on desktop) */}
       <div className="space-y-2 sm:space-y-3">
-        <h2 className="text-base sm:text-lg font-bold tracking-tight">{t("invoiceSummary")}</h2>
+        <h2 className="text-sm sm:text-lg font-bold tracking-tight">{t("invoiceSummary")}</h2>
         <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           {[
             { label: t("totalInvoices"), value: String(stats?.totalInvoicesCount ?? 0), icon: FileText },
@@ -271,12 +271,12 @@ function Dashboard() {
               key={c.label}
               className={`rounded-xl border border-border bg-card p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3 ${isLoading ? 'animate-pulse' : ''}`}
             >
-              <div className={`p-2 sm:p-3 rounded-full shrink-0 ${c.color || "bg-muted text-muted-foreground"}`}>
+              <div className={`p-2 sm:p-2.5 rounded-lg shrink-0 ${c.color || "bg-muted text-muted-foreground"}`}>
                 <c.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate">{c.label}</div>
-                <div className="text-sm sm:text-xl font-bold truncate">{c.value}</div>
+                <div className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate">{c.label}</div>
+                <div className="text-xs sm:text-base font-bold truncate" title={c.value}>{c.value}</div>
               </div>
             </div>
           ))}

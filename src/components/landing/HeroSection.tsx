@@ -99,11 +99,11 @@ export function HeroSection({ t }: HeroSectionProps) {
       <div className="w-[94%] sm:w-[90%] max-w-6xl mx-auto px-1 sm:px-4 relative text-center space-y-5 sm:space-y-8">
         {/* Top Eyebrow Pill */}
         <div className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-purple-200 bg-white/95 text-violet-800 text-[10px] sm:text-xs font-mono font-bold tracking-wider shadow-xs">
-          <span>BUILT FOR TANZANIA • 55+ ACTIVE SHOPS</span>
+          <span>BUILT FOR TANZANIA • 110+ ACTIVE SHOPS</span>
         </div>
 
         {/* Main Headline with Typewriter Typing Effect */}
-        <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tight text-[#01184c] leading-[1.12] sm:leading-[1.08] max-w-4xl mx-auto">
+        <h1 className="text-3xl sm:text-5xl lg:text-7xl font-black tracking-tight text-slate-950 leading-[1.12] sm:leading-[1.08] max-w-4xl mx-auto">
           <span>{h.headlinePrefix} </span>
           <br className="hidden sm:inline" />
           <span className="text-violet-600 font-serif italic relative inline-block">
@@ -129,7 +129,7 @@ export function HeroSection({ t }: HeroSectionProps) {
 
           <Link
             to="/demo"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-purple-200 hover:border-[#01184c] bg-white hover:bg-purple-50/50 text-[#01184c] font-bold text-xs uppercase tracking-wider transition-all shadow-xs"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-purple-200 hover:border-black bg-white hover:bg-purple-50/50 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all shadow-xs"
           >
             <span>{h.secondaryCta}</span>
           </Link>
@@ -158,8 +158,8 @@ export function HeroSection({ t }: HeroSectionProps) {
         {/* 4 Feature Stat Cards */}
         <div className="pt-3 sm:pt-6 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 w-full max-w-5xl mx-auto text-left">
           <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
-            <div className="text-xl sm:text-2xl font-black text-[#01184c] font-mono tracking-tight">
-              55+
+            <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">
+              110+
             </div>
             <div className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5 sm:mt-1 leading-tight">
               {isSwahili ? "Maduka kote Tanzania" : "Active stores in Tanzania"}
@@ -185,7 +185,7 @@ export function HeroSection({ t }: HeroSectionProps) {
           </div>
 
           <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 backdrop-blur-md border border-purple-100 shadow-xs">
-            <div className="text-xl sm:text-2xl font-black text-[#01184c] font-mono tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">
               100%
             </div>
             <div className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5 sm:mt-1 leading-tight">

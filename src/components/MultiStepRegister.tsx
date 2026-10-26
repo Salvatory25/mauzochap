@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,24 +16,12 @@ import {
   User,
   MapPin,
   Store,
-  Sparkles,
-  ShieldCheck,
   ArrowLeft,
   ArrowRight,
-  CheckCircle2,
-  ShoppingCart,
-  Package,
-  BarChart3,
-  Receipt,
-  Users,
-  Bell,
-  Smartphone,
-  Lock,
   Check,
-  Building2,
   Globe,
   Mail,
-  CreditCard,
+  ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -80,57 +69,6 @@ const BUSINESS_TYPES = [
   { value: "general", label: "General Merchant / Minimarket" },
 ];
 
-const PACKAGES_CONFIG = [
-  {
-    id: "starter",
-    name: "STARTER",
-    price: "TSh 10,500",
-    priceNum: 10500,
-    period: "/ Month",
-    popular: false,
-    badge: "Basic",
-    features: [
-      "1 Location",
-      "1 User",
-      "100 Products",
-      "Basic Reports",
-      "Unlimited Invoices & Receipts",
-    ],
-  },
-  {
-    id: "kilimanjaro",
-    name: "KILIMANJARO",
-    price: "TSh 15,500",
-    priceNum: 15500,
-    period: "/ Month",
-    popular: true,
-    badge: "Popular",
-    features: [
-      "1 Location",
-      "3 Users",
-      "Unlimited Reports",
-      "Unlimited Invoices & Receipts",
-      "Multiple Branches",
-    ],
-  },
-  {
-    id: "serengeti",
-    name: "SERENGETI",
-    price: "TSh 25,500",
-    priceNum: 25500,
-    period: "/ Month",
-    popular: false,
-    badge: "Enterprise",
-    features: [
-      "Unlimited Locations",
-      "Unlimited Users",
-      "Unlimited Products",
-      "Unlimited Reports",
-      "Unlimited Branches",
-    ],
-  },
-];
-
 export function MultiStepRegister({
   onSuccess,
   onSwitchToSignIn,
@@ -138,9 +76,8 @@ export function MultiStepRegister({
   inviteRole = "cashier",
   inviteBranch = "",
   inviteBusinessName,
-  initialPackage,
 }: MultiStepRegisterProps) {
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
 
   // Step 1: User Account
@@ -156,16 +93,10 @@ export function MultiStepRegister({
   const [district, setDistrict] = useState("");
   const [address, setAddress] = useState("");
 
-  // Step 3: Business Information
+  // Step 3: Business Information & Legal Consent
   const [businessName, setBusinessName] = useState("");
   const [ownerName, setOwnerName] = useState("");
   const [businessType, setBusinessType] = useState("retail");
-
-  // Step 4: Package Selection
-  const [selectedPackage, setSelectedPackage] = useState<string>(initialPackage || "kilimanjaro");
-
-  // Step 5: Verification & Payment State
-  const [paymentReference, setPaymentReference] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
@@ -180,7 +111,7 @@ export function MultiStepRegister({
         type: "signup",
         email,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${window.location.origin}/setup-billing`,
         },
       });
       if (error) throw error;
@@ -235,11 +166,15 @@ export function MultiStepRegister({
 
   const validateStep3 = () => {
     if (!inviteId && !businessName.trim()) {
-      toast.error("Please enter your business name");
+      toast.error("Please enter your business / store name");
       return false;
     }
     if (!ownerName.trim()) {
       toast.error("Please enter the business owner name");
+      return false;
+    }
+    if (!acceptTerms || !acceptPrivacy) {
+      toast.error("Please accept the Terms of Service and Privacy Policy to continue.");
       return false;
     }
     return true;
@@ -248,41 +183,25 @@ export function MultiStepRegister({
   const handleNextStep = () => {
     if (currentStep === 1) {
       if (!validateStep1()) return;
-      // Pre-fill owner name if empty
       if (!ownerName) setOwnerName(fullName);
       setCurrentStep(2);
     } else if (currentStep === 2) {
       if (!validateStep2()) return;
       setCurrentStep(3);
     } else if (currentStep === 3) {
-      if (!validateStep3()) return;
-      setCurrentStep(4);
-    } else if (currentStep === 4) {
-      setCurrentStep(5);
+      handleCompleteRegistration();
     }
   };
 
   const handlePrevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4 | 5);
+      setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3);
     }
   };
 
-  // Final Submission
+  // Final Registration: Signs up user and immediately directs them to /setup-billing
   const handleCompleteRegistration = async () => {
-    const cleanRef = paymentReference.trim();
-    if (!cleanRef) {
-      toast.error("Please enter your payment transaction reference number.");
-      return;
-    }
-    if (cleanRef.length < 4) {
-      toast.error("Please enter a valid payment reference number (at least 4 characters).");
-      return;
-    }
-    if (!acceptTerms || !acceptPrivacy) {
-      toast.error("You must accept the Terms & Conditions and Privacy Policy to continue.");
-      return;
-    }
+    if (!validateStep3()) return;
 
     setLoading(true);
     try {
@@ -311,75 +230,44 @@ export function MultiStepRegister({
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${window.location.origin}/setup-billing`,
           data: signUpMetadata,
         },
       });
 
       if (error) throw error;
 
-      // 1. Check duplicate email
+      // Duplicate email detection
       if (data?.user && data?.user?.identities?.length === 0) {
         toast.error("This email is already registered. Please sign in with your password.");
         onSwitchToSignIn();
         return;
       }
 
-      // Sync profile & submit payment record for business
+      // Upsert user profile
       if (data?.user) {
         try {
-          const { data: userProf } = await supabase
+          await supabase
             .from("profiles")
             .upsert({
               id: data.user.id,
               full_name: fullName,
               phone: phone,
               business_name: inviteId ? inviteBusinessName || businessName : businessName,
-            })
-            .select("business_id")
-            .single();
-
-          const bizId = userProf?.business_id;
-          if (bizId) {
-            const pkgObj = PACKAGES_CONFIG.find((p) => p.id === selectedPackage);
-            const amount = pkgObj ? pkgObj.priceNum : 15500;
-
-            await supabase
-              .from("businesses")
-              .update({
-                package: selectedPackage as any,
-                account_status: "pending",
-                rejection_reason: null as any,
-              })
-              .eq("id", bizId);
-
-            await supabase.from("payments").insert({
-              business_id: bizId,
-              amount: amount,
-              payment_reference: cleanRef,
-              verification_status: "waiting_verification",
             });
-
-            await supabase.from("notifications" as any).insert({
-              business_id: bizId,
-              title: "Payment Reference Submitted",
-              message: `Your payment reference (${cleanRef}) for ${pkgObj?.name || selectedPackage} has been submitted for admin verification.`,
-              type: "payment",
-            });
-          }
         } catch (e) {
-          console.warn("Profile/Payment sync error on registration:", e);
+          console.warn("Profile sync notice on registration:", e);
         }
       }
 
-      // 2. If user session is returned immediately
+      // If user session returned immediately, take them directly to setup-billing
       if (data?.session) {
-        toast.success("Registration & Payment submitted! Awaiting admin verification.");
+        toast.success("Registration complete! Let's choose your package.");
         onSuccess();
         return;
       }
 
-      // 3. Email activation link sent by Supabase
+      // If email verification is enabled by Supabase
       setEmailSentSuccess(true);
       toast.success(`Activation link sent to ${email}`);
     } catch (err: any) {
@@ -389,15 +277,12 @@ export function MultiStepRegister({
     }
   };
 
-  // Progress Bar percentage
-  const progressPercentage = (currentStep / 5) * 100;
+  const progressPercentage = (currentStep / 3) * 100;
 
   const STEPS_CONFIG = [
-    { number: 1, label: "User Account", icon: User },
-    { number: 2, label: "Location", icon: MapPin },
-    { number: 3, label: "Business", icon: Store },
-    { number: 4, label: "Choose Package", icon: Package },
-    { number: 5, label: "Verification & Payment", icon: ShieldCheck },
+    { number: 1, label: "Akaunti / Account", icon: User },
+    { number: 2, label: "Mahali / Location", icon: MapPin },
+    { number: 3, label: "Biashara / Business", icon: Store },
   ];
 
   if (emailSentSuccess) {
@@ -408,23 +293,25 @@ export function MultiStepRegister({
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-foreground">Check Your Email Inbox</h2>
+          <h2 className="text-2xl font-bold text-foreground">Thibitisha Barua Pepe Yako</h2>
           <p className="text-xs md:text-sm text-muted-foreground">
-            We sent an account activation link to{" "}
+            Tumetuma kiungo cha kuwezesha akaunti kwenda{" "}
             <span className="font-bold text-foreground">{email}</span>.
           </p>
         </div>
 
         <div className="p-4 rounded-xl bg-muted/40 border border-border text-xs text-left text-muted-foreground space-y-2">
-          <p className="font-semibold text-foreground">Important Next Steps:</p>
+          <p className="font-semibold text-foreground">Hatua Zifuatazo / Next Steps:</p>
           <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
             <li>
-              Open your email inbox and click <strong>"Confirm Email"</strong>.
+              Fungua email yako na ubofye <strong>"Confirm Email"</strong>.
             </li>
             <li>
-              Check your <strong>Spam or Junk</strong> folder if it does not appear in 1-2 minutes.
+              Angalia pia folda ya <strong>Spam au Junk</strong> kama haijaonekana ndani ya dakika 1.
             </li>
-            <li>Once confirmed, your payment reference will be processed by our admin team.</li>
+            <li>
+              Baada ya kuthibitisha, utapelekwa moja kwa moja kwenye ukurasa wa kuchagua kifurushi chako (Setup Billing).
+            </li>
           </ul>
         </div>
 
@@ -436,10 +323,10 @@ export function MultiStepRegister({
             className="w-full font-semibold"
             variant="outline"
           >
-            {resendingEmail ? "Sending..." : "Resend Activation Email"}
+            {resendingEmail ? "Sending..." : "Tuma Tena Barua Pepe"}
           </Button>
           <Button type="button" onClick={onSwitchToSignIn} className="w-full font-semibold">
-            Proceed to Sign In
+            Endelea Kuingia / Sign In
           </Button>
         </div>
       </div>
@@ -447,19 +334,17 @@ export function MultiStepRegister({
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 md:p-8 shadow-[var(--shadow-elevated)]">
+    <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-2xl p-5 sm:p-7 md:p-8 shadow-[var(--shadow-elevated)]">
       {/* Header */}
-      <div className="flex items-center justify-between pb-6 border-b border-border mb-6">
+      <div className="flex items-center justify-between pb-5 border-b border-border mb-6">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground">
-            {currentStep === 1 && "Create Your Account"}
-            {currentStep === 2 && "Physical Store Location"}
-            {currentStep === 3 && "Business Information"}
-            {currentStep === 4 && "Select Subscription Plan"}
-            {currentStep === 5 && "Payment & Account Verification"}
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+            {currentStep === 1 && "Fungua Akaunti / Create Account"}
+            {currentStep === 2 && "Eneo la Duka / Store Location"}
+            {currentStep === 3 && "Taarifa za Biashara / Business Info"}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Step {currentStep} of 5 — {STEPS_CONFIG.find((s) => s.number === currentStep)?.label}
+            Hatua ya {currentStep} kati ya 3 — {STEPS_CONFIG.find((s) => s.number === currentStep)?.label}
           </p>
         </div>
         <div className="text-right hidden sm:block">
@@ -470,7 +355,7 @@ export function MultiStepRegister({
       </div>
 
       {/* Step Stepper Indicator */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between mb-2">
           {STEPS_CONFIG.map((step) => {
             const IconComponent = step.icon;
@@ -494,8 +379,8 @@ export function MultiStepRegister({
                   )}
                 </div>
                 <span
-                  className={`text-[10px] font-semibold text-center hidden md:block truncate max-w-[80px] ${
-                    isCurrent ? "text-primary" : "text-muted-foreground"
+                  className={`text-[10px] font-semibold text-center truncate max-w-[100px] ${
+                    isCurrent ? "text-primary font-bold" : "text-muted-foreground"
                   }`}
                 >
                   {step.label}
@@ -514,17 +399,17 @@ export function MultiStepRegister({
       </div>
 
       {/* Form Content */}
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
         {/* STEP 1: USER ACCOUNT */}
         {currentStep === 1 && (
           <div className="space-y-4 animate-in fade-in-50 duration-300">
             <div>
-              <Label htmlFor="fullName" className="text-sm font-semibold">
-                Full Name *
+              <Label htmlFor="fullName" className="text-xs sm:text-sm font-semibold">
+                Jina Kamili / Full Name *
               </Label>
               <Input
                 id="fullName"
-                placeholder="e.g. Baraka Joseph"
+                placeholder="mfano: Baraka Joseph"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="mt-1.5"
@@ -534,13 +419,13 @@ export function MultiStepRegister({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="email" className="text-sm font-semibold">
-                  Email Address *
+                <Label htmlFor="email" className="text-xs sm:text-sm font-semibold">
+                  Barua Pepe / Email Address *
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="e.g. baraka@store.com"
+                  placeholder="mfano: baraka@duka.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1.5"
@@ -549,16 +434,16 @@ export function MultiStepRegister({
               </div>
 
               <div>
-                <Label htmlFor="phone" className="text-sm font-semibold">
-                  Phone Number *
+                <Label htmlFor="phone" className="text-xs sm:text-sm font-semibold">
+                  Namba ya Simu / WhatsApp Phone *
                 </Label>
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="e.g. 0754123456"
+                  placeholder="mfano: 0754123456"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="mt-1.5"
+                  className="mt-1.5 font-mono"
                   required
                 />
               </div>
@@ -566,8 +451,8 @@ export function MultiStepRegister({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="password" className="text-sm font-semibold">
-                  Password *
+                <Label htmlFor="password" className="text-xs sm:text-sm font-semibold">
+                  Nenosiri / Password (Angalau herufi 8) *
                 </Label>
                 <Input
                   id="password"
@@ -582,8 +467,8 @@ export function MultiStepRegister({
               </div>
 
               <div>
-                <Label htmlFor="confirmPassword" className="text-sm font-semibold">
-                  Confirm Password *
+                <Label htmlFor="confirmPassword" className="text-xs sm:text-sm font-semibold">
+                  Thibitisha Nenosiri / Confirm Password *
                 </Label>
                 <Input
                   id="confirmPassword"
@@ -604,19 +489,19 @@ export function MultiStepRegister({
           <div className="space-y-4 animate-in fade-in-50 duration-300">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-semibold">Country *</Label>
+                <Label className="text-xs sm:text-sm font-semibold">Nchi / Country *</Label>
                 <div className="mt-1.5 p-2.5 rounded-lg border border-border bg-muted/40 font-bold text-xs text-foreground flex items-center gap-2">
                   <Globe className="w-4 h-4 text-primary" /> {country}
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="region" className="text-sm font-semibold">
-                  Region / Region *
+                <Label htmlFor="region" className="text-xs sm:text-sm font-semibold">
+                  Mkoa / Region *
                 </Label>
                 <Select value={region} onValueChange={setRegion}>
                   <SelectTrigger className="mt-1.5">
-                    <SelectValue placeholder="Select region" />
+                    <SelectValue placeholder="Chagua mkoa" />
                   </SelectTrigger>
                   <SelectContent>
                     {TANZANIA_REGIONS.map((r) => (
@@ -630,12 +515,12 @@ export function MultiStepRegister({
             </div>
 
             <div>
-              <Label htmlFor="district" className="text-sm font-semibold">
-                City / District / Area *
+              <Label htmlFor="district" className="text-xs sm:text-sm font-semibold">
+                Wilaya au Mji / District or Area *
               </Label>
               <Input
                 id="district"
-                placeholder="e.g. Kinondoni, Kariakoo, Arusha Urban"
+                placeholder="mfano: Kinondoni, Kariakoo, Ilala, Arusha Mjini"
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
                 className="mt-1.5"
@@ -644,12 +529,12 @@ export function MultiStepRegister({
             </div>
 
             <div>
-              <Label htmlFor="address" className="text-sm font-semibold">
-                Physical Street / Building Address *
+              <Label htmlFor="address" className="text-xs sm:text-sm font-semibold">
+                Anwani ya Mtaa au Jengo / Street or Building Address *
               </Label>
               <Input
                 id="address"
-                placeholder="e.g. Swahili Street, House No. 12, Floor 1"
+                placeholder="mfano: Mtaa wa Msimbazi, Ghorofa ya 1"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="mt-1.5"
@@ -659,19 +544,19 @@ export function MultiStepRegister({
           </div>
         )}
 
-        {/* STEP 3: BUSINESS INFORMATION */}
+        {/* STEP 3: BUSINESS INFORMATION & FINISH */}
         {currentStep === 3 && (
           <div className="space-y-4 animate-in fade-in-50 duration-300">
             {!inviteId ? (
               <div>
-                <Label htmlFor="businessName" className="text-sm font-semibold">
-                  Business / Store Name *
+                <Label htmlFor="businessName" className="text-xs sm:text-sm font-semibold">
+                  Jina la Biashara au Duka / Store Name *
                 </Label>
                 <div className="relative mt-1.5">
                   <Store className="absolute left-3.5 top-3 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="businessName"
-                    placeholder="e.g. Mauzo General Supplies"
+                    placeholder="mfano: Mauzo General Supplies au Duka la Dawa"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     className="pl-10"
@@ -692,12 +577,12 @@ export function MultiStepRegister({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="ownerName" className="text-sm font-semibold">
-                  Business Owner Name *
+                <Label htmlFor="ownerName" className="text-xs sm:text-sm font-semibold">
+                  Jina la Mmiliki / Owner Name *
                 </Label>
                 <Input
                   id="ownerName"
-                  placeholder="e.g. Baraka Joseph"
+                  placeholder="mfano: Baraka Joseph"
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
                   className="mt-1.5"
@@ -706,12 +591,12 @@ export function MultiStepRegister({
               </div>
 
               <div>
-                <Label htmlFor="businessType" className="text-sm font-semibold">
-                  Business Category / Type *
+                <Label htmlFor="businessType" className="text-xs sm:text-sm font-semibold">
+                  Aina ya Biashara / Business Category *
                 </Label>
                 <Select value={businessType} onValueChange={setBusinessType}>
                   <SelectTrigger className="mt-1.5">
-                    <SelectValue placeholder="Select business type" />
+                    <SelectValue placeholder="Chagua aina ya biashara" />
                   </SelectTrigger>
                   <SelectContent>
                     {BUSINESS_TYPES.map((bt) => (
@@ -723,180 +608,9 @@ export function MultiStepRegister({
                 </Select>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* STEP 4: PACKAGE SELECTION */}
-        {currentStep === 4 && (
-          <div className="space-y-4 animate-in fade-in-50 duration-300">
-            <div>
-              <h3 className="text-base font-bold text-foreground">
-                Select Your POS Subscription Plan
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Choose the plan that best fits your shop requirements. You can upgrade anytime.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-              {PACKAGES_CONFIG.map((pkg) => {
-                const isSelected = selectedPackage === pkg.id;
-                return (
-                  <div
-                    key={pkg.id}
-                    onClick={() => setSelectedPackage(pkg.id)}
-                    className={`rounded-2xl border-2 p-4 cursor-pointer transition-all flex flex-col justify-between space-y-3 relative ${
-                      isSelected
-                        ? "border-primary bg-primary/5 shadow-md scale-[1.01]"
-                        : "border-border bg-card hover:border-primary/40"
-                    }`}
-                  >
-                    {pkg.popular && (
-                      <span className="absolute -top-2.5 right-3 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
-                        Popular
-                      </span>
-                    )}
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span
-                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                            isSelected
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {pkg.badge}
-                        </span>
-                        {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
-                      </div>
-
-                      <h4 className="text-lg font-extrabold text-foreground">{pkg.name}</h4>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-black text-primary">{pkg.price}</span>
-                        <span className="text-xs text-muted-foreground">{pkg.period}</span>
-                      </div>
-
-                      <ul className="space-y-1.5 text-xs text-muted-foreground pt-2 border-t border-border/60">
-                        {pkg.features.map((feat, i) => (
-                          <li key={i} className="flex items-center gap-1.5">
-                            <Check className="w-3.5 h-3.5 text-primary shrink-0" />
-                            <span>{feat}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant={isSelected ? "default" : "outline"}
-                      className="w-full text-xs font-bold py-2 h-auto"
-                      onClick={() => setSelectedPackage(pkg.id)}
-                    >
-                      {isSelected ? "Selected Plan ✓" : `Choose ${pkg.name}`}
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* STEP 5: VERIFICATION & PAYMENT */}
-        {currentStep === 5 && (
-          <div className="space-y-5 animate-in fade-in-50 duration-300">
-            {/* Selected Package Banner */}
-            {(() => {
-              const activePkg =
-                PACKAGES_CONFIG.find((p) => p.id === selectedPackage) || PACKAGES_CONFIG[1];
-              return (
-                <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                      Chosen Subscription Plan
-                    </span>
-                    <h4 className="text-base font-extrabold text-foreground">
-                      {activePkg.name} PLAN
-                    </h4>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xl font-black text-primary">{activePkg.price}</span>
-                    <span className="text-xs text-muted-foreground block">{activePkg.period}</span>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Payment Methods (Njia za Malipo) */}
-            <div className="p-4 rounded-xl border border-border bg-card space-y-3">
-              <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-                  <CreditCard className="w-4 h-4 text-primary" /> Tanzanian Payment Channels (Lipa
-                  Hapa)
-                </span>
-                <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Instant Verification
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
-                  <span className="font-bold text-blue-600 block">🔵 Mix By Yas</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">
-                    Number: 0674673494
-                  </p>
-                </div>
-
-                <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
-                  <span className="font-bold text-emerald-600 block">🟢 Airtel Money</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">
-                    Number: 0668632187
-                  </p>
-                </div>
-
-                <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
-                  <span className="font-bold text-amber-600 block">🟠 Halopesa</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">
-                    Number: 0627274168
-                  </p>
-                </div>
-
-                <div className="p-2.5 rounded-lg border border-border/60 bg-muted/30 space-y-1">
-                  <span className="font-bold text-purple-600 block">🏦 NMB Bank</span>
-                  <p className="font-mono text-xs font-semibold text-foreground">
-                    Acc: 40310127484
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment Reference Input */}
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="paymentReference"
-                className="text-xs font-bold text-foreground flex items-center justify-between"
-              >
-                <span>Payment Transaction Reference Code *</span>
-                <span className="text-[10px] font-normal text-muted-foreground">
-                  Required for verification
-                </span>
-              </Label>
-              <Input
-                id="paymentReference"
-                placeholder="e.g. QGH89231KL or TXN-98210"
-                value={paymentReference}
-                onChange={(e) => setPaymentReference(e.target.value)}
-                className="font-mono font-bold tracking-wider text-sm"
-                required
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Enter the receipt transaction code from your M-Pesa / TigoPesa / Airtel Money / Bank
-                payment confirmation SMS.
-              </p>
-            </div>
-
-            {/* Terms & Privacy Checkboxes */}
-            <div className="space-y-2.5 pt-1">
+            {/* Terms of Service & Privacy Policy Acceptance */}
+            <div className="space-y-2.5 pt-3 border-t border-border/70 mt-3">
               <div className="flex items-start space-x-2.5">
                 <Checkbox
                   id="terms"
@@ -908,11 +622,11 @@ export function MultiStepRegister({
                   htmlFor="terms"
                   className="text-xs leading-relaxed text-muted-foreground font-normal cursor-pointer"
                 >
-                  I have read and agree to the{" "}
-                  <span className="text-primary font-semibold underline">
-                    MauzoChap Terms & Conditions
-                  </span>{" "}
-                  governing POS operations and account access.
+                  Nimesoma na ninakubali{" "}
+                  <Link to="/terms" target="_blank" className="text-primary font-bold underline">
+                    MauzoChap Terms of Service
+                  </Link>{" "}
+                  ikiwemo vigezo vya uendeshaji, majanga na ukomo wa dhima (disaster & downtime defense).
                 </Label>
               </div>
 
@@ -927,52 +641,56 @@ export function MultiStepRegister({
                   htmlFor="privacy"
                   className="text-xs leading-relaxed text-muted-foreground font-normal cursor-pointer"
                 >
-                  I agree to the{" "}
-                  <span className="text-primary font-semibold underline">Privacy Policy</span>{" "}
-                  regarding store inventory & transaction data privacy.
+                  Ninakubali{" "}
+                  <Link to="/privacy" target="_blank" className="text-primary font-bold underline">
+                    Sera ya Faragha (Privacy Policy)
+                  </Link>{" "}
+                  kuhusu usalama na ulinzi wa data za duka langu.
                 </Label>
               </div>
             </div>
           </div>
         )}
 
-        {/* Form Navigation Actions */}
-        <div className="flex items-center justify-between pt-6 border-t border-border mt-6">
+        {/* Navigation Action Buttons */}
+        <div className="flex items-center justify-between pt-6 border-t border-border mt-6 gap-3">
           {currentStep > 1 ? (
             <Button
               type="button"
               variant="outline"
               onClick={handlePrevStep}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 text-xs font-semibold"
+              disabled={loading}
             >
-              <ArrowLeft className="w-4 h-4" /> Previous
+              <ArrowLeft className="w-3.5 h-3.5" /> Nyuma
             </Button>
           ) : (
             <button
               type="button"
               onClick={onSwitchToSignIn}
-              className="text-xs font-semibold text-primary hover:underline sm:hidden"
+              className="text-xs font-semibold text-primary hover:underline"
             >
-              Back to Sign In
+              Una akaunti tayari? Ingia
             </button>
           )}
 
-          {currentStep < 5 ? (
+          {currentStep < 3 ? (
             <Button
               type="button"
               onClick={handleNextStep}
-              className="flex items-center gap-2 ml-auto"
+              className="flex items-center gap-1.5 ml-auto text-xs font-bold"
             >
-              Continue <ArrowRight className="w-4 h-4" />
+              Endelea <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           ) : (
             <Button
               type="button"
               onClick={handleCompleteRegistration}
-              disabled={loading || !paymentReference.trim() || !acceptTerms || !acceptPrivacy}
-              className="flex items-center gap-2 ml-auto bg-primary text-primary-foreground font-bold shadow-md hover:opacity-90"
+              disabled={loading || !acceptTerms || !acceptPrivacy}
+              className="flex items-center gap-2 ml-auto bg-primary text-primary-foreground font-bold shadow-md hover:opacity-90 text-xs py-2.5 px-5 cursor-pointer"
             >
-              {loading ? "Submitting Payment..." : "Complete Registration & Submit Payment"}
+              {loading ? "Inasajili Duka..." : "Kamilisha & Chagua Kifurushi"}
+              <ArrowRight className="w-4 h-4" />
             </Button>
           )}
         </div>

@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Banknote, Search, User } from "lucide-react";
+import { Plus, Pencil, Trash2, Banknote, Search, User, Phone, Mail, Users, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/use-auth";
 import { z } from "zod";
@@ -69,6 +69,9 @@ function CustomersPage() {
       (c.email ?? "").toLowerCase().includes(search.toLowerCase()),
   );
 
+  const debtCustomers = customers.filter((c) => Number(c.balance || 0) > 0);
+  const totalDebt = debtCustomers.reduce((acc, c) => acc + Number(c.balance || 0), 0);
+
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
@@ -81,11 +84,12 @@ function CustomersPage() {
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="space-y-4 sm:space-y-6 pb-20 sm:pb-12">
+      {/* Header and Add Customer */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">{t("customers")}</h1>
-          <p className="text-sm text-muted-foreground">{customers.length} customers</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("customers")}</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">{customers.length} {t("customers").toLowerCase()}</p>
         </div>
         <Dialog
           open={open}
@@ -95,7 +99,7 @@ function CustomersPage() {
           }}
         >
           <DialogTrigger asChild>
-            <Button onClick={() => setEditing(null)}>
+            <Button onClick={() => setEditing(null)} className="w-full sm:w-auto h-10 shadow-sm">
               <Plus className="h-4 w-4 mr-2" />
               {t("addCustomer")}
             </Button>
@@ -104,6 +108,40 @@ function CustomersPage() {
         </Dialog>
       </div>
 
+      {/* Customer Summary KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-4 shadow-sm flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Users className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[11px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">Jumla ya Wateja</div>
+            <div className="text-lg sm:text-2xl font-bold">{customers.length}</div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-4 shadow-sm flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <AlertCircle className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[11px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">Wateja Wenye Madeni</div>
+            <div className="text-lg sm:text-2xl font-bold text-amber-600 dark:text-amber-400">{debtCustomers.length}</div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-4 shadow-sm flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center shrink-0">
+            <Banknote className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[11px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider">Jumla ya Madeni</div>
+            <div className="text-lg sm:text-2xl font-bold text-destructive truncate">{formatTZS(totalDebt)}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -112,12 +150,117 @@ function CustomersPage() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          placeholder={t("search") + " customers..."}
-          className="pl-10 max-w-md"
+          placeholder={t("search") + " wateja kwa jina au simu..."}
+          className="pl-10 w-full sm:max-w-md h-10"
         />
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      {/* Mobile Customer Cards View (md:hidden) */}
+      <div className="md:hidden space-y-3">
+        {isLoading ? (
+          <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            {t("loading")}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            {t("noData")}
+          </div>
+        ) : (
+          paginated.map((c) => (
+            <div key={c.id} className="rounded-xl border border-border bg-card p-3.5 shadow-sm space-y-3">
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                    {c.name ? c.name.charAt(0).toUpperCase() : "C"}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-sm text-foreground truncate">{c.name}</h3>
+                    {c.phone ? (
+                      <a href={`tel:${c.phone}`} className="text-xs text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors mt-0.5">
+                        <Phone className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{c.phone}</span>
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground/60 italic">Bila namba</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-[10px] uppercase font-semibold text-muted-foreground">Salio</div>
+                  <span
+                    className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
+                      c.balance > 0 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold" : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-medium"
+                    }`}
+                  >
+                    {formatTZS(Number(c.balance))}
+                  </span>
+                </div>
+              </div>
+
+              {c.email && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5 truncate pt-1 border-t border-border/40">
+                  <Mail className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{c.email}</span>
+                </div>
+              )}
+
+              {/* Action Buttons on Mobile */}
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs px-2.5"
+                    onClick={() => setProfileCustomer(c)}
+                  >
+                    <User className="h-3.5 w-3.5 mr-1" /> Profile
+                  </Button>
+                  {c.balance > 0 && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="h-8 text-xs px-2.5 bg-amber-600 hover:bg-amber-700 text-white"
+                      onClick={() => {
+                        setPayingCustomer(c);
+                        setPaymentOpen(true);
+                      }}
+                    >
+                      <Banknote className="h-3.5 w-3.5 mr-1" />
+                      Lipa Deni
+                    </Button>
+                  )}
+                </div>
+                {isManager && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={() => {
+                        setEditing(c);
+                        setOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(c.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View (hidden on mobile, visible on md and up) */}
+      <div className="hidden md:block rounded-xl border border-border bg-card overflow-x-auto shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
@@ -156,7 +299,7 @@ function CustomersPage() {
                       {formatTZS(Number(c.balance))}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right space-x-1">
+                  <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
                     <Button
                       size="sm"
                       variant="ghost"
@@ -278,7 +421,7 @@ function CustomerDialog({ editing, onClose }: { editing: Customer | null; onClos
   };
 
   return (
-    <DialogContent>
+    <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-md p-4 sm:p-6">
       <DialogHeader>
         <DialogTitle>{editing ? t("edit") : t("addCustomer")}</DialogTitle>
       </DialogHeader>
@@ -358,7 +501,7 @@ function PaymentDialog({ customer, onClose }: { customer: Customer | null; onClo
   };
 
   return (
-    <DialogContent>
+    <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-md p-4 sm:p-6">
       <DialogHeader>
         <DialogTitle>{t("receivePayment")}</DialogTitle>
       </DialogHeader>
@@ -469,47 +612,49 @@ function CustomerProfileDialog({ customer, onClose }: { customer: Customer | nul
   if (!customer) return null;
 
   return (
-    <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+    <DialogContent className="max-w-4xl w-[calc(100vw-1.5rem)] sm:w-full max-h-[88vh] flex flex-col p-3.5 sm:p-6 overflow-hidden">
       <DialogHeader>
-        <DialogTitle>Customer Profile</DialogTitle>
+        <DialogTitle className="text-lg sm:text-xl">Customer Profile</DialogTitle>
       </DialogHeader>
       
-      <div className="flex gap-4 p-4 rounded-xl border border-border bg-muted/20">
-        <div className="h-16 w-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xl font-bold">
-          {customer.name.charAt(0).toUpperCase()}
-        </div>
-        <div className="flex-1">
-          <h2 className="text-xl font-bold">{customer.name}</h2>
-          <div className="text-sm text-muted-foreground flex gap-4 mt-1">
-            {customer.phone && <span>{customer.phone}</span>}
-            {customer.email && <span>{customer.email}</span>}
-            {customer.address && <span>{customer.address}</span>}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border border-border bg-muted/20">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold shrink-0">
+            {customer.name ? customer.name.charAt(0).toUpperCase() : "C"}
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-xl font-bold truncate">{customer.name}</h2>
+            <div className="text-xs text-muted-foreground flex flex-wrap gap-2 mt-0.5">
+              {customer.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{customer.phone}</span>}
+              {customer.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{customer.email}</span>}
+              {customer.address && <span>{customer.address}</span>}
+            </div>
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-sm text-muted-foreground">Current Balance</div>
-          <div className={`text-2xl font-bold ${customer.balance > 0 ? "text-warning" : "text-success"}`}>
+        <div className="w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border flex justify-between sm:block sm:text-right">
+          <div className="text-[11px] sm:text-xs text-muted-foreground">Current Balance</div>
+          <div className={`text-base sm:text-2xl font-bold ${customer.balance > 0 ? "text-warning" : "text-success"}`}>
             {formatTZS(customer.balance)}
           </div>
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-border mt-4">
+      <div className="flex gap-1.5 border-b border-border mt-3 overflow-x-auto pb-1 text-xs sm:text-sm">
         <button
           onClick={() => setTab("purchases")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === "purchases" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          className={`px-3 py-1.5 font-medium border-b-2 whitespace-nowrap transition-colors ${tab === "purchases" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
         >
           Purchase History
         </button>
         <button
           onClick={() => setTab("payments")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === "payments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          className={`px-3 py-1.5 font-medium border-b-2 whitespace-nowrap transition-colors ${tab === "payments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
         >
           Payment History
         </button>
         <button
           onClick={() => setTab("outstanding_invoices")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === "outstanding_invoices" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          className={`px-3 py-1.5 font-medium border-b-2 whitespace-nowrap transition-colors ${tab === "outstanding_invoices" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
         >
           Outstanding Invoices
         </button>
@@ -517,99 +662,105 @@ function CustomerProfileDialog({ customer, onClose }: { customer: Customer | nul
 
       <div className="flex-1 overflow-auto mt-2">
         {tab === "purchases" && (
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 sticky top-0 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-left">Receipt</th>
-                <th className="px-4 py-3 text-right">Total</th>
-                <th className="px-4 py-3 text-right">Paid</th>
-                <th className="px-4 py-3 text-right">Method</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loadingSales ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center">Loading...</td></tr>
-              ) : sales.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No purchases found.</td></tr>
-              ) : (
-                sales.map((s: any) => (
-                  <tr key={s.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 whitespace-nowrap">{formatDate(s.created_at)}</td>
-                    <td className="px-4 py-3 font-mono">{s.receipt_number}</td>
-                    <td className="px-4 py-3 text-right font-medium">{formatTZS(s.total)}</td>
-                    <td className="px-4 py-3 text-right text-success">{formatTZS(s.amount_paid)}</td>
-                    <td className="px-4 py-3 text-right capitalize">{s.payment_method}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm min-w-[500px]">
+              <thead className="bg-muted/50 sticky top-0 text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-3 sm:px-4 py-2.5 text-left">Date</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-left">Receipt</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Total</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Paid</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Method</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loadingSales ? (
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-xs">Loading...</td></tr>
+                ) : sales.length === 0 ? (
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-xs">No purchases found.</td></tr>
+                ) : (
+                  sales.map((s: any) => (
+                    <tr key={s.id} className="hover:bg-muted/30">
+                      <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">{formatDate(s.created_at)}</td>
+                      <td className="px-3 sm:px-4 py-2.5 font-mono">{s.receipt_number}</td>
+                      <td className="px-3 sm:px-4 py-2.5 text-right font-medium">{formatTZS(s.total)}</td>
+                      <td className="px-3 sm:px-4 py-2.5 text-right text-success">{formatTZS(s.amount_paid)}</td>
+                      <td className="px-3 sm:px-4 py-2.5 text-right capitalize">{s.payment_method}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {tab === "payments" && (
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 sticky top-0 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-right">Amount Paid</th>
-                <th className="px-4 py-3 text-right">Method</th>
-                <th className="px-4 py-3 text-left pl-8">Notes</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loadingPayments ? (
-                <tr><td colSpan={4} className="px-4 py-8 text-center">Loading...</td></tr>
-              ) : payments.length === 0 ? (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No payments found.</td></tr>
-              ) : (
-                payments.map((p: any) => (
-                  <tr key={p.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 whitespace-nowrap">{formatDate(p.created_at)}</td>
-                    <td className="px-4 py-3 text-right font-medium text-success">+{formatTZS(p.amount)}</td>
-                    <td className="px-4 py-3 text-right capitalize">{p.payment_method.replace("_", " ")}</td>
-                    <td className="px-4 py-3 pl-8 text-muted-foreground text-xs">{p.notes || '—'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm min-w-[460px]">
+              <thead className="bg-muted/50 sticky top-0 text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-3 sm:px-4 py-2.5 text-left">Date</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Amount Paid</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Method</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-left pl-6 sm:pl-8">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loadingPayments ? (
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-xs">Loading...</td></tr>
+                ) : payments.length === 0 ? (
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-xs">No payments found.</td></tr>
+                ) : (
+                  payments.map((p: any) => (
+                    <tr key={p.id} className="hover:bg-muted/30">
+                      <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">{formatDate(p.created_at)}</td>
+                      <td className="px-3 sm:px-4 py-2.5 text-right font-medium text-success">+{formatTZS(p.amount)}</td>
+                      <td className="px-3 sm:px-4 py-2.5 text-right capitalize">{p.payment_method.replace("_", " ")}</td>
+                      <td className="px-3 sm:px-4 py-2.5 pl-6 sm:pl-8 text-muted-foreground text-[11px]">{p.notes || '—'}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {tab === "outstanding_invoices" && (
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 sticky top-0 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 text-left">Invoice Number</th>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-right">Total</th>
-                <th className="px-4 py-3 text-right">Paid</th>
-                <th className="px-4 py-3 text-right">Balance Due</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loadingInvoices ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center">Loading...</td></tr>
-              ) : outstandingInvoices.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No outstanding invoices found.</td></tr>
-              ) : (
-                outstandingInvoices.map((inv: any) => (
-                  <tr key={inv.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-semibold text-primary">{inv.invoice_number}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{formatDate(inv.created_at)}</td>
-                    <td className="px-4 py-3 text-right font-medium">{formatTZS(inv.total_amount)}</td>
-                    <td className="px-4 py-3 text-right text-success">{formatTZS(inv.amount_paid)}</td>
-                    <td className="px-4 py-3 text-right text-warning font-semibold">{formatTZS(inv.balance)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm min-w-[500px]">
+              <thead className="bg-muted/50 sticky top-0 text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-3 sm:px-4 py-2.5 text-left">Invoice Number</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-left">Date</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Total</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Paid</th>
+                  <th className="px-3 sm:px-4 py-2.5 text-right">Balance Due</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loadingInvoices ? (
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-xs">Loading...</td></tr>
+                ) : outstandingInvoices.length === 0 ? (
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-xs">No outstanding invoices found.</td></tr>
+                ) : (
+                  outstandingInvoices.map((inv: any) => (
+                    <tr key={inv.id} className="hover:bg-muted/30">
+                      <td className="px-3 sm:px-4 py-2.5 font-semibold text-primary">{inv.invoice_number}</td>
+                      <td className="px-3 sm:px-4 py-2.5 whitespace-nowrap">{formatDate(inv.created_at)}</td>
+                      <td className="px-3 sm:px-4 py-2.5 text-right font-medium">{formatTZS(inv.total_amount)}</td>
+                      <td className="px-3 sm:px-4 py-2.5 text-right text-success">{formatTZS(inv.amount_paid)}</td>
+                      <td className="px-3 sm:px-4 py-2.5 text-right text-warning font-semibold">{formatTZS(inv.balance)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
       
-      <div className="pt-4 border-t border-border flex justify-end">
-        <Button variant="ghost" onClick={onClose}>Close Profile</Button>
+      <div className="pt-3 border-t border-border flex justify-end">
+        <Button variant="ghost" size="sm" onClick={onClose}>Close Profile</Button>
       </div>
     </DialogContent>
   );

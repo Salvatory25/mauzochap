@@ -517,7 +517,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <main className="flex-1 lg:ml-0 pt-16 lg:pt-0 bg-muted/20">
-        <div className="px-3 py-4 sm:px-6 sm:py-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
+        <div className="px-3 py-4 sm:px-6 sm:py-6 lg:p-8 max-w-7xl mx-auto pb-10 sm:pb-8">{children}</div>
         {/* Mobile bottom nav */}
         <nav className={`lg:hidden fixed bottom-0 inset-x-0 grid ${isSuperAdmin ? "grid-cols-3" : "grid-cols-5"} gap-1 border-t border-border bg-card/95 backdrop-blur-md px-1.5 py-1 z-40 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)]`}>
           {isSuperAdmin ? (
@@ -586,7 +586,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </>
           )}
         </nav>
-        <div className="lg:hidden h-16" />
+        <div className="lg:hidden h-20" />
       </main>
     </div>
   );

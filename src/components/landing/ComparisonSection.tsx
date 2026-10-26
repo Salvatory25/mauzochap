@@ -120,7 +120,7 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
             <span>{isSwahili ? "KWA NINI UACHANE NA DAFTARI?" : "WHY SWITCH"}</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#01184c] tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-950 tracking-tight leading-tight">
             {isSwahili ? (
               <>
                 BADO UNAENDESHA DUKA KWA{" "}
@@ -171,7 +171,7 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
                   }`}
                 >
                   {/* Category Column */}
-                  <div className="col-span-12 sm:col-span-3 font-bold text-xs sm:text-sm text-[#01184c]">
+                  <div className="col-span-12 sm:col-span-3 font-bold text-xs sm:text-sm text-slate-950">
                     {row.category}
                   </div>
 
@@ -189,7 +189,7 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
                       <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center shrink-0 mt-0.5">
                         <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-violet-600 stroke-[2.5]" />
                       </div>
-                      <span className="text-xs sm:text-sm font-semibold text-[#01184c] leading-relaxed">
+                      <span className="text-xs sm:text-sm font-semibold text-slate-950 leading-relaxed">
                         {row.mauzochap}
                       </span>
                     </div>
@@ -226,7 +226,7 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-violet-600 text-white text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase">
                 <span>{isSwahili ? "HESABU RAHISI YA FAIDA" : "THE SIMPLE PROFIT MATH"}</span>
               </div>
-              <h3 className="text-lg sm:text-2xl font-black text-[#01184c] tracking-tight leading-snug">
+              <h3 className="text-lg sm:text-2xl font-black text-slate-950 tracking-tight leading-snug">
                 {isSwahili
                   ? "Daftari linakugharimu ~TZS 320,000/mwezi. MauzoChap ni TZS 10,500 tu."
                   : "The notebook costs ~TZS 320,000/mo in losses. MauzoChap is just TZS 10,500."}
