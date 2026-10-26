@@ -106,7 +106,7 @@ export default function LandingPage() {
           <img src="/images/logo-black.png" alt="MauzoChap" className="w-7 h-7 object-contain bg-white rounded-lg p-0.5 shrink-0 shadow-sm" />
           <div className="truncate text-left">
             <span className="block font-black text-xs leading-none">MauzoChap</span>
-            <span className="block text-[10px] font-mono text-emerald-300 leading-none mt-0.5">{lang === "sw" ? "Siku 5 Bure" : "5-Day Free Trial"}</span>
+            <span className="block text-[10px] font-mono text-emerald-300 leading-none mt-0.5">{lang === "sw" ? "Jaribu Demo Bure" : "Try Free Demo"}</span>
           </div>
         </div>
 

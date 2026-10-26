@@ -140,7 +140,7 @@ export function HeroSection({ t }: HeroSectionProps) {
         <div className="pt-1 flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-1.5 text-[11px] sm:text-xs text-slate-500 font-mono">
           <span className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>{isSwahili ? "Siku 5 za Bure" : "Free 5-Day Trial"}</span>
+            <span>{isSwahili ? "Jaribu Demo Bure" : "Try Free Demo"}</span>
           </span>
           <span className="flex items-center gap-1.5">
             <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />

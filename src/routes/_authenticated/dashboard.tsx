@@ -254,7 +254,7 @@ function Dashboard() {
                     </strong>
                   );
                 })() : (
-                  <span className="italic">Bila kikomo / Siku 5 Bure</span>
+                  <span className="italic">Bila kikomo</span>
                 )}
               </div>
             </div>

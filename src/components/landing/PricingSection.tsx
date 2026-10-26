@@ -190,7 +190,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                   <div
                     className={`mt-2.5 text-center text-[10px] font-mono ${isFeatured ? "text-violet-200" : "text-slate-400"}`}
                   >
-                    5-day free trial • No card required
+                    Bei nafuu kila mwezi • Hakuna makato ya siri
                   </div>
                 </div>
               </div>

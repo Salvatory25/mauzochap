@@ -328,12 +328,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         />
       );
     }
-    // Check expiry (after 5-day free trial or monthly subscription)
+    // Check expiry of subscription
     if (business.expiry_date && new Date(business.expiry_date) < new Date()) {
       return (
         <Blocker
-          title="Muda wa Majaribio Umekwisha / Subscription Expired"
-          message="Muda wako wa siku 5 za majaribio bila malipo au kifurushi chako umemalizika. Mfumo umefungwa kwa sasa hadi utakapofanya malipo ya kifurushi chako (Starter, Kilimanjaro au Serengeti) ili kuendelea kutumia MauzoChap POS dukani kwako."
+          title="Kifurushi Kimekwisha / Subscription Expired"
+          message="Muda wa kifurushi chako umemalizika. Mfumo umefungwa kwa sasa hadi utakapofanya malipo ya kifurushi chako (Starter, Kilimanjaro au Serengeti) ili kuendelea kutumia MauzoChap POS dukani kwako."
           icon={CreditCard}
           action={
             <Button className="w-full bg-primary text-primary-foreground font-bold shadow-md hover:opacity-95" onClick={() => navigate({ to: "/setup-billing" })}>
@@ -482,8 +482,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-background w-full overflow-x-hidden">
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-sm h-screen sticky top-0 overflow-hidden z-30">
+    <div className="flex min-h-screen bg-background w-full">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-sm fixed inset-y-0 left-0 h-screen z-30">
         {sidebarContent}
       </aside>
 
@@ -516,7 +516,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <main className="flex-1 min-w-0 w-full lg:ml-0 pt-16 lg:pt-0 bg-muted/20 overflow-x-hidden">
+      <main className="flex-1 min-w-0 w-full lg:pl-64 pt-16 lg:pt-0 bg-muted/20 overflow-x-hidden">
         <div className="px-3 py-4 sm:px-6 sm:py-6 lg:p-8 max-w-7xl mx-auto pb-10 sm:pb-8 w-full min-w-0">
           {!isSuperAdmin && business?.expiry_date && (() => {
             const days = Math.ceil((new Date(business.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
@@ -526,7 +526,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <div className="flex items-center gap-2.5">
                     <Clock className="h-4 w-4 text-amber-600 shrink-0 animate-pulse" />
                     <span>
-                      <strong>Majaribio ya Siku 5 Bure:</strong> Zimebaki <strong>siku {days}</strong> pekee kabla ya mfumo kufungwa. Lipia mapema ili huduma yako isikatike.
+                      <strong>Ilani ya Kifurushi:</strong> Zimebaki <strong>siku {days}</strong> pekee kabla ya kifurushi chako kumalizika. Lipia mapema ili huduma yako isikatike.
                     </span>
                   </div>
                   <Link

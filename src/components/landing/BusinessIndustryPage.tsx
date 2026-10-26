@@ -1081,7 +1081,7 @@ export function BusinessIndustryPage({ industry }: { industry: IndustryKey }) {
               onClick={() => setRegisterModalOpen(true)}
               className="inline-flex items-center gap-1.5 bg-slate-950 hover:bg-violet-700 text-white text-xs sm:text-sm font-bold px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl shadow-sm transition-all"
             >
-              <span>{isSw ? "Anza Bure Siku 5" : "Start Free Trial"}</span>
+              <span>{isSw ? "Sajili Duka Lako" : "Register Store"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -1120,7 +1120,7 @@ export function BusinessIndustryPage({ industry }: { industry: IndustryKey }) {
                   onClick={() => setRegisterModalOpen(true)}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-slate-950 hover:bg-violet-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-purple-950/10 hover:shadow-xl transition-all"
                 >
-                  <span>{isSw ? "Sajili Duka Lako Bure" : "Start 5-Day Free Trial"}</span>
+                  <span>{isSw ? "Sajili Duka Lako Sasa" : "Register Your Business"}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -1497,7 +1497,7 @@ export function BusinessIndustryPage({ industry }: { industry: IndustryKey }) {
               onClick={() => setRegisterModalOpen(true)}
               className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm sm:text-base shadow-lg transition-all"
             >
-              {isSw ? "Anza Jaribio la Siku 5 Bure" : "Start 5-Day Free Trial"}
+              {isSw ? "Sajili Duka Lako Leo" : "Register Your Business Today"}
             </button>
             <a
               href="https://wa.me/255627274168"
