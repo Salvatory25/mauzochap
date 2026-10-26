@@ -34,7 +34,7 @@ export function HowItWorksSection({ t }: HowItWorksSectionProps) {
 
         {/* 3 Steps Grid */}
         <div className="grid gap-8 md:grid-cols-3 relative">
-          {hw.steps.map((step, idx) => {
+          {hw.steps.map((step: { number: string; title: string; description: string; detail: string }, idx: number) => {
             const Icon = stepIcons[idx] || UserCheck;
 
             return (

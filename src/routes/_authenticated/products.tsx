@@ -58,7 +58,7 @@ function ProductsPage() {
   const t = useT();
   const qc = useQueryClient();
   const { isManager, branchId, business } = useAuth();
-  const currentPackage = business?.package || "kilimanjaro";
+  const currentPackage = (business?.package as string) || "kilimanjaro";
   const productLimit = currentPackage === "starter" ? 100 : 999999;
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);

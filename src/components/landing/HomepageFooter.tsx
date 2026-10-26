@@ -27,7 +27,7 @@ export function HomepageFooter({
           <div className="lg:col-span-6 space-y-5">
             <Link to="/" className="flex items-center gap-2.5">
               <img
-                src="/images/logo.png"
+                src="/images/logo-black.png"
                 alt="MauzoChap"
                 className="w-10 h-10 object-contain bg-white rounded-xl p-1 shadow-md"
                 width={40}

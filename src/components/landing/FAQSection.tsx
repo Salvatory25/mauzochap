@@ -33,7 +33,7 @@ export function FAQSection({ t }: FAQSectionProps) {
 
         {/* Accordion List */}
         <div className="rounded-2xl border border-slate-200/90 bg-white divide-y divide-slate-100 shadow-sm overflow-hidden">
-          {f.items.map((item, idx) => {
+          {f.items.map((item: { q: string; a: string }, idx: number) => {
             const isOpen = openIndex === idx;
 
             return (

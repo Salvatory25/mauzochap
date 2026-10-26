@@ -61,9 +61,13 @@ export function RegisterModal({
         {/* Modal Top Header */}
         <div className="px-6 py-5 bg-gradient-to-r from-violet-600 to-indigo-700 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center font-black text-sm text-white">
-              M
-            </div>
+            <img
+              src="/images/logo-white.png"
+              alt="MauzoChap"
+              className="w-9 h-9 object-contain drop-shadow-sm"
+              width={36}
+              height={36}
+            />
             <div>
               <h3 className="text-base font-black tracking-tight">{m.title}</h3>
               <p className="text-xs text-violet-200">{m.subtitle}</p>

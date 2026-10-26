@@ -32,11 +32,10 @@ export function HomepageHeader({
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-all duration-200 ${
-        scrolled
+      className={`sticky top-0 z-40 transition-all duration-200 ${scrolled
           ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-purple-100 py-3"
           : "bg-white/90 backdrop-blur-sm border-b border-purple-50 py-4"
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
         {/* Brand: MauzoChap with official logo icon */}
@@ -45,7 +44,7 @@ export function HomepageHeader({
           className="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-600 rounded-lg"
         >
           <img
-            src="/images/logo.png"
+            src="/images/logo-black.png"
             alt="MauzoChap"
             className="w-9 h-9 sm:w-10 sm:h-10 object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
             width={40}
@@ -93,22 +92,20 @@ export function HomepageHeader({
           <div className="inline-flex items-center rounded-lg border border-purple-200 bg-purple-50/80 p-0.5 text-xs font-mono font-bold">
             <button
               onClick={() => lang !== "en" && onToggleLang()}
-              className={`px-2 py-1 rounded-md transition-colors cursor-pointer ${
-                lang === "en"
+              className={`px-2 py-1 rounded-md transition-colors cursor-pointer ${lang === "en"
                   ? "bg-violet-600 text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
-              }`}
+                }`}
             >
               EN
             </button>
             <span className="text-slate-300">|</span>
             <button
               onClick={() => lang !== "sw" && onToggleLang()}
-              className={`px-2 py-1 rounded-md transition-colors cursor-pointer ${
-                lang === "sw"
+              className={`px-2 py-1 rounded-md transition-colors cursor-pointer ${lang === "sw"
                   ? "bg-violet-600 text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
-              }`}
+                }`}
             >
               SW
             </button>

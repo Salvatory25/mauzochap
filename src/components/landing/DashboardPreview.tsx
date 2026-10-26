@@ -28,7 +28,7 @@ export function DashboardPreview({ t }: DashboardPreviewProps) {
           <div className="flex items-center justify-between pb-3 px-2 border-b border-purple-100/80">
             <div className="flex items-center gap-2.5">
               <img
-                src="/logo.png"
+                src="/logo-black.png"
                 alt="MauzoChap POS Official Logo"
                 className="w-7 h-7 rounded-lg object-contain shadow-sm"
                 width={28}

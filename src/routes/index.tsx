@@ -103,7 +103,7 @@ export default function LandingPage() {
       {/* Floating App-Like Bottom Action Bar on Mobile */}
       <div className="sm:hidden fixed bottom-3 inset-x-3 z-30 rounded-2xl bg-[#01184c]/95 backdrop-blur-md border border-white/15 p-2.5 shadow-2xl flex items-center justify-between gap-3 text-white">
         <div className="flex items-center gap-2 pl-1 min-w-0">
-          <img src="/images/logo.png" alt="MauzoChap" className="w-7 h-7 object-contain bg-white rounded-lg p-0.5 shrink-0 shadow-sm" />
+          <img src="/images/logo-black.png" alt="MauzoChap" className="w-7 h-7 object-contain bg-white rounded-lg p-0.5 shrink-0 shadow-sm" />
           <div className="truncate text-left">
             <span className="block font-black text-xs leading-none">MauzoChap</span>
             <span className="block text-[10px] font-mono text-emerald-300 leading-none mt-0.5">{lang === "sw" ? "Siku 5 Bure" : "5-Day Free Trial"}</span>

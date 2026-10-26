@@ -31,10 +31,10 @@ export function TestimonialsSection({ t }: TestimonialsSectionProps) {
 
         {/* 6 Deduplicated Testimonial Cards Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {ts.stories.map((story, idx) => {
+          {ts.stories.map((story: { name: string; business: string; location: string; quote: string; stat: string }, idx: number) => {
             const initials = story.name
               .split(" ")
-              .map((n) => n[0])
+              .map((n: string) => n[0])
               .join("");
 
             return (

@@ -337,9 +337,9 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
                       </div>
                       <div className="flex items-center gap-2 ml-2 pl-3 border-l border-white/20">
                         <img
-                          src="/images/logo.png"
+                          src="/images/logo-black.png"
                           alt="MauzoChap"
-                          className="w-6 h-6 rounded-md object-contain bg-white/10 p-0.5 shadow-xs"
+                          className="w-6 h-6 rounded-md object-contain bg-white p-0.5 shadow-xs"
                           width={24}
                           height={24}
                         />
