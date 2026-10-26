@@ -122,6 +122,7 @@ export function HomepageHeader({
           {/* Get Started Primary Violet Button */}
           <Link
             to="/auth"
+            search={{ mode: "signup" }}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-bold shadow-md shadow-violet-600/25 transition-all cursor-pointer hover:shadow-violet-600/35 active:scale-95"
           >
             <span>{t.nav.getStarted}</span>
@@ -202,6 +203,7 @@ export function HomepageHeader({
 
             <Link
               to="/auth"
+              search={{ mode: "signup" }}
               onClick={closeMenu}
               className="w-full py-2.5 rounded-xl bg-violet-600 text-white text-center text-xs font-bold shadow-md shadow-violet-600/20"
             >

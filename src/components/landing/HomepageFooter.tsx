@@ -95,7 +95,7 @@ export function HomepageFooter({
                 </Link>
               </li>
               <li>
-                <Link to="/auth" className="hover:text-white transition-colors text-left cursor-pointer">
+                <Link to="/auth" search={{ mode: "signup" }} className="hover:text-white transition-colors text-left cursor-pointer">
                   Create Account
                 </Link>
               </li>

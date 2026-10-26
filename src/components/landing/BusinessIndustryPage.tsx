@@ -1499,13 +1499,13 @@ export function BusinessIndustryPage({ industry }: { industry: IndustryKey }) {
               {isSw ? "Anza Jaribio la Siku 5 Bure" : "Start 5-Day Free Trial"}
             </button>
             <a
-              href="https://wa.me/255764250828"
+              href="https://wa.me/255627274168"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-white/20 hover:bg-white/10 text-white font-bold text-sm sm:text-base transition-colors"
             >
               <PhoneCall className="w-4 h-4 text-emerald-400" />
-              <span>WhatsApp: +255 764 250 828</span>
+              <span>WhatsApp: +255 627 274 168</span>
             </a>
           </div>
         </div>

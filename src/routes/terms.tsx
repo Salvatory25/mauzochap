@@ -154,7 +154,7 @@ function TermsPage() {
 
         {/* Footer Help */}
         <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>Have questions about these terms? Contact us at legal@mauzochap.com</div>
+          <div>Have questions about these terms? Contact us at legal@mauzochap.com or WhatsApp: <a href="https://wa.me/255627274168" target="_blank" rel="noreferrer" className="text-emerald-600 font-bold hover:underline">+255 627 274 168</a></div>
           <Link
             to="/auth"
             className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs uppercase tracking-wider"

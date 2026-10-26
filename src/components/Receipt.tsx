@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useT, formatTZS, formatDate } from "@/lib/i18n";
 import { useState, useEffect } from "react";
-import { Printer, X } from "lucide-react";
+import { Printer, X, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 
@@ -117,6 +117,28 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
     document.title = originalTitle;
   };
 
+  const handleShareWhatsApp = () => {
+    const isProforma = sale.status === "pending";
+    const docTitle = isProforma ? "PROFORMA INVOICE" : "RISITI YA MALIPO";
+    const receiptText = `*${businessName.toUpperCase()}*\n` +
+      `📍 ${locationName}\n` +
+      `--------------------------------\n` +
+      `📄 *${docTitle}:* #${sale.receipt_number}\n` +
+      `📅 Tarehe: ${formatDate(sale.created_at)}\n` +
+      `💳 Njia ya Malipo: ${sale.payment_method.replace("_", " ").toUpperCase()}\n` +
+      `--------------------------------\n` +
+      sale.items.map(i => `• ${i.name}\n   ${i.qty} x ${formatTZS(i.price)} = ${formatTZS(i.qty * i.price)}`).join('\n') +
+      `\n--------------------------------\n` +
+      `*JUMLA KUU / TOTAL: ${formatTZS(sale.total)}*\n` +
+      (sale.amount_paid ? `Kiasi Kilicholipwa: ${formatTZS(sale.amount_paid)}\n` : '') +
+      `--------------------------------\n` +
+      `Asante kwa kutuunga mkono! Karibu tena.\n` +
+      `_Imezalishwa na MauzoChap POS (mauzochap.co.tz)_`;
+
+    const url = `https://wa.me/?text=${encodeURIComponent(receiptText)}`;
+    window.open(url, "_blank");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4 no-print">
@@ -128,7 +150,7 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
             {sale.status === "pending" ? "Proforma invoice generated." : "Sale completed successfully."}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="rounded-lg border border-border p-1 bg-card flex">
             <button
               onClick={() => setFormat("thermal")}
@@ -149,6 +171,13 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
           </div>
           <Button onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-2" /> {t("print")}
+          </Button>
+          <Button 
+            onClick={handleShareWhatsApp} 
+            variant="outline" 
+            className="border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 font-bold"
+          >
+            <MessageCircle className="h-4 w-4 mr-1.5 text-emerald-600" /> Tuma WhatsApp
           </Button>
           <Button variant="ghost" onClick={onClose}>
             <X className="h-4 w-4 mr-2" /> Close

@@ -121,6 +121,7 @@ export function HeroSection({ t }: HeroSectionProps) {
         <div className="pt-1 sm:pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-4">
           <Link
             to="/auth"
+            search={{ mode: "signup" }}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-violet-600/25 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
           >
             <span>{h.primaryCta}</span>

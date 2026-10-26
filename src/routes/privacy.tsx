@@ -122,7 +122,7 @@ function PrivacyPage() {
 
         {/* Contact info */}
         <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>Swali au shaka kuhusu faragha yako? Wasiliana nasi: privacy@mauzochap.com</div>
+          <div>Swali au shaka kuhusu faragha yako? Wasiliana nasi: privacy@mauzochap.com au WhatsApp: <a href="https://wa.me/255627274168" target="_blank" rel="noreferrer" className="text-emerald-600 font-bold hover:underline">+255 627 274 168</a></div>
           <Link
             to="/terms"
             className="text-violet-600 hover:text-violet-800 font-bold underline"

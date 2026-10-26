@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { CreditCard, CheckCircle2, Package, ArrowRight, Clock, RefreshCw, AlertCircle } from "lucide-react";
+import { CreditCard, CheckCircle2, Package, ArrowRight, Clock, RefreshCw, AlertCircle, Sparkles } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendEmail } from "@/lib/email";
 
@@ -67,6 +67,37 @@ function SetupBilling() {
   const [selectedPackage, setSelectedPackage] = useState<string>("kilimanjaro");
   const [paymentRef, setPaymentRef] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [activatingTrial, setActivatingTrial] = useState(false);
+
+  const hasUsedTrial = !!business?.expiry_date;
+
+  const handleStartTrial = async () => {
+    if (!business?.id) return;
+    setActivatingTrial(true);
+    try {
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + 5);
+
+      const { error } = await supabase
+        .from("businesses")
+        .update({
+          account_status: "approved",
+          package: "kilimanjaro",
+          expiry_date: expiry.toISOString().split("T")[0],
+          rejection_reason: null as any,
+        })
+        .eq("id", business.id);
+
+      if (error) throw error;
+
+      await qc.invalidateQueries({ queryKey: ["auth"] });
+      toast.success("Hongera! Akaunti yako ya majaribio ya siku 5 za bure imewashwa rasmi!");
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to activate 5-day free trial");
+      setActivatingTrial(false);
+    }
+  };
 
   // Fetch payments for this business to check pending status
   const { data: payments = [], isLoading: pLoading, refetch: refetchPayments } = useQuery({
@@ -249,10 +280,40 @@ function SetupBilling() {
           <div className="mx-auto h-12 w-12 rounded-full bg-destructive/25 flex items-center justify-center">
             <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
-          <h2 className="text-xl font-bold">Your Subscription Has Expired</h2>
+          <h2 className="text-xl font-bold">Muda wa Majaribio ya Siku 5 Umekwisha / Subscription Expired</h2>
           <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-            Thank you for using MauzoChap POS. Your subscription period has ended. To continue using MauzoChap POS and access your business features, please choose a subscription plan below to renew.
+            Muda wako wa siku 5 za majaribio bila malipo au muda wa kifurushi chako umemalizika. Mfumo umefungwa kwa sasa hadi utakapofanya malipo ya kifurushi chako (Starter, Kilimanjaro, au Serengeti) hapa chini ili kuendelea kutumia MauzoChap POS dukani kwako.
           </p>
+        </div>
+      )}
+
+      {/* 5-Day Free Trial Activation Card (Available for new registrations who haven't used trial) */}
+      {!hasUsedTrial && !isExpired && (
+        <div className="max-w-4xl mx-auto rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent p-6 sm:p-8 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-mono font-bold tracking-wider uppercase border border-emerald-500/30">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Anza Bure Siku 5 / 5-Day Free Trial</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+                Jaribu MauzoChap Bure kwa Siku 5 Bila Kutoa Pesa
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-xl leading-relaxed">
+                Tumia mfumo mzima wa duka lako bila malipo: uza kaunta (POS), toa risiti za WhatsApp, dhibiti stoo na kuzuia wizi. Baada ya siku 5, utachagua kifurushi ili kuendelea.
+              </p>
+            </div>
+
+            <Button
+              size="lg"
+              onClick={handleStartTrial}
+              disabled={activatingTrial}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm px-8 py-6 rounded-2xl shadow-lg shadow-emerald-600/30 shrink-0 transition-transform active:scale-95 cursor-pointer"
+            >
+              {activatingTrial ? "Inawasha..." : "Anza Bure Siku 5 Sasa"}
+              {!activatingTrial && <ArrowRight className="h-4 w-4 ml-2" />}
+            </Button>
+          </div>
         </div>
       )}
 
@@ -269,9 +330,9 @@ function SetupBilling() {
       )}
 
       <div className="text-center max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold tracking-tight">Select a Subscription Package</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Vifurushi vya MauzoChap / Subscription Plans</h1>
         <p className="text-muted-foreground mt-2">
-          Choose the right plan to activate your business account for <strong>{business.business_name}</strong>.
+          Chagua kifurushi unachotaka kulipia kwa ajili ya biashara ya <strong>{business.business_name}</strong>.
         </p>
       </div>
 

@@ -328,16 +328,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         />
       );
     }
-    // Check expiry
+    // Check expiry (after 5-day free trial or monthly subscription)
     if (business.expiry_date && new Date(business.expiry_date) < new Date()) {
       return (
         <Blocker
-          title="Subscription Expired"
-          message="Your subscription has expired. Please renew your package to continue using MauzoChap."
+          title="Muda wa Majaribio Umekwisha / Subscription Expired"
+          message="Muda wako wa siku 5 za majaribio bila malipo au kifurushi chako umemalizika. Mfumo umefungwa kwa sasa hadi utakapofanya malipo ya kifurushi chako (Starter, Kilimanjaro au Serengeti) ili kuendelea kutumia MauzoChap POS dukani kwako."
           icon={CreditCard}
           action={
-            <Button className="w-full" onClick={() => navigate({ to: "/setup-billing" })}>
-              Renew / Upgrade Subscription
+            <Button className="w-full bg-primary text-primary-foreground font-bold shadow-md hover:opacity-95" onClick={() => navigate({ to: "/setup-billing" })}>
+              Chagua Kifurushi & Lipia Sasa / Renew Subscription
             </Button>
           }
         />
@@ -517,7 +517,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <main className="flex-1 min-w-0 w-full lg:ml-0 pt-16 lg:pt-0 bg-muted/20 overflow-x-hidden">
-        <div className="px-3 py-4 sm:px-6 sm:py-6 lg:p-8 max-w-7xl mx-auto pb-10 sm:pb-8 w-full min-w-0">{children}</div>
+        <div className="px-3 py-4 sm:px-6 sm:py-6 lg:p-8 max-w-7xl mx-auto pb-10 sm:pb-8 w-full min-w-0">
+          {!isSuperAdmin && business?.expiry_date && (() => {
+            const days = Math.ceil((new Date(business.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+            if (days > 0 && days <= 5 && !location.pathname.startsWith("/setup-billing")) {
+              return (
+                <div className="mb-4 sm:mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 sm:p-4 text-xs sm:text-sm text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <Clock className="h-4 w-4 text-amber-600 shrink-0 animate-pulse" />
+                    <span>
+                      <strong>Majaribio ya Siku 5 Bure:</strong> Zimebaki <strong>siku {days}</strong> pekee kabla ya mfumo kufungwa. Lipia mapema ili huduma yako isikatike.
+                    </span>
+                  </div>
+                  <Link
+                    to="/setup-billing"
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider shrink-0 text-center transition-colors shadow-sm"
+                  >
+                    Lipia Kifurushi Sasa
+                  </Link>
+                </div>
+              );
+            }
+            return null;
+          })()}
+          {children}
+        </div>
         {/* Mobile bottom nav */}
         <nav className={`lg:hidden fixed bottom-0 inset-x-0 grid ${isSuperAdmin ? "grid-cols-3" : "grid-cols-5"} gap-1 border-t border-border bg-card/95 backdrop-blur-md px-1.5 py-1 z-40 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)]`}>
           {isSuperAdmin ? (
