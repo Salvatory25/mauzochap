@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useT, formatTZS, formatDate } from "@/lib/i18n";
-import { TrendingUp, Boxes, Users, AlertTriangle, CreditCard, Activity, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { TrendingUp, Boxes, Users, AlertTriangle, CreditCard, Activity, FileText, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -13,7 +13,7 @@ import { useAuth } from "@/lib/use-auth";
 
 function Dashboard() {
   const t = useT();
-  const { branchId } = useAuth();
+  const { branchId, business } = useAuth();
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["dashboard-stats", branchId],
@@ -21,18 +21,18 @@ function Dashboard() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const weekAgo = new Date(Date.now() - 6 * 86400000); // Last 7 days including today
-      weekAgo.setHours(0,0,0,0);
+      weekAgo.setHours(0, 0, 0, 0);
       const monthStart = new Date(Date.now() - 29 * 86400000); // Last 30 days
-      monthStart.setHours(0,0,0,0);
+      monthStart.setHours(0, 0, 0, 0);
 
       const [
-        todayRes, 
-        weekRes, 
-        monthRes, 
+        todayRes,
+        weekRes,
+        monthRes,
         allTimeRes,
-        productsRes, 
-        lowStockRes, 
-        customersRes, 
+        productsRes,
+        lowStockRes,
+        customersRes,
         debtsRes,
         invoicesRes
       ] = await Promise.all([
@@ -128,13 +128,13 @@ function Dashboard() {
       const monthData = monthRes.data || [];
       const monthSaleIds = monthData.map((s: any) => s.id);
       let saleItemsThisMonth: any[] = [];
-      
+
       if (monthSaleIds.length > 0) {
         const { data, error } = await supabase
           .from("sale_items")
           .select("quantity, subtotal, products(name)")
           .in("sale_id", monthSaleIds.slice(0, 1000));
-        
+
         if (error) {
           console.error("Error fetching top products:", error);
         }
@@ -148,7 +148,7 @@ function Dashboard() {
         byProduct[name].quantity += Number(item.quantity);
         byProduct[name].revenue += Number(item.subtotal);
       });
-      const topProducts = Object.values(byProduct).sort((a,b) => b.quantity - a.quantity).slice(0, 8);
+      const topProducts = Object.values(byProduct).sort((a, b) => b.quantity - a.quantity).slice(0, 8);
 
       return {
         today: sum(todayRes.data),
@@ -178,11 +178,11 @@ function Dashboard() {
         .select("id, receipt_number, total, payment_method, created_at")
         .order("created_at", { ascending: false })
         .limit(8);
-        
+
       if (branchId) {
         q = q.or(`branch_id.eq.${branchId},branch_id.is.null`);
       }
-      
+
       const { data } = await q;
       return data ?? [];
     },
@@ -215,6 +215,62 @@ function Dashboard() {
           <p className="text-xs sm:text-sm text-muted-foreground">{t("dashboardSubtitle")}</p>
         </div>
       </div>
+
+      {/* Subscription Expiry & Plan Status Card for Business Admins (Visible immediately without swiping) */}
+      {business && (
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-lg shrink-0 ${
+              business.expiry_date && new Date(business.expiry_date) < new Date()
+                ? 'bg-destructive/15 text-destructive'
+                : business.expiry_date && Math.ceil((new Date(business.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) <= 5
+                ? 'bg-amber-500/15 text-amber-600'
+                : 'bg-primary/10 text-primary'
+            }`}>
+              <CreditCard className="h-5 w-5" />
+            </div>
+            <div className="space-y-0.5 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs sm:text-sm font-bold text-foreground">
+                  Kifurushi: <span className="uppercase text-primary font-extrabold">{business.package || "Starter"}</span>
+                </span>
+                <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                  business.account_status === "approved" ? "bg-success/15 text-success" : 
+                  business.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
+                }`}>
+                  {business.account_status === "approved" ? "Active" : business.account_status}
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                <span>Tarehe ya Kuisha:</span>
+                {business.expiry_date ? (() => {
+                  const days = Math.ceil((new Date(business.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+                  const isExp = days <= 0;
+                  const isSoon = days > 0 && days <= 5;
+                  return (
+                    <strong className={isExp ? "text-destructive" : isSoon ? "text-amber-600 font-bold" : "text-foreground font-semibold"}>
+                      {new Date(business.expiry_date).toLocaleDateString()}
+                      {isExp ? " (Kimekwisha)" : ` (Zimebaki siku ${days})`}
+                    </strong>
+                  );
+                })() : (
+                  <span className="italic">Bila kikomo / Siku 5 Bure</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex items-center">
+            <Link
+              to="/setup-billing"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              <span>Boresha / Lipia Kifurushi</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Primary KPIs (2x2 grid on mobile, 4 cols on desktop) */}
       <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
@@ -296,7 +352,7 @@ function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} dy={6} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} tickFormatter={(val) => `${val >= 1000 ? Math.round(val / 1000) + 'k' : val}`} />
-                  <Tooltip 
+                  <Tooltip
                     cursor={{ fill: 'var(--muted)' }}
                     contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--card)', fontSize: '12px' }}
                     formatter={(value: number) => [formatTZS(value), "Revenue"]}

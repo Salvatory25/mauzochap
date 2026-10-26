@@ -20,7 +20,7 @@ function SuperAdminDashboard() {
   const { isSuperAdmin } = useAuth();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<"businesses" | "payments">("businesses");
-  
+
   const [bPage, setBPage] = useState(1);
   const [pPage, setPPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -89,13 +89,13 @@ function SuperAdminDashboard() {
       expiry.setDate(expiry.getDate() + days);
 
       // 3. Update business package, status to approved, set expiry and clear rejection reason
-      const { error: bErr } = await supabase.from("businesses").update({ 
+      const { error: bErr } = await supabase.from("businesses").update({
         account_status: "approved",
         package: pkg as any,
         expiry_date: expiry.toISOString().split("T")[0],
         rejection_reason: null as any
       }).eq("id", businessId);
-      
+
       if (bErr) throw bErr;
 
       // 4. In-app notification
@@ -123,21 +123,21 @@ function SuperAdminDashboard() {
 
   const handleRejectPayment = async (paymentId: string, businessId: string, clientEmail: string, businessName: string) => {
     const reason = window.prompt(
-      "Enter the reason for rejecting this payment:", 
+      "Enter the reason for rejecting this payment:",
       "Payment reference could not be verified. Please check your transaction reference and submit the correct reference."
     );
     if (reason === null) return; // User cancelled
 
     try {
       // 1. Mark payment as rejected
-      const { error: pErr } = await supabase.from("payments").update({ 
+      const { error: pErr } = await supabase.from("payments").update({
         verification_status: "rejected" as any,
         rejection_reason: reason as any
       } as any).eq("id", paymentId);
       if (pErr) throw pErr;
 
       // 2. Set business account status to rejected and update rejection reason
-      const { error: bErr } = await supabase.from("businesses").update({ 
+      const { error: bErr } = await supabase.from("businesses").update({
         account_status: "rejected",
         rejection_reason: reason as any
       }).eq("id", businessId);
@@ -215,13 +215,13 @@ function SuperAdminDashboard() {
       </div>
 
       <div className="flex gap-2 border-b border-border mb-4 overflow-x-auto no-scrollbar">
-        <button 
+        <button
           onClick={() => setActiveTab("businesses")}
           className={`px-3.5 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap ${activeTab === "businesses" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
         >
           Businesses ({businesses.length})
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab("payments")}
           className={`px-3.5 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap ${activeTab === "payments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
         >
@@ -231,299 +231,312 @@ function SuperAdminDashboard() {
 
       {activeTab === "businesses" && (
         <>
-        {/* Mobile Cards View */}
-        <div className="md:hidden space-y-3">
-          {bLoading ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">Loading businesses...</div>
-          ) : paginatedBusinesses.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">No businesses registered yet.</div>
-          ) : (
-            paginatedBusinesses.map((b) => {
-              const latestP = b.payments?.[0];
-              const daysLeft = b.expiry_date ? Math.ceil((new Date(b.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : null;
-              const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 5;
-              const isExpired = daysLeft !== null && daysLeft <= 0;
-
-              return (
-                <div key={b.id} className="rounded-xl border border-border bg-card p-3.5 shadow-sm space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="font-bold text-sm sm:text-base text-foreground truncate">{b.business_name}</div>
-                      <div className="text-xs text-muted-foreground">{b.owner_name}</div>
-                    </div>
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                      b.account_status === "approved" ? "bg-success/15 text-success" : 
-                      b.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
-                    }`}>
-                      {b.account_status}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-border">
-                    <div>
-                      <span className="text-muted-foreground block text-[10px] uppercase">Contact</span>
-                      <span className="truncate block font-medium">{b.email}</span>
-                      <span className="text-muted-foreground truncate block">{b.phone}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-[10px] uppercase">Plan & Expiry</span>
-                      <span className="font-bold text-primary uppercase text-[11px] block">{b.package || "N/A"}</span>
-                      {b.expiry_date ? (
-                        <span className={`text-[11px] font-semibold block ${isExpired ? 'text-destructive' : isExpiringSoon ? 'text-amber-500' : 'text-foreground'}`}>
-                          {new Date(b.expiry_date).toLocaleDateString()}
-                          {isExpiringSoon && ` (${daysLeft}d)`}
-                          {isExpired && ` (Exp)`}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground italic text-[11px]">No expiry</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {latestP?.payment_reference && (
-                    <div className="bg-muted/60 p-2 rounded-lg text-xs flex items-center justify-between">
-                      <span className="text-muted-foreground text-[10px] uppercase">Payment Ref:</span>
-                      <span className="font-mono font-bold">{latestP.payment_reference}</span>
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border">
-                    {b.account_status !== "approved" && latestP && (
-                      <Button 
-                        size="sm" 
-                        className="flex-1 bg-primary text-primary-foreground font-bold h-8 text-xs"
-                        onClick={() => handleApprovePayment(latestP.id, b.id, b.package || "kilimanjaro", b.email, b.business_name)}
-                      >
-                        Verify & Activate
-                      </Button>
-                    )}
-                    {b.account_status !== "approved" && !latestP && (
-                      <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleUpdateBusinessStatus(b.id, "approved")}>Approve</Button>
-                    )}
-                    {b.account_status !== "suspended" && (
-                      <Button size="sm" variant="outline" className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={() => handleUpdateBusinessStatus(b.id, "suspended")}>Suspend</Button>
-                    )}
-                    <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(b.id, b.business_name)}>
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Desktop Table View */}
-        <div className="hidden md:block rounded-xl border border-border bg-card overflow-x-auto shadow-sm">
-          <table className="w-full text-sm min-w-[950px]">
-            <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Business Name</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Owner</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Contact</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Package</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Payment Reference</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Expiry</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Status</th>
-                <th className="px-4 py-3 text-right whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {bLoading ? (
-                <tr><td colSpan={8} className="p-4 text-center">Loading...</td></tr>
-              ) : paginatedBusinesses.map(b => {
+          {/* Mobile Cards View */}
+          <div className="md:hidden space-y-3">
+            {bLoading ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">Loading businesses...</div>
+            ) : paginatedBusinesses.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">No businesses registered yet.</div>
+            ) : (
+              paginatedBusinesses.map((b) => {
                 const latestP = b.payments?.[0];
+                const daysLeft = b.expiry_date ? Math.ceil((new Date(b.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : null;
+                const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 5;
+                const isExpired = daysLeft !== null && daysLeft <= 0;
+
                 return (
-                  <tr key={b.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{b.business_name}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{b.owner_name}</td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{b.email}<br/>{b.phone}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="font-bold text-xs uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded">
-                        {b.package || "N/A"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">
-                      {latestP?.payment_reference ? (
-                        <span className="font-bold bg-muted px-2.5 py-1 rounded text-foreground border border-border">
-                          {latestP.payment_reference}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground italic">No reference</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap">
-                      {b.expiry_date ? (() => {
-                        const expiry = new Date(b.expiry_date);
-                        const daysLeft = Math.ceil((expiry.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-                        const isExpiringSoon = daysLeft > 0 && daysLeft <= 5;
-                        const isExpired = daysLeft <= 0;
-                        return (
-                          <span className={`font-semibold ${isExpired ? 'text-destructive' : isExpiringSoon ? 'text-amber-500' : 'text-foreground'}`}>
-                            {expiry.toLocaleDateString()}
-                            {isExpiringSoon && <span className="ml-1 text-[10px] uppercase bg-amber-500/10 px-1 py-0.5 rounded animate-pulse">({daysLeft} days left)</span>}
-                            {isExpired && <span className="ml-1 text-[10px] uppercase bg-destructive/10 px-1 py-0.5 rounded">Expired</span>}
-                          </span>
-                        );
-                      })() : <span className="text-muted-foreground italic">N/A</span>}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
-                        b.account_status === "approved" ? "bg-success/15 text-success" : 
-                        b.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
-                      }`}>
+                  <div key={b.id} className="rounded-xl border border-border bg-card p-3.5 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm sm:text-base text-foreground truncate">{b.business_name}</div>
+                        <div className="text-xs text-muted-foreground">{b.owner_name}</div>
+                      </div>
+                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0 ${b.account_status === "approved" ? "bg-success/15 text-success" :
+                          b.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
+                        }`}>
                         {b.account_status}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-border">
+                      <div>
+                        <span className="text-muted-foreground block text-[10px] uppercase">Contact</span>
+                        <span className="truncate block font-medium">{b.email}</span>
+                        <span className="text-muted-foreground truncate block">{b.phone}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-[10px] uppercase">Plan & Expiry</span>
+                        <span className="font-bold text-primary uppercase text-[11px] block">{b.package || "N/A"}</span>
+                        {b.expiry_date ? (
+                          <span className={`text-[11px] font-semibold block ${isExpired ? 'text-destructive' : isExpiringSoon ? 'text-amber-500' : 'text-foreground'}`}>
+                            {new Date(b.expiry_date).toLocaleDateString()}
+                            {isExpiringSoon && ` (${daysLeft}d)`}
+                            {isExpired && ` (Exp)`}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground italic text-[11px]">No expiry</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {latestP?.payment_reference && (
+                      <div className="bg-muted/60 p-2 rounded-lg text-xs flex items-center justify-between">
+                        <span className="text-muted-foreground text-[10px] uppercase">Payment Ref:</span>
+                        <span className="font-mono font-bold">{latestP.payment_reference}</span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border">
                       {b.account_status !== "approved" && latestP && (
-                        <Button 
-                          size="sm" 
-                          className="bg-primary text-primary-foreground font-bold"
+                        <Button
+                          size="sm"
+                          className="flex-1 bg-primary text-primary-foreground font-bold h-8 text-xs"
                           onClick={() => handleApprovePayment(latestP.id, b.id, b.package || "kilimanjaro", b.email, b.business_name)}
                         >
                           Verify & Activate
                         </Button>
                       )}
                       {b.account_status !== "approved" && !latestP && (
-                        <Button size="sm" variant="outline" onClick={() => handleUpdateBusinessStatus(b.id, "approved")}>Approve</Button>
+                        <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleUpdateBusinessStatus(b.id, "approved")}>Approve</Button>
                       )}
                       {b.account_status !== "suspended" && (
-                        <Button size="sm" variant="outline" className="text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={() => handleUpdateBusinessStatus(b.id, "suspended")}>Suspend</Button>
+                        <Button size="sm" variant="outline" className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={() => handleUpdateBusinessStatus(b.id, "suspended")}>Suspend</Button>
                       )}
-                      <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(b.id, b.business_name)}>
+                      <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(b.id, b.business_name)}>
                         Delete
                       </Button>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 );
-              })}
-            </tbody>
-          </table>
-        </div>
-        {totalBPages > 1 && (
-          <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4 text-xs sm:text-sm">
-            <Button variant="outline" size="sm" disabled={bPage === 1} onClick={() => setBPage(p => p - 1)}>Previous</Button>
-            <span className="text-muted-foreground">Page {bPage} of {totalBPages}</span>
-            <Button variant="outline" size="sm" disabled={bPage === totalBPages} onClick={() => setBPage(p => p + 1)}>Next</Button>
+              })
+            )}
           </div>
-        )}
+
+          {/* Desktop Table View (Fits full width without horizontal swiping) */}
+          <div className="hidden md:block rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+                <tr>
+                  <th className="px-3.5 py-3 text-left">Business & Owner</th>
+                  <th className="px-3 py-3 text-left">Contact</th>
+                  <th className="px-3 py-3 text-left">Package & Ref</th>
+                  <th className="px-3 py-3 text-left">Expiry & Status</th>
+                  <th className="px-3.5 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {bLoading ? (
+                  <tr><td colSpan={5} className="p-4 text-center">Loading...</td></tr>
+                ) : paginatedBusinesses.map(b => {
+                  const latestP = b.payments?.[0];
+                  const expiry = b.expiry_date ? new Date(b.expiry_date) : null;
+                  const daysLeft = expiry ? Math.ceil((expiry.getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : null;
+                  const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 5;
+                  const isExpired = daysLeft !== null && daysLeft <= 0;
+
+                  return (
+                    <tr key={b.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-3.5 py-3">
+                        <div className="font-bold text-foreground text-sm leading-snug">{b.business_name}</div>
+                        <div className="text-xs text-muted-foreground">{b.owner_name || "Owner"}</div>
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        <div className="font-medium text-foreground">{b.phone || "No phone"}</div>
+                        <div className="text-muted-foreground text-[11px] truncate max-w-[160px]">{b.email}</div>
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-[10px] uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded">
+                            {b.package || "N/A"}
+                          </span>
+                          {latestP?.payment_reference ? (
+                            <span className="font-mono text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded border border-border">
+                              {latestP.payment_reference}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground italic">No ref</span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-3 text-xs">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${b.account_status === "approved" ? "bg-success/15 text-success" :
+                                b.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
+                              }`}>
+                              {b.account_status}
+                            </span>
+                          </div>
+                          <div>
+                            {expiry ? (
+                              <span className={`text-[11px] font-semibold ${isExpired ? 'text-destructive font-bold' : isExpiringSoon ? 'text-amber-600 font-bold' : 'text-foreground'}`}>
+                                {expiry.toLocaleDateString()}
+                                {isExpiringSoon && <span className="ml-1 text-[9px] uppercase bg-amber-500/10 px-1 py-0.2 rounded font-bold animate-pulse">({daysLeft}d left)</span>}
+                                {isExpired && <span className="ml-1 text-[9px] uppercase bg-destructive/10 px-1 py-0.2 rounded font-bold">(Expired)</span>}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground italic text-[11px]">No expiry</span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-3.5 py-3 text-right">
+                        <div className="inline-flex items-center justify-end gap-1 flex-wrap">
+                          {b.account_status !== "approved" && latestP && (
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs px-2.5 font-bold bg-primary text-primary-foreground shadow-xs"
+                              onClick={() => handleApprovePayment(latestP.id, b.id, b.package || "kilimanjaro", b.email, b.business_name)}
+                            >
+                              Activate
+                            </Button>
+                          )}
+                          {b.account_status !== "approved" && !latestP && (
+                            <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => handleUpdateBusinessStatus(b.id, "approved")}>
+                              Approve
+                            </Button>
+                          )}
+                          {b.account_status !== "suspended" && (
+                            <Button size="sm" variant="outline" className="h-7 text-xs px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={() => handleUpdateBusinessStatus(b.id, "suspended")}>
+                              Suspend
+                            </Button>
+                          )}
+                          <Button size="sm" variant="outline" className="h-7 text-xs px-2 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(b.id, b.business_name)}>
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {totalBPages > 1 && (
+            <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4 text-xs sm:text-sm">
+              <Button variant="outline" size="sm" disabled={bPage === 1} onClick={() => setBPage(p => p - 1)}>Previous</Button>
+              <span className="text-muted-foreground">Page {bPage} of {totalBPages}</span>
+              <Button variant="outline" size="sm" disabled={bPage === totalBPages} onClick={() => setBPage(p => p + 1)}>Next</Button>
+            </div>
+          )}
         </>
       )}
 
       {activeTab === "payments" && (
         <>
-        {/* Mobile Payments Cards View */}
-        <div className="md:hidden space-y-3">
-          {pLoading ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">Loading payments...</div>
-          ) : paginatedPayments.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">No payments to display.</div>
-          ) : (
-            paginatedPayments.map((p) => (
-              <div key={p.id} className="rounded-xl border border-border bg-card p-3.5 shadow-sm space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="font-bold text-sm sm:text-base text-foreground truncate">{p.businesses?.business_name || "Unknown Business"}</div>
-                    <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</div>
-                  </div>
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                    p.verification_status === "paid" ? "bg-success/15 text-success" : 
-                    p.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-600"
-                  }`}>
-                    {p.verification_status === "paid" ? <CheckCircle2 className="h-3 w-3" /> : p.verification_status === "rejected" ? <XCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-                    {p.verification_status.replace("_", " ")}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between bg-muted/60 p-2.5 rounded-lg text-xs">
-                  <div>
-                    <span className="text-muted-foreground text-[10px] uppercase block">Reference</span>
-                    <span className="font-mono font-bold text-foreground">{p.payment_reference}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-muted-foreground text-[10px] uppercase block">Amount</span>
-                    <span className="font-bold text-sm text-foreground">{Number(p.amount).toLocaleString()} TZS</span>
-                  </div>
-                </div>
-
-                {p.verification_status === "waiting_verification" && (
-                  <div className="flex gap-2 pt-2 border-t border-border">
-                    <Button 
-                      size="sm" 
-                      className="flex-1 bg-primary text-primary-foreground font-bold h-8 text-xs" 
-                      onClick={() => handleApprovePayment(p.id, p.business_id, p.businesses?.package || "kilimanjaro", p.businesses?.email, p.businesses?.business_name)}
-                    >
-                      Verify & Activate
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10 h-8 text-xs" 
-                      onClick={() => handleRejectPayment(p.id, p.business_id, p.businesses?.email, p.businesses?.business_name)}
-                    >
-                      Reject
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Desktop Payments Table View */}
-        <div className="hidden md:block rounded-xl border border-border bg-card overflow-x-auto shadow-sm">
-          <table className="w-full text-sm min-w-[750px]">
-            <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Date</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Business</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Reference</th>
-                <th className="px-4 py-3 text-right whitespace-nowrap">Amount</th>
-                <th className="px-4 py-3 text-left whitespace-nowrap">Status</th>
-                <th className="px-4 py-3 text-right whitespace-nowrap">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {pLoading ? <tr><td colSpan={6} className="p-4 text-center">Loading...</td></tr> : paginatedPayments.map(p => (
-                <tr key={p.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(p.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 font-medium whitespace-nowrap">{p.businesses?.business_name || "Unknown"}</td>
-                  <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{p.payment_reference}</td>
-                  <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">{Number(p.amount).toLocaleString()}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
-                      p.verification_status === "paid" ? "bg-success/15 text-success" : 
-                      p.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-600"
-                    }`}>
+          {/* Mobile Payments Cards View */}
+          <div className="md:hidden space-y-3">
+            {pLoading ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">Loading payments...</div>
+            ) : paginatedPayments.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">No payments to display.</div>
+            ) : (
+              paginatedPayments.map((p) => (
+                <div key={p.id} className="rounded-xl border border-border bg-card p-3.5 shadow-sm space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm sm:text-base text-foreground truncate">{p.businesses?.business_name || "Unknown Business"}</div>
+                      <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shrink-0 ${p.verification_status === "paid" ? "bg-success/15 text-success" :
+                        p.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-600"
+                      }`}>
                       {p.verification_status === "paid" ? <CheckCircle2 className="h-3 w-3" /> : p.verification_status === "rejected" ? <XCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
                       {p.verification_status.replace("_", " ")}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
-                    {p.verification_status === "waiting_verification" && (
-                      <>
-                        <Button size="sm" onClick={() => handleApprovePayment(p.id, p.business_id, p.businesses?.package || "kilimanjaro", p.businesses?.email, p.businesses?.business_name)}>
-                          Verify & Activate
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRejectPayment(p.id, p.business_id, p.businesses?.email, p.businesses?.business_name)}>
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {totalPPages > 1 && (
-          <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4 text-xs sm:text-sm">
-            <Button variant="outline" size="sm" disabled={pPage === 1} onClick={() => setPPage(p => p - 1)}>Previous</Button>
-            <span className="text-muted-foreground">Page {pPage} of {totalPPages}</span>
-            <Button variant="outline" size="sm" disabled={pPage === totalPPages} onClick={() => setPPage(p => p + 1)}>Next</Button>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-muted/60 p-2.5 rounded-lg text-xs">
+                    <div>
+                      <span className="text-muted-foreground text-[10px] uppercase block">Reference</span>
+                      <span className="font-mono font-bold text-foreground">{p.payment_reference}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-muted-foreground text-[10px] uppercase block">Amount</span>
+                      <span className="font-bold text-sm text-foreground">{Number(p.amount).toLocaleString()} TZS</span>
+                    </div>
+                  </div>
+
+                  {p.verification_status === "waiting_verification" && (
+                    <div className="flex gap-2 pt-2 border-t border-border">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-primary text-primary-foreground font-bold h-8 text-xs"
+                        onClick={() => handleApprovePayment(p.id, p.business_id, p.businesses?.package || "kilimanjaro", p.businesses?.email, p.businesses?.business_name)}
+                      >
+                        Verify & Activate
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10 h-8 text-xs"
+                        onClick={() => handleRejectPayment(p.id, p.business_id, p.businesses?.email, p.businesses?.business_name)}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
-        )}
+
+          {/* Desktop Payments Table View */}
+          <div className="hidden md:block rounded-xl border border-border bg-card overflow-x-auto shadow-sm">
+            <table className="w-full text-sm min-w-[750px]">
+              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 text-left whitespace-nowrap">Date</th>
+                  <th className="px-4 py-3 text-left whitespace-nowrap">Business</th>
+                  <th className="px-4 py-3 text-left whitespace-nowrap">Reference</th>
+                  <th className="px-4 py-3 text-right whitespace-nowrap">Amount</th>
+                  <th className="px-4 py-3 text-left whitespace-nowrap">Status</th>
+                  <th className="px-4 py-3 text-right whitespace-nowrap">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {pLoading ? <tr><td colSpan={6} className="p-4 text-center">Loading...</td></tr> : paginatedPayments.map(p => (
+                  <tr key={p.id} className="hover:bg-muted/30">
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(p.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 font-medium whitespace-nowrap">{p.businesses?.business_name || "Unknown"}</td>
+                    <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{p.payment_reference}</td>
+                    <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">{Number(p.amount).toLocaleString()}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${p.verification_status === "paid" ? "bg-success/15 text-success" :
+                          p.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-600"
+                        }`}>
+                        {p.verification_status === "paid" ? <CheckCircle2 className="h-3 w-3" /> : p.verification_status === "rejected" ? <XCircle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                        {p.verification_status.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+                      {p.verification_status === "waiting_verification" && (
+                        <>
+                          <Button size="sm" onClick={() => handleApprovePayment(p.id, p.business_id, p.businesses?.package || "kilimanjaro", p.businesses?.email, p.businesses?.business_name)}>
+                            Verify & Activate
+                          </Button>
+                          <Button size="sm" variant="outline" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRejectPayment(p.id, p.business_id, p.businesses?.email, p.businesses?.business_name)}>
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {totalPPages > 1 && (
+            <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4 text-xs sm:text-sm">
+              <Button variant="outline" size="sm" disabled={pPage === 1} onClick={() => setPPage(p => p - 1)}>Previous</Button>
+              <span className="text-muted-foreground">Page {pPage} of {totalPPages}</span>
+              <Button variant="outline" size="sm" disabled={pPage === totalPPages} onClick={() => setPPage(p => p + 1)}>Next</Button>
+            </div>
+          )}
         </>
       )}
     </div>
