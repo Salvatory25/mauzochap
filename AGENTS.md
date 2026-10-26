@@ -10,3 +10,8 @@
 > the editor, so keep the branch in a working state.
 
 <!-- LOVABLE:END -->
+
+## Deployment & Git Workflow
+- Automatically stage, commit, and push verified changes to `origin main` upon completing tasks or requested updates so that live deployments on Vercel and Lovable sync immediately.
+- Always verify changes (`npx tsc --noEmit`) before pushing to ensure clean builds.
+- Never force push, rebase, or rewrite published git history.
