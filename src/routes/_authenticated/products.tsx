@@ -265,7 +265,7 @@ function ProductsPage() {
 function ProductDialog({ editing, onClose }: { editing: Product | null; onClose: () => void }) {
   const qc = useQueryClient();
   const t = useT();
-  const { branchId, user } = useAuth();
+  const { branchId, user, business } = useAuth();
   const [form, setForm] = useState({
     name: editing?.name ?? "",
     sku: editing?.sku ?? "",
@@ -276,6 +276,8 @@ function ProductDialog({ editing, onClose }: { editing: Product | null; onClose:
     low_stock_threshold: editing?.low_stock_threshold ?? "",
     category_id: editing?.category_id ?? "",
     unit: editing?.unit ?? "pcs",
+    batch_number: "",
+    expiry_date: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -334,10 +336,22 @@ function ProductDialog({ editing, onClose }: { editing: Product | null; onClose:
             created_by: user?.id
           });
         }
+
+        if (form.expiry_date) {
+          await supabase.from("product_batches").insert({
+            product_id: newProduct.id,
+            branch_id: branchId,
+            batch_number: form.batch_number || `BATCH-${Date.now().toString().slice(-6)}`,
+            expiry_date: form.expiry_date,
+            stock_quantity: Number(form.stock_quantity) || 0,
+            business_id: business?.id,
+          });
+        }
       }
       
       toast.success(editing ? "Updated" : "Created");
       qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["product-batches"] });
       onClose();
     } catch (err: unknown) {
       toast.error((err as Error).message);
@@ -435,6 +449,27 @@ function ProductDialog({ editing, onClose }: { editing: Product | null; onClose:
             />
           </div>
         </div>
+
+        {!editing && (
+          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+            <div>
+              <Label>Batch / Lot # (Hiari)</Label>
+              <Input 
+                placeholder="mfano: B-2026" 
+                value={form.batch_number} 
+                onChange={(e) => setForm({ ...form, batch_number: e.target.value })} 
+              />
+            </div>
+            <div>
+              <Label>Tarehe ya Kuisha (Expiry Date)</Label>
+              <Input 
+                type="date" 
+                value={form.expiry_date} 
+                onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} 
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="ghost" onClick={onClose}>

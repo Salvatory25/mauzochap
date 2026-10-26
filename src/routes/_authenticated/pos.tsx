@@ -113,18 +113,30 @@ function POSPage() {
   const taxAmount = (taxableAmount * Number(taxRate || 0)) / 100;
   const total = taxableAmount + taxAmount;
 
-  const addToCart = (p: Product) => {
+  const addToCart = (p: Product, qty: number = 1) => {
     setCart((c) => {
       const existing = c.find((i) => i.id === p.id);
-      if (existing) return c.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i));
-      return [...c, { ...p, qty: 1 }];
+      if (existing) {
+        const newQty = Math.round((existing.qty + qty) * 1000) / 1000;
+        return c.map((i) => (i.id === p.id ? { ...i, qty: newQty } : i));
+      }
+      return [...c, { ...p, qty: Math.round(qty * 1000) / 1000 }];
     });
+  };
+
+  const setItemQty = (id: string, qty: number) => {
+    if (qty <= 0) {
+      removeItem(id);
+      return;
+    }
+    const cleanQty = Math.round(qty * 1000) / 1000;
+    setCart((c) => c.map((i) => (i.id === id ? { ...i, qty: cleanQty } : i)));
   };
 
   const updateQty = (id: string, delta: number) => {
     setCart((c) =>
       c
-        .map((i) => (i.id === id ? { ...i, qty: Math.max(0, i.qty + delta) } : i))
+        .map((i) => (i.id === id ? { ...i, qty: Math.round(Math.max(0, i.qty + delta) * 1000) / 1000 } : i))
         .filter((i) => i.qty > 0),
     );
   };
@@ -363,16 +375,64 @@ function POSPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[65vh] overflow-y-auto pr-1">
           {displayProducts.map((p) => (
-            <button
+            <div
               key={p.id}
-              onClick={() => addToCart(p)}
-              disabled={p.stock_quantity <= 0}
-              className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary hover:shadow-[var(--shadow-soft)] disabled:opacity-40 transition"
+              className="text-left rounded-xl border border-border bg-card p-3 hover:border-primary/80 hover:shadow-sm transition flex flex-col justify-between"
             >
-              <div className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{p.name}</div>
-              <div className="mt-2 text-base font-bold">{formatTZS(Number(p.price))}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{p.stock_quantity} in stock</div>
-            </button>
+              <div 
+                onClick={() => p.stock_quantity > 0 && addToCart(p, 1)}
+                className="cursor-pointer"
+              >
+                <div className="text-sm font-semibold line-clamp-2 min-h-[2.4rem] text-foreground hover:text-primary transition-colors">
+                  {p.name}
+                </div>
+                <div className="mt-1 text-base font-bold text-foreground">
+                  {formatTZS(Number(p.price))}
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground flex items-center justify-between">
+                  <span>{p.stock_quantity} in stock</span>
+                  {p.stock_quantity <= 0 && <span className="text-destructive font-bold text-[10px]">Imeisha</span>}
+                </div>
+              </div>
+
+              {/* Quick Actions & Fraction Selling */}
+              <div className="mt-2.5 pt-2 border-t border-border/60 flex items-center gap-1.5 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => addToCart(p, 1)}
+                  disabled={p.stock_quantity <= 0}
+                  className="h-6 text-[11px] flex-1 font-semibold px-1.5"
+                  title="Ongeza 1 nzima"
+                >
+                  <Plus className="h-3 w-3 mr-0.5" /> +1
+                </Button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToCart(p, 0.5);
+                  }}
+                  disabled={p.stock_quantity <= 0}
+                  className="h-6 px-1.5 text-[10px] font-bold rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground border border-primary/20 transition-colors disabled:opacity-40"
+                  title="Uza Nusu (0.5)"
+                >
+                  ½ Nusu
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToCart(p, 0.25);
+                  }}
+                  disabled={p.stock_quantity <= 0}
+                  className="h-6 px-1.5 text-[10px] font-bold rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-600 hover:text-white border border-amber-500/20 transition-colors disabled:opacity-40"
+                  title="Uza Robo (0.25)"
+                >
+                  ¼ Robo
+                </button>
+              </div>
+            </div>
           ))}
           {displayProducts.length === 0 && (
             <div className="col-span-full text-center text-sm text-muted-foreground py-10">
@@ -400,23 +460,115 @@ function POSPage() {
             <div className="p-10 text-center text-sm text-muted-foreground">{t("emptyCart")}</div>
           ) : (
             cart.map((i) => (
-              <div key={i.id} className="px-4 py-3 flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{i.name}</div>
-                  <div className="text-xs text-muted-foreground">{formatTZS(i.price)}</div>
+              <div key={i.id} className="px-4 py-3 flex flex-col gap-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate text-foreground">{i.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {formatTZS(i.price)} @ kipimo
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-sm font-bold text-primary">
+                      {formatTZS(i.price * i.qty)}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
-                  <Button size="icon" variant="ghost" onClick={() => updateQty(i.id, -1)} className="h-6 w-6 rounded-sm hover:bg-background">
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <span className="w-6 text-center text-sm font-medium">{i.qty}</span>
-                  <Button size="icon" variant="ghost" onClick={() => updateQty(i.id, 1)} className="h-6 w-6 rounded-sm hover:bg-background">
-                    <Plus className="h-3 w-3" />
+
+                <div className="flex items-center justify-between gap-2">
+                  {/* Quantity input & quick step */}
+                  <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-md border border-border/60">
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      onClick={() => updateQty(i.id, -1)} 
+                      className="h-6 w-6 rounded hover:bg-background"
+                      title="Punguza 1"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <Input
+                      type="number"
+                      step="any"
+                      min="0.001"
+                      value={i.qty}
+                      onChange={(e) => setItemQty(i.id, parseFloat(e.target.value) || 0)}
+                      className="w-14 h-6 text-center font-bold text-xs p-0 bg-background border-border/80"
+                      title="Badili idadi / kipimo moja kwa moja"
+                    />
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      onClick={() => updateQty(i.id, 1)} 
+                      className="h-6 w-6 rounded hover:bg-background"
+                      title="Ongeza 1"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+
+                  {/* Fraction shortcuts */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setItemQty(i.id, 0.25)}
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-colors ${
+                        i.qty === 0.25 
+                          ? 'bg-amber-600 text-white border-amber-600' 
+                          : 'bg-muted hover:bg-amber-500/20 text-muted-foreground hover:text-amber-700 border-border'
+                      }`}
+                      title="Weka Robo (0.25)"
+                    >
+                      ¼
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setItemQty(i.id, 0.5)}
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-colors ${
+                        i.qty === 0.5 
+                          ? 'bg-primary text-primary-foreground border-primary' 
+                          : 'bg-muted hover:bg-primary/20 text-muted-foreground hover:text-primary border-border'
+                      }`}
+                      title="Weka Nusu (0.5)"
+                    >
+                      ½
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setItemQty(i.id, 0.75)}
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-colors ${
+                        i.qty === 0.75 
+                          ? 'bg-primary text-primary-foreground border-primary' 
+                          : 'bg-muted hover:bg-primary/20 text-muted-foreground hover:text-primary border-border'
+                      }`}
+                      title="Weka Robo 3 (0.75)"
+                    >
+                      ¾
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setItemQty(i.id, 1)}
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-colors ${
+                        i.qty === 1 
+                          ? 'bg-foreground text-background border-foreground' 
+                          : 'bg-muted hover:bg-muted-foreground/20 text-muted-foreground hover:text-foreground border-border'
+                      }`}
+                      title="Weka 1 Nzima"
+                    >
+                      1
+                    </button>
+                  </div>
+
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={() => removeItem(i.id)} 
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    title="Ondoa bidhaa hii"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => removeItem(i.id)} className="h-8 w-8 ml-1 text-muted-foreground hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
             ))
           )}

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MultiStepRegister } from "@/components/MultiStepRegister";
+import { sendOtpSMS } from "@/lib/sms-service";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -32,6 +33,7 @@ function AuthPage() {
   );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetPhone, setResetPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [inviteBusinessName, setInviteBusinessName] = useState<string | null>(null);
@@ -64,7 +66,36 @@ function AuthPage() {
           redirectTo: window.location.origin + "/update-password",
         });
         if (error) throw error;
-        toast.success("Password reset email sent! Check your inbox.");
+
+        // Dispatch OTP SMS with Sender ID MauzoChap if phone is provided or registered
+        try {
+          let phoneToNotify = resetPhone.trim();
+          if (!phoneToNotify) {
+            const { data: bizData } = await supabase
+              .from("businesses")
+              .select("phone")
+              .eq("email", email)
+              .limit(1);
+            if (bizData && bizData[0]?.phone) {
+              phoneToNotify = bizData[0].phone;
+            }
+          }
+
+          if (phoneToNotify) {
+            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            await sendOtpSMS({
+              phone: phoneToNotify,
+              code: otpCode,
+            });
+            toast.success(`Nambari ya siri (OTP) na kiungo vimetumwa kwenye SMS ya MauzoChap (${phoneToNotify}) na Email yako!`);
+          } else {
+            toast.success("Barua pepe ya kubadili nenosiri imetumwa! Tafadhali fungua inbox yako.");
+          }
+        } catch (smsErr) {
+          console.warn("SMS dispatch notice:", smsErr);
+          toast.success("Barua pepe ya kubadili nenosiri imetumwa! Tafadhali fungua inbox yako.");
+        }
+
         setMode("signin");
         return;
       } else {
@@ -156,7 +187,7 @@ function AuthPage() {
                 />
               </div>
 
-              {mode !== "reset" && (
+              {mode !== "reset" ? (
                 <div>
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">{t("password")}</Label>
@@ -178,6 +209,21 @@ function AuthPage() {
                     required
                     minLength={8}
                   />
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="resetPhone">Namba ya Simu kwa MauzoChap SMS (Hiari)</Label>
+                  <Input
+                    id="resetPhone"
+                    type="tel"
+                    placeholder="mfano: 0712345678"
+                    value={resetPhone}
+                    onChange={(e) => setResetPhone(e.target.value)}
+                    className="mt-1.5"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Utapewa nambari ya siri ya uhakiki (OTP) moja kwa moja kwa SMS kutoka kwa <strong>MauzoChap</strong>.
+                  </p>
                 </div>
               )}
 

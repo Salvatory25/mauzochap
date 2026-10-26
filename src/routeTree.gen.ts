@@ -36,6 +36,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSetupBillingRouteImport } from './routes/_authenticated/setup-billing'
+import { Route as AuthenticatedSmsRouteImport } from './routes/_authenticated/sms'
 import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
 import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
@@ -177,6 +178,11 @@ const AuthenticatedSetupBillingRoute =
     path: '/setup-billing',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSmsRoute = AuthenticatedSmsRouteImport.update({
+  id: '/sms',
+  path: '/sms',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSuperAdminRoute = AuthenticatedSuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/sales': typeof AuthenticatedSalesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/setup-billing': typeof AuthenticatedSetupBillingRoute
+  '/sms': typeof AuthenticatedSmsRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/tools': typeof AuthenticatedToolsRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/sales': typeof AuthenticatedSalesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/setup-billing': typeof AuthenticatedSetupBillingRoute
+  '/sms': typeof AuthenticatedSmsRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/tools': typeof AuthenticatedToolsRoute
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/setup-billing': typeof AuthenticatedSetupBillingRoute
+  '/_authenticated/sms': typeof AuthenticatedSmsRoute
   '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
   '/_authenticated/tools': typeof AuthenticatedToolsRoute
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/sales'
     | '/settings'
     | '/setup-billing'
+    | '/sms'
     | '/super-admin'
     | '/suppliers'
     | '/tools'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/sales'
     | '/settings'
     | '/setup-billing'
+    | '/sms'
     | '/super-admin'
     | '/suppliers'
     | '/tools'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales'
     | '/_authenticated/settings'
     | '/_authenticated/setup-billing'
+    | '/_authenticated/sms'
     | '/_authenticated/super-admin'
     | '/_authenticated/suppliers'
     | '/_authenticated/tools'
@@ -617,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSetupBillingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sms': {
+      id: '/_authenticated/sms'
+      path: '/sms'
+      fullPath: '/sms'
+      preLoaderRoute: typeof AuthenticatedSmsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/super-admin': {
       id: '/_authenticated/super-admin'
       path: '/super-admin'
@@ -668,6 +687,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSetupBillingRoute: typeof AuthenticatedSetupBillingRoute
+  AuthenticatedSmsRoute: typeof AuthenticatedSmsRoute
   AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
   AuthenticatedSuppliersRoute: typeof AuthenticatedSuppliersRoute
   AuthenticatedToolsRoute: typeof AuthenticatedToolsRoute
@@ -687,6 +707,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSetupBillingRoute: AuthenticatedSetupBillingRoute,
+  AuthenticatedSmsRoute: AuthenticatedSmsRoute,
   AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
   AuthenticatedSuppliersRoute: AuthenticatedSuppliersRoute,
   AuthenticatedToolsRoute: AuthenticatedToolsRoute,

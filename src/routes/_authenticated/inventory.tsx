@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Search, Settings2, DownloadCloud, History, FileDown } from "lucide-react";
+import { Plus, Search, Settings2, DownloadCloud, History, FileDown, AlertTriangle, Calendar, ShieldAlert, CheckCircle2, Clock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
@@ -32,7 +32,9 @@ type Product = {
 
 function InventoryPage() {
   const t = useT();
+  const qc = useQueryClient();
   const { isManager, branchId } = useAuth();
+  const [activeTab, setActiveTab] = useState<"stock" | "expiry">("stock");
   const [search, setSearch] = useState("");
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
@@ -57,6 +59,39 @@ function InventoryPage() {
       })) as Product[];
     },
   });
+
+  const { data: batches = [], isLoading: isBatchesLoading } = useQuery({
+    queryKey: ["product-batches", branchId],
+    enabled: !!branchId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_batches")
+        .select("*, products(name, sku, cost)")
+        .eq("branch_id", branchId!)
+        .order("expiry_date", { ascending: true });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+
+  const nowTime = new Date().getTime();
+  const expiredBatches = batches.filter((b) => b.expiry_date && new Date(b.expiry_date).getTime() < nowTime);
+  const expiringSoonBatches = batches.filter((b) => {
+    if (!b.expiry_date) return false;
+    const diff = (new Date(b.expiry_date).getTime() - nowTime) / 86400000;
+    return diff >= 0 && diff <= 30;
+  });
+
+  const deleteBatch = async (id: string) => {
+    if (!confirm("Ondoa rekodi ya batch hii kwenye mfumo?")) return;
+    const { error } = await supabase.from("product_batches").delete().eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Batch imeondolewa");
+    qc.invalidateQueries({ queryKey: ["product-batches"] });
+  };
 
   const filtered = products.filter(
     (p) =>
@@ -123,93 +158,296 @@ function InventoryPage() {
         )}
       </div>
 
-      <div className="flex justify-between items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Search products..."
-            className="pl-10"
-          />
-        </div>
-        
-        {isManager && (
-          <Button variant="secondary" onClick={exportCSV}>
-            <FileDown className="h-4 w-4 mr-2" /> Export Report
-          </Button>
-        )}
-      </div>
-
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 text-left">Product</th>
-              <th className="px-4 py-3 text-left">SKU</th>
-              <th className="px-4 py-3 text-right">In Stock</th>
-              <th className="px-4 py-3 text-right">Cost Value</th>
-              <th className="px-4 py-3 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {isLoading ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
-                  {t("loading")}
-                </td>
-              </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
-                  {t("noData")}
-                </td>
-              </tr>
-            ) : (
-              paginated.map((p) => (
-                <tr key={p.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3 font-medium">{p.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.sku || "—"}</td>
-                  <td className="px-4 py-3 text-right text-lg font-bold">{p.stock_quantity}</td>
-                  <td className="px-4 py-3 text-right text-muted-foreground">
-                    {formatTZS(p.stock_quantity * p.cost)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {p.stock_quantity <= 0 ? (
-                      <span className="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
-                        Out of Stock
-                      </span>
-                    ) : p.stock_quantity <= p.low_stock_threshold ? (
-                      <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
-                        Low Stock
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-                        In Stock
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4">
-          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
-            Previous
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+      {/* Tabs navigation for Inventory vs Expiry Alerts */}
+      <div className="flex items-center gap-2 border-b border-border pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab("stock")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            activeTab === "stock"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "bg-muted/50 text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <span>Hali ya Stoo (Stock)</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-background/20 font-bold">
+            {products.length}
           </span>
-          <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
-            Next
-          </Button>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("expiry")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            activeTab === "expiry"
+              ? "bg-destructive text-destructive-foreground shadow-sm"
+              : "bg-muted/50 text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <AlertTriangle className="h-4 w-4" />
+          <span>Tahadhari ya Kuisha Muda (Expiry Alerts)</span>
+          {(expiredBatches.length > 0 || expiringSoonBatches.length > 0) && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-white text-destructive font-black animate-pulse">
+              {expiredBatches.length + expiringSoonBatches.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === "stock" ? (
+        <>
+          <div className="flex justify-between items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search products..."
+                className="pl-10"
+              />
+            </div>
+            
+            {isManager && (
+              <Button variant="secondary" onClick={exportCSV}>
+                <FileDown className="h-4 w-4 mr-2" /> Export Report
+              </Button>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 text-left">Product</th>
+                  <th className="px-4 py-3 text-left">SKU</th>
+                  <th className="px-4 py-3 text-right">In Stock</th>
+                  <th className="px-4 py-3 text-right">Cost Value</th>
+                  <th className="px-4 py-3 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+                      {t("loading")}
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+                      {t("noData")}
+                    </td>
+                  </tr>
+                ) : (
+                  paginated.map((p) => (
+                    <tr key={p.id} className="hover:bg-muted/30">
+                      <td className="px-4 py-3 font-medium">{p.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.sku || "—"}</td>
+                      <td className="px-4 py-3 text-right text-lg font-bold">{p.stock_quantity}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">
+                        {formatTZS(p.stock_quantity * p.cost)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {p.stock_quantity <= 0 ? (
+                          <span className="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
+                            Out of Stock
+                          </span>
+                        ) : p.stock_quantity <= p.low_stock_threshold ? (
+                          <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
+                            Low Stock
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
+                            In Stock
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border border-border bg-card p-3 rounded-lg mt-4">
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
+              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+                Next
+              </Button>
+            </div>
+          )}
+        </>
+      ) : (
+        /* Expiry Alerts & Batch Management Tab */
+        <div className="space-y-6">
+          {/* Top Expiry Metric Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-destructive uppercase tracking-wider">
+                  Vimekwisha Muda (Expired)
+                </div>
+                <div className="text-2xl font-black text-destructive mt-1">
+                  {expiredBatches.length}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Ondoa mara moja ili kulinda afya ya wateja
+                </div>
+              </div>
+              <ShieldAlert className="h-8 w-8 text-destructive opacity-80" />
+            </div>
+
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                  Vinakwisha Muda (Siku ≤ 30)
+                </div>
+                <div className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1">
+                  {expiringSoonBatches.length}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Toa ofa au uza haraka kabla havijaisha
+                </div>
+              </div>
+              <Clock className="h-8 w-8 text-amber-600 opacity-80" />
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-4 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Jumla ya Batches Zinazofuatiliwa
+                </div>
+                <div className="text-2xl font-black text-foreground mt-1">
+                  {batches.length}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Zilizowekewa tarehe ya mwisho (expiry)
+                </div>
+              </div>
+              <Calendar className="h-8 w-8 text-primary opacity-80" />
+            </div>
+          </div>
+
+          {/* Expiry Table */}
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <h3 className="font-bold text-sm text-foreground">Orodha ya Bidhaa na Tarehe za Mwisho (Expiry Batches)</h3>
+              </div>
+              <span className="text-xs text-muted-foreground font-medium">
+                Inapangwa kuanzia zinazoisha mapema zaidi
+              </span>
+            </div>
+
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 text-left">Bidhaa</th>
+                  <th className="px-4 py-3 text-left">Batch / Lot #</th>
+                  <th className="px-4 py-3 text-right">Idadi Iliyopo</th>
+                  <th className="px-4 py-3 text-left">Tarehe ya Kuisha</th>
+                  <th className="px-4 py-3 text-center">Hali / Tahadhari</th>
+                  <th className="px-4 py-3 text-right">Kitendo</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {isBatchesLoading ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                      Inapakia taarifa za batches...
+                    </td>
+                  </tr>
+                ) : batches.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                      <div className="max-w-md mx-auto space-y-2">
+                        <Calendar className="h-10 w-10 mx-auto text-muted-foreground/40" />
+                        <div className="font-semibold text-foreground">Bado Hujarekodi Batch au Tarehe za Kuisha</div>
+                        <p className="text-xs leading-relaxed">
+                          Unapopokea mzigo kupitia kitufe cha <span className="font-bold text-foreground">"Receive Purchase"</span> hapo juu, weka tarehe ya kuisha muda (Expiry Date) ili mfumo ukutanabishe kiotomatiki kabla hazijaharibika.
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  batches.map((b) => {
+                    const expiryDateObj = b.expiry_date ? new Date(b.expiry_date) : null;
+                    const diffDays = expiryDateObj 
+                      ? Math.ceil((expiryDateObj.getTime() - nowTime) / 86400000) 
+                      : null;
+                    const isExpired = diffDays !== null && diffDays < 0;
+                    const isExpiringSoon = diffDays !== null && diffDays >= 0 && diffDays <= 30;
+
+                    return (
+                      <tr 
+                        key={b.id} 
+                        className={`hover:bg-muted/30 transition-colors ${
+                          isExpired ? "bg-destructive/5 font-medium" : isExpiringSoon ? "bg-amber-500/5" : ""
+                        }`}
+                      >
+                        <td className="px-4 py-3 font-semibold text-foreground">
+                          {b.products?.name || "Bidhaa isiyojulikana"}
+                          {b.products?.sku && (
+                            <div className="text-xs text-muted-foreground font-normal">
+                              SKU: {b.products.sku}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                          {b.batch_number || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-base text-foreground">
+                          {b.stock_quantity}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {b.expiry_date ? formatDate(b.expiry_date) : "Haijawekwa"}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {isExpired ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 text-destructive px-3 py-1 text-xs font-bold">
+                              <ShieldAlert className="h-3 w-3" />
+                              Imeisha (Siku {Math.abs(diffDays!)} zilizopita)
+                            </span>
+                          ) : isExpiringSoon ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 px-3 py-1 text-xs font-bold">
+                              <Clock className="h-3 w-3" />
+                              Inaisha ndani ya siku {diffDays}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-success/15 text-success px-3 py-1 text-xs font-semibold">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Salama ({diffDays} siku zilizobaki)
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => deleteBatch(b.id)}
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            title="Ondoa rekodi ya batch hii"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
@@ -385,7 +623,7 @@ function AdjustStockDialog({ products, onClose }: { products: Product[]; onClose
 
 function ReceivePurchaseDialog({ products, onClose }: { products: Product[]; onClose: () => void }) {
   const qc = useQueryClient();
-  const { user, branchId } = useAuth();
+  const { user, branchId, business } = useAuth();
   
   const [supplierId, setSupplierId] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -437,13 +675,14 @@ function ReceivePurchaseDialog({ products, onClose }: { products: Product[]; onC
       if (itemErr) throw itemErr;
 
       // Track Batch & Expiry Date if provided
-      if (batchNumber) {
+      if (batchNumber || expiryDate) {
         await supabase.from("product_batches").insert({
           product_id: productId,
-          branch_id: branchId,
-          batch_number: batchNumber,
+          branch_id: branchId!,
+          batch_number: batchNumber || `LOT-${Date.now().toString().slice(-6)}`,
           expiry_date: expiryDate || null,
-          stock_quantity: quantity
+          stock_quantity: quantity,
+          business_id: business?.id,
         });
       }
 

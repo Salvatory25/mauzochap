@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useT, formatTZS, formatDate } from "@/lib/i18n";
-import { useState, useEffect } from "react";
-import { Printer, X, MessageCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Printer, X, MessageCircle, Image as ImageIcon, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
+import html2canvas from "html2canvas";
+import { toast } from "sonner";
 
 type SaleData = {
   id: string;
@@ -139,6 +141,77 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
     window.open(url, "_blank");
   };
 
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const [sharingImage, setSharingImage] = useState(false);
+
+  const handleShareWhatsAppImage = async () => {
+    if (!receiptRef.current) return;
+    setSharingImage(true);
+    try {
+      const element = (receiptRef.current.querySelector(".print-area") as HTMLElement) || receiptRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const isProforma = sale.status === "pending";
+      const docTitle = isProforma ? "PROFORMA INVOICE" : "RISITI YA MALIPO";
+      const captionText = `*${businessName.toUpperCase()}*\n` +
+        `📍 ${locationName}\n` +
+        `📄 *${docTitle}:* #${sale.receipt_number}\n` +
+        `💰 *JUMLA: ${formatTZS(sale.total)}*\n` +
+        `📅 Tarehe: ${formatDate(sale.created_at)}\n` +
+        `Asante kwa kutuunga mkono! Karibu tena.\n` +
+        `_Imezalishwa na MauzoChap POS (mauzochap.co.tz)_`;
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          toast.error("Imeshindikana kutengeneza picha ya risiti.");
+          setSharingImage(false);
+          return;
+        }
+
+        const fileName = `Risiti-${sale.receipt_number}.png`;
+        const file = new File([blob], fileName, { type: "image/png" });
+
+        // Native Web Share API (mobile phones & tablets - directly shares the image to WhatsApp!)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `${businessName} - Risiti #${sale.receipt_number}`,
+              text: captionText,
+            });
+            toast.success("Risiti ya picha imeshirikishwa kikamilifu WhatsApp!");
+            setSharingImage(false);
+            return;
+          } catch (shareErr) {
+            console.log("Web share cancelled or unsupported, using desktop download fallback:", shareErr);
+          }
+        }
+
+        // Desktop PC fallback: Auto-download the high-res PNG image and launch WhatsApp Web
+        const imageURL = canvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.href = imageURL;
+        downloadLink.download = fileName;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        toast.success("Picha ya risiti imepakuliwa! Fungua WhatsApp na umtumie mteja.");
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(captionText)}`;
+        window.open(whatsappUrl, "_blank");
+        setSharingImage(false);
+      }, "image/png");
+    } catch (err) {
+      console.error("Failed to generate receipt image:", err);
+      toast.error("Hitilafu wakati wa kutengeneza picha ya risiti.");
+      setSharingImage(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4 no-print">
@@ -169,15 +242,32 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
               {t("a4")}
             </button>
           </div>
-          <Button onClick={handlePrint}>
+          <Button onClick={handlePrint} variant="outline" className="border-border">
             <Printer className="h-4 w-4 mr-2" /> {t("print")}
+          </Button>
+          <Button 
+            onClick={handleShareWhatsAppImage} 
+            disabled={sharingImage}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm"
+            title="Tuma picha ya risiti moja kwa moja WhatsApp"
+          >
+            {sharingImage ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Inatengeneza...
+              </>
+            ) : (
+              <>
+                <ImageIcon className="h-4 w-4 mr-1.5" /> Picha WhatsApp
+              </>
+            )}
           </Button>
           <Button 
             onClick={handleShareWhatsApp} 
             variant="outline" 
-            className="border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 font-bold"
+            className="border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 font-medium"
+            title="Tuma maandishi ya risiti WhatsApp"
           >
-            <MessageCircle className="h-4 w-4 mr-1.5 text-emerald-600" /> Tuma WhatsApp
+            <MessageCircle className="h-4 w-4 mr-1.5 text-emerald-600" /> WhatsApp Text
           </Button>
           <Button variant="ghost" onClick={onClose}>
             <X className="h-4 w-4 mr-2" /> Close
@@ -185,7 +275,7 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
         </div>
       </div>
 
-      <div className="flex justify-center">
+      <div ref={receiptRef} className="flex justify-center p-2 bg-muted/20 rounded-2xl border border-border/40">
         {format === "thermal" ? (
           <ThermalReceipt sale={sale} businessName={businessName} locationName={locationName} />
         ) : (

@@ -24,6 +24,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { sendWelcomeSMS } from "@/lib/sms-service";
 
 interface MultiStepRegisterProps {
   onSuccess: () => void;
@@ -285,6 +286,15 @@ export function MultiStepRegister({
               phone: phone,
               business_name: inviteId ? inviteBusinessName || businessName : businessName,
             });
+
+          // Send welcoming Swahili SMS via SwalaSMS
+          if (phone) {
+            sendWelcomeSMS({
+              phone,
+              ownerName: fullName,
+              businessName: inviteId ? inviteBusinessName || businessName : businessName,
+            }).catch((e) => console.warn("Welcome SMS notice:", e));
+          }
         } catch (e) {
           console.warn("Profile sync notice on registration:", e);
         }

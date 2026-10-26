@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useT, formatTZS, formatDate } from "@/lib/i18n";
-import { TrendingUp, Boxes, Users, AlertTriangle, CreditCard, Activity, FileText, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { TrendingUp, Boxes, Users, AlertTriangle, CreditCard, Activity, FileText, CheckCircle, AlertCircle, ArrowRight, ShieldAlert, Clock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -14,6 +15,7 @@ import { useAuth } from "@/lib/use-auth";
 function Dashboard() {
   const t = useT();
   const { branchId, business } = useAuth();
+  const [inventoryWidgetTab, setInventoryWidgetTab] = useState<"lowStock" | "expiry">("lowStock");
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["dashboard-stats", branchId],
@@ -188,6 +190,31 @@ function Dashboard() {
     },
   });
 
+  const { data: expiryBatches = [] } = useQuery({
+    queryKey: ["dashboard-expiry-batches", branchId],
+    queryFn: async () => {
+      let q = supabase
+        .from("product_batches")
+        .select("id, batch_number, expiry_date, stock_quantity, products(name, sku)")
+        .gt("stock_quantity", 0)
+        .not("expiry_date", "is", null)
+        .order("expiry_date", { ascending: true })
+        .limit(10);
+      if (branchId) {
+        q = q.eq("branch_id", branchId);
+      }
+      const { data } = await q;
+      return (data || []) as any[];
+    },
+  });
+
+  const nowMs = new Date().getTime();
+  const criticalExpiryItems = expiryBatches.filter((b) => {
+    if (!b.expiry_date) return false;
+    const diff = (new Date(b.expiry_date).getTime() - nowMs) / 86400000;
+    return diff <= 30; // expired or expiring within 30 days
+  });
+
   const cards: { label: string; value: string; icon: any; accent?: string; primary?: boolean; color?: string }[] = [
     {
       label: t("totalSalesAllTime"),
@@ -266,6 +293,48 @@ function Dashboard() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
             >
               <span>Boresha / Lipia Kifurushi</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Product Expiry Alert Banner (Immediately visible without swiping) */}
+      {criticalExpiryItems.length > 0 && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-destructive text-destructive-foreground shrink-0 shadow-xs">
+              <ShieldAlert className="h-5 w-5 animate-pulse" />
+            </div>
+            <div className="space-y-0.5 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs sm:text-sm font-bold text-destructive">
+                  Tahadhari ya Bidhaa Zinazoisha Muda (Product Expiry Alert)
+                </span>
+                <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-destructive text-destructive-foreground">
+                  {criticalExpiryItems.length} Bidhaa Hatari
+                </span>
+              </div>
+              <div className="text-xs text-foreground/80 leading-snug">
+                {criticalExpiryItems.some(b => new Date(b.expiry_date!).getTime() < nowMs) ? (
+                  <span className="font-semibold text-destructive">
+                    Kuna bidhaa zilizokwisha muda wa matumizi stoo. Ondoa mara moja au ubadilishe!
+                  </span>
+                ) : (
+                  <span>
+                    Kuna bidhaa zitakazoisha muda ndani ya siku 30 zijazo. Zipe kipaumbele cha mauzo au punguzo!
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex items-center">
+            <Link
+              to="/inventory"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              <span>Kagua Kwenye Stoo</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -368,36 +437,90 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Low Stock Alert */}
+        {/* Inventory Health: Low Stock & Expiry Alert */}
         <div className="rounded-xl border border-border bg-card shadow-sm flex flex-col">
-          <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-border flex items-center gap-2 bg-warning/5 text-warning">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <h2 className="font-semibold text-sm sm:text-base">{t("lowStockAlerts")}</h2>
+          <div className="px-3 py-2.5 sm:px-4 sm:py-3 border-b border-border flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setInventoryWidgetTab("lowStock")}
+                className={`text-xs font-bold px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 cursor-pointer ${
+                  inventoryWidgetTab === "lowStock"
+                    ? "bg-warning/20 text-warning"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                <AlertTriangle className="h-3.5 w-3.5" />
+                <span>Low Stock ({stats?.lowStock?.length || 0})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setInventoryWidgetTab("expiry")}
+                className={`text-xs font-bold px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 cursor-pointer ${
+                  inventoryWidgetTab === "expiry"
+                    ? "bg-destructive/20 text-destructive"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                <ShieldAlert className="h-3.5 w-3.5" />
+                <span>Expiry ({criticalExpiryItems.length})</span>
+              </button>
+            </div>
+            <Link to="/inventory" className="text-[11px] font-semibold text-primary hover:underline flex items-center shrink-0">
+              Stoo <ArrowRight className="h-3 w-3 ml-0.5" />
+            </Link>
           </div>
           <div className="divide-y divide-border overflow-y-auto max-h-[220px] sm:max-h-[300px]">
-            {stats?.lowStock && stats.lowStock.length > 0 ? (
-              stats.lowStock.map(
-                (p: {
-                  id: string;
-                  name: string;
-                  stock_quantity: number;
-                  low_stock_threshold: number;
-                }) => (
-                  <div key={p.id} className="flex items-center justify-between px-3.5 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm">
-                    <span className="font-medium truncate pr-2">{p.name}</span>
-                    <span
-                      className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0"
-                      style={{ color: "var(--warning)" }}
-                    >
-                      {p.stock_quantity} {t("left")}
-                    </span>
-                  </div>
-                ),
+            {inventoryWidgetTab === "lowStock" ? (
+              stats?.lowStock && stats.lowStock.length > 0 ? (
+                stats.lowStock.map(
+                  (p: {
+                    id: string;
+                    name: string;
+                    stock_quantity: number;
+                    low_stock_threshold: number;
+                  }) => (
+                    <div key={p.id} className="flex items-center justify-between px-3.5 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm">
+                      <span className="font-medium truncate pr-2">{p.name}</span>
+                      <span
+                        className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0"
+                        style={{ color: "var(--warning)" }}
+                      >
+                        {p.stock_quantity} {t("left")}
+                      </span>
+                    </div>
+                  ),
+                )
+              ) : (
+                <div className="px-5 py-8 text-center text-xs sm:text-sm text-muted-foreground">
+                  {t("allWellStocked")}
+                </div>
               )
             ) : (
-              <div className="px-5 py-8 text-center text-xs sm:text-sm text-muted-foreground">
-                {t("allWellStocked")}
-              </div>
+              criticalExpiryItems.length > 0 ? (
+                criticalExpiryItems.map((b: any) => {
+                  const expiryDateObj = new Date(b.expiry_date);
+                  const diffDays = Math.ceil((expiryDateObj.getTime() - nowMs) / 86400000);
+                  const isExp = diffDays < 0;
+                  return (
+                    <div key={b.id} className="flex items-center justify-between px-3.5 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm">
+                      <div className="min-w-0 pr-2">
+                        <div className="font-medium truncate text-foreground">{b.products?.name || "Bidhaa"}</div>
+                        <div className="text-[10px] text-muted-foreground">Batch: {b.batch_number} · Baki: {b.stock_quantity}</div>
+                      </div>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 ${
+                        isExp ? "bg-destructive/15 text-destructive font-black" : "bg-amber-500/15 text-amber-700 dark:text-amber-400 font-bold"
+                      }`}>
+                        {isExp ? `Imeisha (${Math.abs(diffDays)}d)` : `Siku ${diffDays} zimebaki`}
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="px-5 py-8 text-center text-xs sm:text-sm text-muted-foreground">
+                  Hakuna bidhaa zilizokaribia kwisha muda
+                </div>
+              )
             )}
           </div>
         </div>
