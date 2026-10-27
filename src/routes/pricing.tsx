@@ -51,6 +51,11 @@ export const Route = createFileRoute("/pricing")({
             answer:
               "Hakuna gharama zozote za siri za ufungaji. Unalipia ada ya kifurushi ulichochagua pekee.",
           },
+          {
+            question: "Je, nikilipia kwa mwaka mzima kuna punguzo la bei?",
+            answer:
+              "Ndiyo! Ukilipia kwa mwaka unapata punguzo maalum la 10% kwenye vifurushi vyote (Starter, Kilimanjaro, na Serengeti).",
+          },
         ]),
       ],
     }),

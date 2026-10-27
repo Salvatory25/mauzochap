@@ -47,7 +47,7 @@ function UsersPage() {
   const qc = useQueryClient();
   const { roles, user, isAdmin, business } = useAuth();
   const currentPackage = (business?.package as string) || "kilimanjaro";
-  const userLimit = currentPackage === "starter" ? 1 : currentPackage === "kilimanjaro" ? 3 : 9999;
+  const userLimit = currentPackage === "starter" ? 1 : currentPackage === "kilimanjaro" ? 9 : 9999;
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"invite" | "edit-role" | null>(null);

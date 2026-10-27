@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/locations")({
 
 const PACKAGE_LIMITS: Record<string, number> = {
   starter: 1,
-  kilimanjaro: 1,
+  kilimanjaro: 3,
   serengeti: 9999,
 };
 

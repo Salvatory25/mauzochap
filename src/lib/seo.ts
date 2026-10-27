@@ -182,7 +182,7 @@ export function getSoftwareApplicationSchema() {
           name: "Kilimanjaro",
           price: "15500",
           priceCurrency: "TZS",
-          description: "Multi-branch inventory, nightly SMS business summaries, and debt management.",
+          description: "3 locations, 9 staff users (3 per branch), multi-branch inventory, nightly SMS business summaries, and debt management.",
           availability: "https://schema.org/InStock",
         },
         {

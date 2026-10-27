@@ -35,12 +35,12 @@ const PACKAGES = [
     price: 15500, 
     duration: "1 Month",
     features: [
-      "1 Location",
-      "3 Users",
+      "3 Locations (Branches)",
+      "9 Users (3 per branch)",
       "Unlimited Reports",
       "Unlimited Invoices",
       "Unlimited Receipts",
-      "Multiple Branches"
+      "Inter-Branch Stock Transfer"
     ]
   },
   { 

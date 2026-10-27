@@ -57,7 +57,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
               >
                 <span>{p.annually}</span>
                 <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
-                  -20%
+                  -10%
                 </span>
               </button>
             </div>
@@ -151,7 +151,7 @@ export function PricingSection({ t, onOpenRegisterModal }: PricingSectionProps) 
                       <div
                         className={`text-[11px] font-mono font-semibold mt-0.5 ${isFeatured ? "text-emerald-300" : "text-emerald-700"}`}
                       >
-                        {p.billedAnnually} (Save 20%)
+                        {p.billedAnnually} ({p.saveBadge})
                       </div>
                     )}
                   </div>
