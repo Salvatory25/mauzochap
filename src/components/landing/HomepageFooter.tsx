@@ -72,6 +72,11 @@ export function HomepageFooter({
                 </Link>
               </li>
               <li>
+                <Link to="/mauzo" className="hover:text-white transition-colors text-emerald-400 font-bold">
+                  Mfumo wa Mauzo (Mauzo)
+                </Link>
+              </li>
+              <li>
                 <Link to="/pos-system-tanzania" className="hover:text-white transition-colors">
                   POS System Tanzania
                 </Link>

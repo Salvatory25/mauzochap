@@ -112,7 +112,15 @@ export function getOrganizationSchema() {
     "@type": "Organization",
     "@id": `${SITE_URL}/#organization`,
     name: "MauzoChap",
-    alternateName: ["MauzoChap POS", "MauzoChap Tanzania"],
+    alternateName: [
+      "Mauzo",
+      "MauzoChap",
+      "Mauzo Chap",
+      "Mfumo wa Mauzo",
+      "App ya Mauzo",
+      "MauzoChap POS",
+      "MauzoChap Tanzania",
+    ],
     url: SITE_URL,
     logo: {
       "@type": "ImageObject",
@@ -140,6 +148,15 @@ export function getSoftwareApplicationSchema() {
     "@type": "SoftwareApplication",
     "@id": `${SITE_URL}/#software`,
     name: "MauzoChap POS",
+    alternateName: [
+      "Mauzo",
+      "MauzoChap",
+      "Mauzo Chap",
+      "Mfumo wa Mauzo",
+      "App ya Mauzo",
+      "Programu ya Mauzo",
+    ],
+    keywords: "mauzo, mauzochap, mauzo chap, mfumo wa mauzo, app ya mauzo, programu ya mauzo, pos tanzania, duka la rejareja",
     operatingSystem: "Web Browser, Android, Windows, iOS",
     applicationCategory: "BusinessApplication",
     description: "All-in-one POS, stock management, credit tracking, receipt printing, and nightly SMS business reporting platform for Tanzanian retailers, pharmacies, and wholesale shops.",
@@ -198,9 +215,18 @@ export function getWebSiteSchema() {
     "@id": `${SITE_URL}/#website`,
     url: SITE_URL,
     name: "MauzoChap",
+    alternateName: ["Mauzo", "Mauzo POS", "MauzoChap POS", "Mauzo Chap", "Mfumo wa Mauzo"],
     description: "MauzoChap POS — Mfumo wa Mauzo na Usimamizi wa Stoo Tanzania",
     publisher: {
       "@id": `${SITE_URL}/#organization`,
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/blog?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
     },
     inLanguage: ["sw-TZ", "en-TZ"],
   };

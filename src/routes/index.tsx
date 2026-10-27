@@ -23,13 +23,21 @@ import {
 export const Route = createFileRoute("/")({
   head: () =>
     buildSeoHead({
-      title: "MauzoChap POS | Mfumo wa Mauzo na Usimamizi wa Stoo Tanzania",
+      title: "Mauzo — MauzoChap POS | Mfumo wa Mauzo na Usimamizi wa Stoo Tanzania",
       description:
-        "Mfumo bora wa mauzo (POS) na usimamizi wa stoo kwa maduka ya rejareja, maduka ya dawa (pharmacies), na supermarkets Tanzania. Pata ripoti ya mauzo kila siku saa 2:30 usiku kwa SMS.",
+        "MauzoChap ni mfumo bora wa mauzo (POS) na usimamizi wa stoo kwa maduka ya rejareja, maduka ya dawa, na supermarkets Tanzania. Kurekodi mauzo, kutoa risiti za WhatsApp na kupata ripoti za mauzo kila siku kwa SMS.",
       path: "/",
       keywords: [
-        "POS system Tanzania",
+        "mauzo",
+        "mauzochap",
+        "mauzo chap",
         "mfumo wa mauzo",
+        "app ya mauzo",
+        "programu ya mauzo",
+        "rekodi ya mauzo",
+        "mauzo ya duka",
+        "mauzo ya kila siku",
+        "POS system Tanzania",
         "mfumo wa POS Tanzania",
         "mfumo wa kusimamia stoo",
         "programu ya mauzo Tanzania",

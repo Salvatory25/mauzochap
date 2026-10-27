@@ -75,30 +75,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "google-site-verification", content: "google1573a499851838be" },
-      { title: "MauzoChap — POS & Business Management" },
+      { title: "Mauzo & POS — MauzoChap | Mfumo wa Mauzo na Biashara Tanzania" },
       {
         name: "description",
         content:
-          "Modern POS and business management for shops, pharmacies and restaurants in Tanzania.",
+          "MauzoChap ni mfumo wa kisasa wa mauzo (POS) na usimamizi wa stoo kwa maduka ya rejareja, maduka ya dawa, na biashara nchini Tanzania. Fuatilia mauzo ya kila siku na faida kwa urahisi.",
+      },
+      {
+        name: "keywords",
+        content:
+          "mauzo, mauzochap, mauzo chap, mfumo wa mauzo, app ya mauzo, programu ya mauzo, pos tanzania, duka la rejareja, usimamizi wa stoo",
       },
       // Open Graph (Social Sharing)
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.mauzochap.co.tz/" },
-      { property: "og:site_name", content: "MauzoChap" },
-      { property: "og:title", content: "MauzoChap — POS & Business Management" },
+      { property: "og:site_name", content: "MauzoChap — Mfumo wa Mauzo" },
+      { property: "og:title", content: "Mauzo & POS — MauzoChap | Mfumo wa Mauzo Tanzania" },
       {
         property: "og:description",
         content:
-          "Modern POS and business management for shops, pharmacies and restaurants in Tanzania.",
+          "MauzoChap: Simamia mauzo ya kila siku, stoo ya duka, risiti za WhatsApp na pata ripoti za mauzo kila siku saa 2:30 usiku.",
       },
       { property: "og:image", content: "https://www.mauzochap.co.tz/og-image.png" },
       // Twitter Cards
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "MauzoChap — POS & Business Management" },
+      { name: "twitter:title", content: "Mauzo & POS — MauzoChap | Mfumo wa Mauzo Tanzania" },
       {
         name: "twitter:description",
         content:
-          "Modern POS and business management for shops, pharmacies and restaurants in Tanzania.",
+          "MauzoChap: Simamia mauzo ya kila siku, stoo ya duka, risiti za WhatsApp na ripoti za biashara Tanzania.",
       },
       { name: "twitter:image", content: "https://www.mauzochap.co.tz/og-image.png" },
       // PWA / iOS meta tags

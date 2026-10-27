@@ -27,12 +27,15 @@ export function HeroSection({ t }: HeroSectionProps) {
     () =>
       isSwahili
         ? [
+            "mauzo ya uhakika kila siku.",
             "kwa urahisi na usalama.",
+            "kudhibiti kila senti ya mauzo.",
             "popote ulipo Tanzania.",
             "bila makosa ya mahesabu.",
             "kwa amani kamili ya akili.",
           ]
         : [
+            "profitable daily sales.",
             "with effortless speed.",
             "from anywhere in Tanzania.",
             "with zero calculation errors.",

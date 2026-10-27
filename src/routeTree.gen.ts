@@ -20,6 +20,7 @@ import { Route as FashionRouteImport } from './routes/fashion'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HardwareRouteImport } from './routes/hardware'
 import { Route as InventoryManagementSystemRouteImport } from './routes/inventory-management-system'
+import { Route as MauzoRouteImport } from './routes/mauzo'
 import { Route as PharmaciesRouteImport } from './routes/pharmacies'
 import { Route as PosSystemTanzaniaRouteImport } from './routes/pos-system-tanzania'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -107,6 +108,11 @@ const InventoryManagementSystemRoute =
     path: '/inventory-management-system',
     getParentRoute: () => rootRouteImport,
   } as any)
+const MauzoRoute = MauzoRouteImport.update({
+  id: '/mauzo',
+  path: '/mauzo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PharmaciesRoute = PharmaciesRouteImport.update({
   id: '/pharmacies',
   path: '/pharmacies',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/features': typeof FeaturesRoute
   '/hardware': typeof HardwareRoute
   '/inventory-management-system': typeof InventoryManagementSystemRoute
+  '/mauzo': typeof MauzoRoute
   '/pharmacies': typeof PharmaciesRoute
   '/pos-system-tanzania': typeof PosSystemTanzaniaRoute
   '/pricing': typeof PricingRoute
@@ -318,6 +325,7 @@ export interface FileRoutesByTo {
   '/features': typeof FeaturesRoute
   '/hardware': typeof HardwareRoute
   '/inventory-management-system': typeof InventoryManagementSystemRoute
+  '/mauzo': typeof MauzoRoute
   '/pharmacies': typeof PharmaciesRoute
   '/pos-system-tanzania': typeof PosSystemTanzaniaRoute
   '/pricing': typeof PricingRoute
@@ -363,6 +371,7 @@ export interface FileRoutesById {
   '/features': typeof FeaturesRoute
   '/hardware': typeof HardwareRoute
   '/inventory-management-system': typeof InventoryManagementSystemRoute
+  '/mauzo': typeof MauzoRoute
   '/pharmacies': typeof PharmaciesRoute
   '/pos-system-tanzania': typeof PosSystemTanzaniaRoute
   '/pricing': typeof PricingRoute
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/hardware'
     | '/inventory-management-system'
+    | '/mauzo'
     | '/pharmacies'
     | '/pos-system-tanzania'
     | '/pricing'
@@ -451,6 +461,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/hardware'
     | '/inventory-management-system'
+    | '/mauzo'
     | '/pharmacies'
     | '/pos-system-tanzania'
     | '/pricing'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/hardware'
     | '/inventory-management-system'
+    | '/mauzo'
     | '/pharmacies'
     | '/pos-system-tanzania'
     | '/pricing'
@@ -540,6 +552,7 @@ export interface RootRouteChildren {
   FeaturesRoute: typeof FeaturesRoute
   HardwareRoute: typeof HardwareRoute
   InventoryManagementSystemRoute: typeof InventoryManagementSystemRoute
+  MauzoRoute: typeof MauzoRoute
   PharmaciesRoute: typeof PharmaciesRoute
   PosSystemTanzaniaRoute: typeof PosSystemTanzaniaRoute
   PricingRoute: typeof PricingRoute
@@ -633,6 +646,13 @@ declare module '@tanstack/react-router' {
       path: '/inventory-management-system'
       fullPath: '/inventory-management-system'
       preLoaderRoute: typeof InventoryManagementSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mauzo': {
+      id: '/mauzo'
+      path: '/mauzo'
+      fullPath: '/mauzo'
+      preLoaderRoute: typeof MauzoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pharmacies': {
@@ -910,6 +930,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeaturesRoute: FeaturesRoute,
   HardwareRoute: HardwareRoute,
   InventoryManagementSystemRoute: InventoryManagementSystemRoute,
+  MauzoRoute: MauzoRoute,
   PharmaciesRoute: PharmaciesRoute,
   PosSystemTanzaniaRoute: PosSystemTanzaniaRoute,
   PricingRoute: PricingRoute,
