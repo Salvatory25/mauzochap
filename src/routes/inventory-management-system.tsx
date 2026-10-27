@@ -209,12 +209,23 @@ function InventoryPage() {
                 ? "Jaribu MauzoChap leo bila malipo ya awali na uone mabadiliko ndani ya siku chache."
                 : "Sign up in 60 seconds and experience automated stock audits."}
             </p>
-            <button
-              onClick={() => setRegisterModalOpen(true)}
-              className="px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm uppercase tracking-wider transition-all shadow-xl cursor-pointer"
-            >
-              {lang === "sw" ? "Anza Bure Sasa" : "Get Started Now"}
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <button
+                onClick={() => setRegisterModalOpen(true)}
+                className="px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm uppercase tracking-wider transition-all shadow-xl cursor-pointer"
+              >
+                {lang === "sw" ? "Anza Bure Sasa" : "Get Started Now"}
+              </button>
+              <a
+                href="https://wa.me/255627274168"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm uppercase tracking-wider transition-all shadow-xl"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>{lang === "sw" ? "Wasiliana WhatsApp: +255 627 274 168" : "Chat WhatsApp: +255 627 274 168"}</span>
+              </a>
+            </div>
           </div>
         </section>
       </main>

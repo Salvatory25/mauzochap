@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ShieldCheck, Heart, Sparkles, MapPin, Users, ArrowRight } from "lucide-react";
+import { ShieldCheck, Heart, Sparkles, MapPin, Users, ArrowRight, MessageCircle } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { landingTranslations } from "@/components/landing/landing-i18n";
 import { HomepageHeader } from "@/components/landing/HomepageHeader";
@@ -131,6 +131,15 @@ function AboutPage() {
                 >
                   {lang === "sw" ? "Anza Jaribio la Bure" : "Start Free Trial"}
                 </button>
+                <a
+                  href="https://wa.me/255627274168"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>WhatsApp: +255 627 274 168</span>
+                </a>
                 <Link
                   to="/contact"
                   className="px-8 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider transition-all"

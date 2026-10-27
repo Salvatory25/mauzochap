@@ -9,6 +9,7 @@ import {
   ArrowRight,
   ShieldCheck,
   TrendingUp,
+  MessageCircle,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { landingTranslations } from "@/components/landing/landing-i18n";
@@ -115,6 +116,16 @@ function RetailPosPage() {
                 <span>{lang === "sw" ? "Jaribu Siku 14 Bure" : "Start Free Trial"}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
+
+              <a
+                href="https://wa.me/255627274168"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-sm tracking-wide shadow-lg transition-all"
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-400" />
+                <span>WhatsApp: +255 627 274 168</span>
+              </a>
 
               <Link
                 to="/shops"
