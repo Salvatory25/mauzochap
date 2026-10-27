@@ -1,7 +1,18 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { BusinessIndustryPage, IndustryKey } from "@/components/landing/BusinessIndustryPage";
 
+import { buildSeoHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/business/$slug")({
+  head: ({ params }) => {
+    const slug = params.slug?.toLowerCase() || "shops";
+    const targetPath = `/${slug}`;
+    return buildSeoHead({
+      title: `MauzoChap POS — ${slug.toUpperCase()} Tanzania`,
+      description: `Mfumo wa mauzo na usimamizi wa biashara kwa ${slug} Tanzania.`,
+      path: targetPath,
+    });
+  },
   component: DynamicBusinessPage,
 });
 

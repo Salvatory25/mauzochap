@@ -48,16 +48,29 @@ import { formatTZS, formatDate } from "@/lib/i18n";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/use-auth";
 
+import { buildSeoHead, getBreadcrumbSchema, getSoftwareApplicationSchema } from "@/lib/seo";
+
 export const Route = createFileRoute("/demo")({
-  head: () => ({
-    meta: [
-      { title: "MauzoChap Dashboard Demo — Mfumo Halisi wa Mauzo na Stoo" },
-      {
-        name: "description",
-        content: "Dashibodi halisi ya majaribio ya MauzoChap POS, usimamizi wa stoo, mauzo na risiti za WhatsApp.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeoHead({
+      title: "Jaribu Demo ya MauzoChap POS Bure | Interactive Live POS Demo",
+      description:
+        "Tazama jinsi MauzoChap POS inavyofanya kazi moja kwa moja bila kujisajili. Jaribu kurekodi mauzo, kutoa risiti ya majaribio, kuangalia stoo na kuona ripoti za SMS.",
+      path: "/demo",
+      keywords: [
+        "demo ya mfumo wa mauzo",
+        "free POS demo Tanzania",
+        "jaribu mauzochap bure",
+        "online POS simulator",
+      ],
+      schema: [
+        getBreadcrumbSchema([
+          { name: "Nyumbani", path: "/" },
+          { name: "Demo ya Mfumo", path: "/demo" },
+        ]),
+        getSoftwareApplicationSchema(),
+      ],
+    }),
   component: DemoPage,
 });
 

@@ -55,34 +55,36 @@ export function HomepageFooter({
             </div>
           </div>
 
-          {/* Column 2: Product Links */}
+          {/* Column 2: Product & Commercial Links */}
           <div className="lg:col-span-3 space-y-3">
             <div className="font-bold text-white uppercase tracking-wider text-xs font-mono">
               {f.productColTitle}
             </div>
             <ul className="space-y-2.5 text-slate-400 font-medium text-xs">
               <li>
-                <a href="#features" className="hover:text-white transition-colors">
+                <Link to="/features" className="hover:text-white transition-colors">
                   {t.nav.features}
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#daily-sms"
-                  className="hover:text-violet-400 text-violet-300 font-bold transition-colors"
-                >
-                  Nightly 20:30 PM SMS
-                </a>
-              </li>
-              <li>
-                <a href="#pricing" className="hover:text-white transition-colors">
+                <Link to="/pricing" className="hover:text-white transition-colors">
                   {t.nav.pricing}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#for-business" className="hover:text-white transition-colors">
-                  {t.nav.forBusiness}
-                </a>
+                <Link to="/pos-system-tanzania" className="hover:text-white transition-colors">
+                  POS System Tanzania
+                </Link>
+              </li>
+              <li>
+                <Link to="/inventory-management-system" className="hover:text-white transition-colors">
+                  Inventory Management
+                </Link>
+              </li>
+              <li>
+                <Link to="/retail-pos-system" className="hover:text-white transition-colors">
+                  Retail POS Software
+                </Link>
               </li>
               <li>
                 <Link to="/demo" className="hover:text-white transition-colors">
@@ -90,23 +92,18 @@ export function HomepageFooter({
                 </Link>
               </li>
               <li>
-                <Link to="/auth" className="hover:text-white transition-colors">
-                  {t.nav.signIn}
+                <Link to="/blog" className="hover:text-white transition-colors">
+                  Blog & Miongozo
                 </Link>
               </li>
               <li>
-                <Link to="/auth" search={{ mode: "signup" }} className="hover:text-white transition-colors text-left cursor-pointer">
-                  Create Account
+                <Link to="/about" className="hover:text-white transition-colors">
+                  Kuhusu MauzoChap
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="hover:text-white transition-colors">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="hover:text-white transition-colors">
-                  Privacy Policy
+                <Link to="/contact" className="hover:text-white transition-colors">
+                  Wasiliana Nasi
                 </Link>
               </li>
             </ul>

@@ -60,26 +60,32 @@ export function HomepageHeader({
           className="hidden md:flex items-center gap-7 text-xs font-bold text-slate-600"
           aria-label="Main Navigation"
         >
-          <a
-            href="#features"
+          <Link
+            to="/features"
             className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600"
           >
             {t.nav.features}
-          </a>
-          <a
-            href="#for-business"
+          </Link>
+          <Link
+            to="/pos-system-tanzania"
             className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600"
           >
             {t.nav.forBusiness}
-          </a>
-          <a
-            href="#pricing"
+          </Link>
+          <Link
+            to="/pricing"
             className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600"
           >
             {t.nav.pricing}
-          </a>
+          </Link>
+          <Link
+            to="/blog"
+            className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600"
+          >
+            Blog
+          </Link>
           <a
-            href="#daily-sms"
+            href="/#daily-sms"
             className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600 text-violet-700 font-extrabold"
           >
             <span>{t.nav.dailySms}</span>
@@ -162,29 +168,36 @@ export function HomepageHeader({
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-b border-purple-100 px-4 pt-3 pb-6 space-y-4 shadow-xl animate-in slide-in-from-top-2 duration-150">
           <nav className="flex flex-col space-y-2 text-sm font-semibold text-slate-700 pt-1">
-            <a
-              href="#features"
+            <Link
+              to="/features"
               onClick={closeMenu}
               className="py-2 px-3 rounded-lg hover:bg-purple-50 hover:text-violet-600"
             >
               {t.nav.features}
-            </a>
-            <a
-              href="#for-business"
+            </Link>
+            <Link
+              to="/pos-system-tanzania"
               onClick={closeMenu}
               className="py-2 px-3 rounded-lg hover:bg-purple-50 hover:text-violet-600"
             >
               {t.nav.forBusiness}
-            </a>
-            <a
-              href="#pricing"
+            </Link>
+            <Link
+              to="/pricing"
               onClick={closeMenu}
               className="py-2 px-3 rounded-lg hover:bg-purple-50 hover:text-violet-600"
             >
               {t.nav.pricing}
-            </a>
+            </Link>
+            <Link
+              to="/blog"
+              onClick={closeMenu}
+              className="py-2 px-3 rounded-lg hover:bg-purple-50 hover:text-violet-600"
+            >
+              Blog & Miongozo
+            </Link>
             <a
-              href="#daily-sms"
+              href="/#daily-sms"
               onClick={closeMenu}
               className="py-2 px-3 rounded-lg hover:bg-purple-50 hover:text-violet-600 text-violet-700 font-bold"
             >

@@ -1,16 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ShieldCheck, Lock, EyeOff, Server, UserCheck, HelpCircle } from "lucide-react";
 
+import { buildSeoHead, getBreadcrumbSchema } from "@/lib/seo";
+
 export const Route = createFileRoute("/privacy")({
-  head: () => ({
-    meta: [
-      { title: "Privacy Policy — MauzoChap POS" },
-      {
-        name: "description",
-        content: "MauzoChap POS Privacy Policy, customer data protection, encryption, and store privacy guarantees in Tanzania.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeoHead({
+      title: "Sera ya Faragha (Privacy Policy) — MauzoChap POS Tanzania",
+      description:
+        "Sera ya faragha ya MauzoChap POS, usalama wa data za wateja na biashara, ulinzi wa miamala na usiri wa hesabu nchini Tanzania.",
+      path: "/privacy",
+      schema: [
+        getBreadcrumbSchema([
+          { name: "Nyumbani", path: "/" },
+          { name: "Sera ya Faragha", path: "/privacy" },
+        ]),
+      ],
+    }),
   component: PrivacyPage,
 });
 

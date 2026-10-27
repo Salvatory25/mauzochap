@@ -11,14 +11,21 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ElectronicsRouteImport } from './routes/electronics'
 import { Route as FashionRouteImport } from './routes/fashion'
+import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HardwareRouteImport } from './routes/hardware'
+import { Route as InventoryManagementSystemRouteImport } from './routes/inventory-management-system'
 import { Route as PharmaciesRouteImport } from './routes/pharmacies'
+import { Route as PosSystemTanzaniaRouteImport } from './routes/pos-system-tanzania'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RestaurantsRouteImport } from './routes/restaurants'
+import { Route as RetailPosSystemRouteImport } from './routes/retail-pos-system'
 import { Route as ShopsRouteImport } from './routes/shops'
 import { Route as SupermarketsRouteImport } from './routes/supermarkets'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -41,6 +48,8 @@ import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
 import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as BlogIndexRouteImport } from './routes/blog/index'
+import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
 import { Route as BusinessSlugRouteImport } from './routes/business.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -52,9 +61,19 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -72,14 +91,35 @@ const FashionRoute = FashionRouteImport.update({
   path: '/fashion',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HardwareRoute = HardwareRouteImport.update({
   id: '/hardware',
   path: '/hardware',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InventoryManagementSystemRoute =
+  InventoryManagementSystemRouteImport.update({
+    id: '/inventory-management-system',
+    path: '/inventory-management-system',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PharmaciesRoute = PharmaciesRouteImport.update({
   id: '/pharmacies',
   path: '/pharmacies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PosSystemTanzaniaRoute = PosSystemTanzaniaRouteImport.update({
+  id: '/pos-system-tanzania',
+  path: '/pos-system-tanzania',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -90,6 +130,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const RestaurantsRoute = RestaurantsRouteImport.update({
   id: '/restaurants',
   path: '/restaurants',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RetailPosSystemRoute = RetailPosSystemRouteImport.update({
+  id: '/retail-pos-system',
+  path: '/retail-pos-system',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShopsRoute = ShopsRouteImport.update({
@@ -203,6 +248,16 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BusinessSlugRoute = BusinessSlugRouteImport.update({
   id: '/business/$slug',
   path: '/business/$slug',
@@ -211,14 +266,21 @@ const BusinessSlugRoute = BusinessSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/electronics': typeof ElectronicsRoute
   '/fashion': typeof FashionRoute
+  '/features': typeof FeaturesRoute
   '/hardware': typeof HardwareRoute
+  '/inventory-management-system': typeof InventoryManagementSystemRoute
   '/pharmacies': typeof PharmaciesRoute
+  '/pos-system-tanzania': typeof PosSystemTanzaniaRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/restaurants': typeof RestaurantsRoute
+  '/retail-pos-system': typeof RetailPosSystemRoute
   '/shops': typeof ShopsRoute
   '/supermarkets': typeof SupermarketsRoute
   '/terms': typeof TermsRoute
@@ -241,18 +303,27 @@ export interface FileRoutesByFullPath {
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/business/$slug': typeof BusinessSlugRoute
+  '/blog/': typeof BlogIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/electronics': typeof ElectronicsRoute
   '/fashion': typeof FashionRoute
+  '/features': typeof FeaturesRoute
   '/hardware': typeof HardwareRoute
+  '/inventory-management-system': typeof InventoryManagementSystemRoute
   '/pharmacies': typeof PharmaciesRoute
+  '/pos-system-tanzania': typeof PosSystemTanzaniaRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/restaurants': typeof RestaurantsRoute
+  '/retail-pos-system': typeof RetailPosSystemRoute
   '/shops': typeof ShopsRoute
   '/supermarkets': typeof SupermarketsRoute
   '/terms': typeof TermsRoute
@@ -275,20 +346,29 @@ export interface FileRoutesByTo {
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/business/$slug': typeof BusinessSlugRoute
+  '/blog': typeof BlogIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/electronics': typeof ElectronicsRoute
   '/fashion': typeof FashionRoute
+  '/features': typeof FeaturesRoute
   '/hardware': typeof HardwareRoute
+  '/inventory-management-system': typeof InventoryManagementSystemRoute
   '/pharmacies': typeof PharmaciesRoute
+  '/pos-system-tanzania': typeof PosSystemTanzaniaRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/restaurants': typeof RestaurantsRoute
+  '/retail-pos-system': typeof RetailPosSystemRoute
   '/shops': typeof ShopsRoute
   '/supermarkets': typeof SupermarketsRoute
   '/terms': typeof TermsRoute
@@ -311,20 +391,29 @@ export interface FileRoutesById {
   '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
   '/_authenticated/tools': typeof AuthenticatedToolsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/business/$slug': typeof BusinessSlugRoute
+  '/blog/': typeof BlogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/auth'
+    | '/contact'
     | '/demo'
     | '/electronics'
     | '/fashion'
+    | '/features'
     | '/hardware'
+    | '/inventory-management-system'
     | '/pharmacies'
+    | '/pos-system-tanzania'
+    | '/pricing'
     | '/privacy'
     | '/restaurants'
+    | '/retail-pos-system'
     | '/shops'
     | '/supermarkets'
     | '/terms'
@@ -347,18 +436,27 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/tools'
     | '/users'
+    | '/blog/$slug'
     | '/business/$slug'
+    | '/blog/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/auth'
+    | '/contact'
     | '/demo'
     | '/electronics'
     | '/fashion'
+    | '/features'
     | '/hardware'
+    | '/inventory-management-system'
     | '/pharmacies'
+    | '/pos-system-tanzania'
+    | '/pricing'
     | '/privacy'
     | '/restaurants'
+    | '/retail-pos-system'
     | '/shops'
     | '/supermarkets'
     | '/terms'
@@ -381,19 +479,28 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/tools'
     | '/users'
+    | '/blog/$slug'
     | '/business/$slug'
+    | '/blog'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about'
     | '/auth'
+    | '/contact'
     | '/demo'
     | '/electronics'
     | '/fashion'
+    | '/features'
     | '/hardware'
+    | '/inventory-management-system'
     | '/pharmacies'
+    | '/pos-system-tanzania'
+    | '/pricing'
     | '/privacy'
     | '/restaurants'
+    | '/retail-pos-system'
     | '/shops'
     | '/supermarkets'
     | '/terms'
@@ -416,26 +523,37 @@ export interface FileRouteTypes {
     | '/_authenticated/suppliers'
     | '/_authenticated/tools'
     | '/_authenticated/users'
+    | '/blog/$slug'
     | '/business/$slug'
+    | '/blog/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  ContactRoute: typeof ContactRoute
   DemoRoute: typeof DemoRoute
   ElectronicsRoute: typeof ElectronicsRoute
   FashionRoute: typeof FashionRoute
+  FeaturesRoute: typeof FeaturesRoute
   HardwareRoute: typeof HardwareRoute
+  InventoryManagementSystemRoute: typeof InventoryManagementSystemRoute
   PharmaciesRoute: typeof PharmaciesRoute
+  PosSystemTanzaniaRoute: typeof PosSystemTanzaniaRoute
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   RestaurantsRoute: typeof RestaurantsRoute
+  RetailPosSystemRoute: typeof RetailPosSystemRoute
   ShopsRoute: typeof ShopsRoute
   SupermarketsRoute: typeof SupermarketsRoute
   TermsRoute: typeof TermsRoute
   UpdatePasswordRoute: typeof UpdatePasswordRoute
   WholesaleRoute: typeof WholesaleRoute
+  BlogSlugRoute: typeof BlogSlugRoute
   BusinessSlugRoute: typeof BusinessSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -454,11 +572,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -482,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FashionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hardware': {
       id: '/hardware'
       path: '/hardware'
@@ -489,11 +628,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HardwareRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inventory-management-system': {
+      id: '/inventory-management-system'
+      path: '/inventory-management-system'
+      fullPath: '/inventory-management-system'
+      preLoaderRoute: typeof InventoryManagementSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pharmacies': {
       id: '/pharmacies'
       path: '/pharmacies'
       fullPath: '/pharmacies'
       preLoaderRoute: typeof PharmaciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pos-system-tanzania': {
+      id: '/pos-system-tanzania'
+      path: '/pos-system-tanzania'
+      fullPath: '/pos-system-tanzania'
+      preLoaderRoute: typeof PosSystemTanzaniaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -508,6 +668,13 @@ declare module '@tanstack/react-router' {
       path: '/restaurants'
       fullPath: '/restaurants'
       preLoaderRoute: typeof RestaurantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/retail-pos-system': {
+      id: '/retail-pos-system'
+      path: '/retail-pos-system'
+      fullPath: '/retail-pos-system'
+      preLoaderRoute: typeof RetailPosSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shops': {
@@ -664,6 +831,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/business/$slug': {
       id: '/business/$slug'
       path: '/business/$slug'
@@ -720,20 +901,29 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  ContactRoute: ContactRoute,
   DemoRoute: DemoRoute,
   ElectronicsRoute: ElectronicsRoute,
   FashionRoute: FashionRoute,
+  FeaturesRoute: FeaturesRoute,
   HardwareRoute: HardwareRoute,
+  InventoryManagementSystemRoute: InventoryManagementSystemRoute,
   PharmaciesRoute: PharmaciesRoute,
+  PosSystemTanzaniaRoute: PosSystemTanzaniaRoute,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   RestaurantsRoute: RestaurantsRoute,
+  RetailPosSystemRoute: RetailPosSystemRoute,
   ShopsRoute: ShopsRoute,
   SupermarketsRoute: SupermarketsRoute,
   TermsRoute: TermsRoute,
   UpdatePasswordRoute: UpdatePasswordRoute,
   WholesaleRoute: WholesaleRoute,
+  BlogSlugRoute: BlogSlugRoute,
   BusinessSlugRoute: BusinessSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

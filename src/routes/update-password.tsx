@@ -6,10 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { buildSeoHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/update-password")({
-  head: () => ({
-    meta: [{ title: "Update Password — MauzoChap" }],
-  }),
+  head: () =>
+    buildSeoHead({
+      title: "Badili Nenosiri — MauzoChap POS",
+      description: "Weka nenosiri jipya kwa ajili ya akaunti yako ya MauzoChap POS.",
+      path: "/update-password",
+      noindex: true,
+    }),
   component: UpdatePasswordPage,
 });
 

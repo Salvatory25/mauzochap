@@ -13,33 +13,37 @@ import { PricingSection } from "@/components/landing/PricingSection";
 import { GettingStartedSection } from "@/components/landing/GettingStartedSection";
 import { HomepageFooter } from "@/components/landing/HomepageFooter";
 import { RegisterModal } from "@/components/landing/RegisterModal";
+import {
+  buildSeoHead,
+  getOrganizationSchema,
+  getSoftwareApplicationSchema,
+  getWebSiteSchema,
+} from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      {
-        title: "MauzoChap — Modern POS & Business Management for Tanzania",
-      },
-      {
-        name: "description",
-        content:
-          "Run your shop with confidence. MauzoChap is the modern POS platform for retail, pharmacies, restaurants, and wholesalers in Tanzania with nightly 20:30 PM SMS business reports.",
-      },
-      {
-        property: "og:title",
-        content: "MauzoChap — Modern POS & Business Management for Tanzania",
-      },
-      {
-        property: "og:description",
-        content:
-          "Run your shop with confidence. MauzoChap is the modern POS platform for retail, pharmacies, restaurants, and wholesalers in Tanzania with nightly 20:30 PM SMS business reports.",
-      },
-      {
-        property: "og:image",
-        content: "/images/hero-dashboard.jpg",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeoHead({
+      title: "MauzoChap POS | Mfumo wa Mauzo na Usimamizi wa Stoo Tanzania",
+      description:
+        "Mfumo bora wa mauzo (POS) na usimamizi wa stoo kwa maduka ya rejareja, maduka ya dawa (pharmacies), na supermarkets Tanzania. Pata ripoti ya mauzo kila siku saa 2:30 usiku kwa SMS.",
+      path: "/",
+      keywords: [
+        "POS system Tanzania",
+        "mfumo wa mauzo",
+        "mfumo wa POS Tanzania",
+        "mfumo wa kusimamia stoo",
+        "programu ya mauzo Tanzania",
+        "inventory management software Tanzania",
+        "POS software Tanzania",
+        "mfumo wa biashara",
+      ],
+      ogImage: "/images/hero-dashboard.jpg",
+      schema: [
+        getOrganizationSchema(),
+        getSoftwareApplicationSchema(),
+        getWebSiteSchema(),
+      ],
+    }),
   component: LandingPage,
 });
 

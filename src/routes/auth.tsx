@@ -11,10 +11,16 @@ import { Label } from "@/components/ui/label";
 import { MultiStepRegister } from "@/components/MultiStepRegister";
 import { sendOtpSMS } from "@/lib/sms-service";
 
+import { buildSeoHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/auth")({
-  head: () => ({
-    meta: [{ title: "Sign in — MauzoChap" }],
-  }),
+  head: () =>
+    buildSeoHead({
+      title: "Ingia / Jisajili — MauzoChap POS",
+      description: "Ingia kwenye akaunti yako ya MauzoChap POS au sajili duka lako kuanza kusimamia mauzo na stoo.",
+      path: "/auth",
+      noindex: true,
+    }),
   component: AuthPage,
 });
 

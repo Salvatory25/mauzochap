@@ -1,16 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Shield, AlertTriangle, FileText, CheckCircle2, Lock, CloudOff, HelpCircle } from "lucide-react";
 
+import { buildSeoHead, getBreadcrumbSchema } from "@/lib/seo";
+
 export const Route = createFileRoute("/terms")({
-  head: () => ({
-    meta: [
-      { title: "Terms of Service — MauzoChap POS" },
-      {
-        name: "description",
-        content: "MauzoChap POS Terms of Service, liability disclaimers, disaster protection, billing and operating guidelines in Tanzania.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeoHead({
+      title: "Vigezo na Masharti (Terms of Service) — MauzoChap POS Tanzania",
+      description:
+        "Vigezo na masharti ya matumizi ya mfumo wa MauzoChap POS, usajili, malipo ya usajili wa mwezi, na haki za mtumiaji nchini Tanzania.",
+      path: "/terms",
+      schema: [
+        getBreadcrumbSchema([
+          { name: "Nyumbani", path: "/" },
+          { name: "Vigezo na Masharti", path: "/terms" },
+        ]),
+      ],
+    }),
   component: TermsPage,
 });
 
