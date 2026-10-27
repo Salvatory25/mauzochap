@@ -425,26 +425,41 @@ ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- Businesses policies
+DROP POLICY IF EXISTS "super_admin all businesses" ON public.businesses;
 CREATE POLICY "super_admin all businesses" ON public.businesses FOR ALL TO authenticated 
   USING (public.is_super_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "users read own business" ON public.businesses;
 CREATE POLICY "users read own business" ON public.businesses FOR SELECT TO authenticated 
   USING (id = public.current_business_id() OR public.is_super_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "users update own business" ON public.businesses;
 CREATE POLICY "users update own business" ON public.businesses FOR UPDATE TO authenticated 
   USING ((id = public.current_business_id() AND public.is_admin_or_manager(auth.uid())) OR public.is_super_admin(auth.uid()));
 
 -- Profiles policies
+DROP POLICY IF EXISTS "profiles select access" ON public.profiles;
 CREATE POLICY "profiles select access" ON public.profiles FOR SELECT TO authenticated 
   USING (id = auth.uid() OR business_id = public.current_business_id() OR public.is_super_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "profiles update own" ON public.profiles;
 CREATE POLICY "profiles update own" ON public.profiles FOR UPDATE TO authenticated 
   USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "profiles insert own" ON public.profiles;
 CREATE POLICY "profiles insert own" ON public.profiles FOR INSERT TO authenticated 
   WITH CHECK (auth.uid() = id);
 
 -- User roles policies
+DROP POLICY IF EXISTS "users see own roles" ON public.user_roles;
 CREATE POLICY "users see own roles" ON public.user_roles FOR SELECT TO authenticated 
   USING (auth.uid() = user_id OR public.is_super_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "admins see business roles" ON public.user_roles;
 CREATE POLICY "admins see business roles" ON public.user_roles FOR SELECT TO authenticated 
   USING (public.has_role(auth.uid(), 'admin') AND (SELECT business_id FROM public.profiles WHERE id = user_id) = public.current_business_id());
+
+DROP POLICY IF EXISTS "admins manage business roles" ON public.user_roles;
 CREATE POLICY "admins manage business roles" ON public.user_roles FOR ALL TO authenticated 
   USING ((public.has_role(auth.uid(), 'admin') AND (SELECT business_id FROM public.profiles WHERE id = user_id) = public.current_business_id()) OR public.is_super_admin(auth.uid()))
   WITH CHECK ((public.has_role(auth.uid(), 'admin') AND (SELECT business_id FROM public.profiles WHERE id = user_id) = public.current_business_id()) OR public.is_super_admin(auth.uid()));
@@ -488,10 +503,19 @@ BEGIN
   RETURN NEW; 
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_profiles_updated ON public.profiles;
 CREATE TRIGGER trg_profiles_updated BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+DROP TRIGGER IF EXISTS trg_products_updated ON public.products;
 CREATE TRIGGER trg_products_updated BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+DROP TRIGGER IF EXISTS trg_customers_updated ON public.customers;
 CREATE TRIGGER trg_customers_updated BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+DROP TRIGGER IF EXISTS trg_businesses_updated ON public.businesses;
 CREATE TRIGGER trg_businesses_updated BEFORE UPDATE ON public.businesses FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+DROP TRIGGER IF EXISTS trg_suppliers_updated ON public.suppliers;
 CREATE TRIGGER trg_suppliers_updated BEFORE UPDATE ON public.suppliers FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
 -- Sales decrement stock (branch + overall product)
@@ -522,6 +546,7 @@ BEGIN
   RETURN NEW;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_decrement_stock ON public.sale_items;
 CREATE TRIGGER trg_decrement_stock AFTER INSERT ON public.sale_items
 FOR EACH ROW EXECUTE FUNCTION public.decrement_stock_on_sale();
 
@@ -554,6 +579,7 @@ BEGIN
   RETURN NEW;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_process_purchase_item ON public.purchase_items;
 CREATE TRIGGER trg_process_purchase_item AFTER INSERT ON public.purchase_items
 FOR EACH ROW EXECUTE FUNCTION public.process_purchase_item();
 
@@ -583,6 +609,7 @@ BEGIN
   RETURN NEW;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_execute_stock_transfer ON public.stock_transfers;
 CREATE TRIGGER trg_execute_stock_transfer AFTER UPDATE ON public.stock_transfers
 FOR EACH ROW EXECUTE FUNCTION public.execute_stock_transfer();
 
@@ -598,6 +625,7 @@ BEGIN
   RETURN NEW;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_add_customer_debt ON public.sales;
 CREATE TRIGGER trg_add_customer_debt AFTER INSERT ON public.sales
 FOR EACH ROW EXECUTE FUNCTION public.add_debt_on_credit_sale();
 
@@ -632,6 +660,7 @@ BEGIN
   RETURN NEW;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_adjust_customer_debt_on_update ON public.sales;
 CREATE TRIGGER trg_adjust_customer_debt_on_update AFTER UPDATE ON public.sales
 FOR EACH ROW EXECUTE FUNCTION public.adjust_debt_on_sale_update();
 
@@ -647,6 +676,7 @@ BEGIN
   RETURN OLD;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_revert_customer_debt_on_delete ON public.sales;
 CREATE TRIGGER trg_revert_customer_debt_on_delete AFTER DELETE ON public.sales
 FOR EACH ROW EXECUTE FUNCTION public.revert_debt_on_sale_delete();
 
@@ -660,6 +690,7 @@ BEGIN
   RETURN NEW;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_deduct_customer_balance ON public.customer_payments;
 CREATE TRIGGER trg_deduct_customer_balance AFTER INSERT ON public.customer_payments
 FOR EACH ROW EXECUTE FUNCTION public.deduct_balance_on_payment();
 
@@ -675,6 +706,7 @@ BEGIN
   RETURN NEW;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_update_supplier_debt ON public.purchases;
 CREATE TRIGGER trg_update_supplier_debt AFTER INSERT ON public.purchases
 FOR EACH ROW EXECUTE FUNCTION public.update_supplier_balance_on_purchase();
 
@@ -688,6 +720,7 @@ BEGIN
   RETURN NEW;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_update_supplier_balance_after_payment ON public.supplier_payments;
 CREATE TRIGGER trg_update_supplier_balance_after_payment AFTER INSERT ON public.supplier_payments
 FOR EACH ROW EXECUTE FUNCTION public.update_supplier_balance_on_payment();
 
