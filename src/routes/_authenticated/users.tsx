@@ -418,66 +418,36 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
         }
       });
 
-      const isAlreadyRegistered = !!signUpError?.message?.toLowerCase().includes("already registered");
-
-      if (signUpError && !isAlreadyRegistered) {
+      if (signUpError) {
+        if (signUpError.message?.toLowerCase().includes("already registered")) {
+          throw new Error(
+            `Barua pepe '${email}' tayari imesajiliwa kwenye mfumo. Tafadhali weka barua pepe mpya ya mfanyakazi huyu, au tumia tab ya 'Share Link' ili ajiunge na duka hili.`
+          );
+        }
         throw signUpError;
       }
 
-      // If user was newly created in auth, handle_new_user trigger in Postgres has already linked them!
-      let rpcSuccess = !!signUpData?.user;
-      let lastErrorMessage = "";
+      if (!signUpData?.user) {
+        throw new Error("Imeshindwa kusajili mfanyakazi. Tafadhali hakikisha taarifa zote zimejazwa kwa usahihi.");
+      }
 
-      // 2. Call SECURITY DEFINER RPC to ensure profile, branch, and role are explicitly bound
+      // 2. Direct client-side profile confirmation (the PostgreSQL handle_new_user trigger also handles this automatically)
       try {
-        const { data: rpcData, error: rpcError } = await (supabase.rpc as any)("admin_add_staff_member", {
-          _email: email.trim(),
-          _full_name: fullName.trim(),
-          _phone: phone?.trim() || "",
-          _role: role,
-          _branch_id: branchId || null,
-          _user_id: signUpData?.user?.id || null,
+        await supabase.from("profiles").upsert({
+          id: signUpData.user.id,
+          full_name: fullName.trim(),
+          phone: phone?.trim() || null,
+          business_id: business.id,
+          branch_id: branchId || null,
+          business_name: business.business_name,
         });
 
-        if (!rpcError && (rpcData as any)?.success) {
-          rpcSuccess = true;
-        } else if (rpcError) {
-          lastErrorMessage = rpcError.message;
-          console.warn("RPC notice:", rpcError);
-        }
-      } catch (err: any) {
-        lastErrorMessage = err?.message || String(err);
-        console.warn("RPC call notice:", err);
-      }
-
-      // Fallback: Direct profile and role upsert
-      if (signUpData?.user) {
-        try {
-          await supabase.from("profiles").upsert({
-            id: signUpData.user.id,
-            full_name: fullName.trim(),
-            phone: phone?.trim() || null,
-            business_id: business.id,
-            branch_id: branchId || null,
-            business_name: business.business_name,
-          });
-
-          await supabase.from("user_roles").upsert({
-            user_id: signUpData.user.id,
-            role: role as any,
-          });
-          rpcSuccess = true;
-        } catch (fbErr: any) {
-          console.warn("Direct fallback notice:", fbErr);
-          rpcSuccess = true; // Still true since handle_new_user trigger set them up
-        }
-      }
-
-      if (!rpcSuccess) {
-        throw new Error(
-          lastErrorMessage || 
-          "Mtumiaji huyu tayari yupo kwenye mfumo. Tafadhali kimbiza faili lote la pili la SQL kwenye Supabase SQL Editor ili kumuunganisha kwenye duka hili."
-        );
+        await supabase.from("user_roles").upsert({
+          user_id: signUpData.user.id,
+          role: role as any,
+        });
+      } catch (upsertErr) {
+        console.warn("Direct profile upsert notice (handled by Postgres trigger):", upsertErr);
       }
 
       // 3. Send staff welcome SMS so employee gets notified immediately on phone
