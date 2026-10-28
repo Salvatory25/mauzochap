@@ -492,7 +492,8 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
       }
 
       toast.success(`Akaunti ya ${fullName} imeundwa na kuunganishwa kikamilifu! Anaweza kuingia moja kwa moja bila kizuizi.`);
-      await qc.invalidateQueries({ queryKey: ["users-list"] });
+      qc.invalidateQueries({ queryKey: ["users-list"] });
+      await qc.refetchQueries({ queryKey: ["users-list"] });
       onClose();
     } catch (err: any) {
       toast.error(err.message || "Failed to create user account");
