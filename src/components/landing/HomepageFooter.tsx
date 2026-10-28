@@ -55,112 +55,115 @@ export function HomepageFooter({
             </div>
           </div>
 
-          {/* Column 2: Product & Commercial Links */}
-          <div className="lg:col-span-3 space-y-3">
-            <div className="font-bold text-white uppercase tracking-wider text-xs font-mono">
-              {f.productColTitle}
+          {/* Columns 2 & 3: Product & For Your Business (Side-by-side in 2 columns on mobile) */}
+          <div className="lg:col-span-6 grid grid-cols-2 gap-4 sm:gap-8 text-left">
+            {/* Column 2: Product & Commercial Links */}
+            <div className="space-y-3">
+              <div className="font-bold text-white uppercase tracking-wider text-xs font-mono">
+                {f.productColTitle}
+              </div>
+              <ul className="space-y-2.5 text-slate-400 font-medium text-xs">
+                <li>
+                  <Link to="/features" className="hover:text-white transition-colors">
+                    {t.nav.features}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/pricing" className="hover:text-white transition-colors">
+                    {t.nav.pricing}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/mauzo" className="hover:text-white transition-colors text-emerald-400 font-bold">
+                    Mfumo wa Mauzo (Mauzo)
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/pos-system-tanzania" className="hover:text-white transition-colors">
+                    POS System Tanzania
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/inventory-management-system" className="hover:text-white transition-colors">
+                    Inventory Management
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/retail-pos-system" className="hover:text-white transition-colors">
+                    Retail POS Software
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/demo" className="hover:text-white transition-colors">
+                    {t.nav.seeDemo}
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/blog" className="hover:text-white transition-colors">
+                    Blog & Miongozo
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/about" className="hover:text-white transition-colors">
+                    Kuhusu MauzoChap
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="hover:text-white transition-colors">
+                    Wasiliana Nasi
+                  </Link>
+                </li>
+              </ul>
             </div>
-            <ul className="space-y-2.5 text-slate-400 font-medium text-xs">
-              <li>
-                <Link to="/features" className="hover:text-white transition-colors">
-                  {t.nav.features}
-                </Link>
-              </li>
-              <li>
-                <Link to="/pricing" className="hover:text-white transition-colors">
-                  {t.nav.pricing}
-                </Link>
-              </li>
-              <li>
-                <Link to="/mauzo" className="hover:text-white transition-colors text-emerald-400 font-bold">
-                  Mfumo wa Mauzo (Mauzo)
-                </Link>
-              </li>
-              <li>
-                <Link to="/pos-system-tanzania" className="hover:text-white transition-colors">
-                  POS System Tanzania
-                </Link>
-              </li>
-              <li>
-                <Link to="/inventory-management-system" className="hover:text-white transition-colors">
-                  Inventory Management
-                </Link>
-              </li>
-              <li>
-                <Link to="/retail-pos-system" className="hover:text-white transition-colors">
-                  Retail POS Software
-                </Link>
-              </li>
-              <li>
-                <Link to="/demo" className="hover:text-white transition-colors">
-                  {t.nav.seeDemo}
-                </Link>
-              </li>
-              <li>
-                <Link to="/blog" className="hover:text-white transition-colors">
-                  Blog & Miongozo
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="hover:text-white transition-colors">
-                  Kuhusu MauzoChap
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="hover:text-white transition-colors">
-                  Wasiliana Nasi
-                </Link>
-              </li>
-            </ul>
-          </div>
 
-          {/* Column 3: For Your Business */}
-          <div className="lg:col-span-3 space-y-3">
-            <div className="font-bold text-white uppercase tracking-wider text-xs font-mono">
-              {f.businessColTitle}
+            {/* Column 3: For Your Business */}
+            <div className="space-y-3">
+              <div className="font-bold text-white uppercase tracking-wider text-xs font-mono">
+                {f.businessColTitle}
+              </div>
+              <ul className="space-y-2 text-slate-400 text-xs">
+                <li>
+                  <Link to="/shops" className="hover:text-white transition-colors">
+                    Shops and Maduka
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/supermarkets" className="hover:text-white transition-colors">
+                    Supermarkets & Retail
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/pharmacies" className="hover:text-white transition-colors">
+                    Pharmacies & Duka la Dawa
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/hardware" className="hover:text-white transition-colors">
+                    Hardware & Electricals
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/wholesale" className="hover:text-white transition-colors">
+                    Wholesale & Distribution
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/restaurants" className="hover:text-white transition-colors">
+                    Restaurants & Bars
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/fashion" className="hover:text-white transition-colors">
+                    Boutiques & Fashion
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/electronics" className="hover:text-white transition-colors">
+                    Phones & Electronics
+                  </Link>
+                </li>
+              </ul>
             </div>
-            <ul className="space-y-2 text-slate-400 text-xs">
-              <li>
-                <Link to="/shops" className="hover:text-white transition-colors">
-                  Shops and Maduka
-                </Link>
-              </li>
-              <li>
-                <Link to="/supermarkets" className="hover:text-white transition-colors">
-                  Supermarkets & Retail
-                </Link>
-              </li>
-              <li>
-                <Link to="/pharmacies" className="hover:text-white transition-colors">
-                  Pharmacies & Duka la Dawa
-                </Link>
-              </li>
-              <li>
-                <Link to="/hardware" className="hover:text-white transition-colors">
-                  Hardware & Electricals
-                </Link>
-              </li>
-              <li>
-                <Link to="/wholesale" className="hover:text-white transition-colors">
-                  Wholesale & Distribution
-                </Link>
-              </li>
-              <li>
-                <Link to="/restaurants" className="hover:text-white transition-colors">
-                  Restaurants & Bars
-                </Link>
-              </li>
-              <li>
-                <Link to="/fashion" className="hover:text-white transition-colors">
-                  Boutiques & Fashion
-                </Link>
-              </li>
-              <li>
-                <Link to="/electronics" className="hover:text-white transition-colors">
-                  Phones & Electronics
-                </Link>
-              </li>
-            </ul>
           </div>
         </div>
 

@@ -143,22 +143,24 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
               </p>
             </div>
 
-            {/* 4 Glassmorphism Cards in 2x2 Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 pt-1">
+            {/* 4 Glassmorphism Cards in 2x2 Grid (2 columns on mobile & desktop) */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 pt-1">
               {featureCards.map((card, idx) => {
                 const CardIcon = card.icon;
                 return (
                   <div
                     key={idx}
-                    className="p-4 sm:p-5 rounded-2xl bg-white/[0.05] border border-white/10 hover:border-blue-400/50 hover:bg-white/[0.08] transition-all duration-200 space-y-2 group"
+                    className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-white/[0.05] border border-white/10 hover:border-blue-400/50 hover:bg-white/[0.08] transition-all duration-200 space-y-1.5 sm:space-y-2 group flex flex-col justify-between"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/30 text-blue-300 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                      <CardIcon className="w-5 h-5" />
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-500/20 border border-blue-400/30 text-blue-300 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                        <CardIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-white tracking-tight leading-snug">{card.title}</h4>
+                      <p className="text-[10px] sm:text-xs text-slate-300 leading-relaxed font-normal">
+                        {card.desc}
+                      </p>
                     </div>
-                    <h4 className="text-sm font-bold text-white tracking-tight">{card.title}</h4>
-                    <p className="text-xs text-slate-300 leading-relaxed font-normal">
-                      {card.desc}
-                    </p>
                   </div>
                 );
               })}

@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { reportAppError } from "../lib/app-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider } from "@/lib/use-auth";
+import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 
 function NotFoundComponent() {
   return (
@@ -177,6 +178,7 @@ function RootComponent() {
       <AuthProvider>
         <Outlet />
         <Toaster position="top-right" richColors />
+        <PwaInstallPrompt />
       </AuthProvider>
     </QueryClientProvider>
   );
