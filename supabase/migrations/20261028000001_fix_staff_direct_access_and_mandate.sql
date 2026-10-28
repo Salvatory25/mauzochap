@@ -2,14 +2,14 @@
 -- Ensures staff added by business owners never get blocked by subscription verification,
 -- and allows business owners to add or assign existing users directly to their business.
 
--- 1. Create or replace admin_add_staff_member RPC function
+-- 1. Create admin_add_staff_member RPC function with flexible TEXT parameters
 CREATE OR REPLACE FUNCTION public.admin_add_staff_member(
   _email TEXT,
   _full_name TEXT,
   _phone TEXT,
   _role TEXT,
-  _branch_id UUID DEFAULT NULL,
-  _user_id UUID DEFAULT NULL
+  _branch_id TEXT DEFAULT NULL,
+  _user_id TEXT DEFAULT NULL
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -40,8 +40,9 @@ BEGIN
   END IF;
 
   -- Determine target user_id
-  target_user_id := _user_id;
-  IF target_user_id IS NULL AND _email IS NOT NULL AND _email <> '' THEN
+  IF _user_id IS NOT NULL AND TRIM(_user_id) <> '' THEN
+    target_user_id := TRIM(_user_id)::UUID;
+  ELSIF _email IS NOT NULL AND TRIM(_email) <> '' THEN
     SELECT id INTO target_user_id FROM auth.users WHERE LOWER(email) = LOWER(TRIM(_email)) LIMIT 1;
   END IF;
 
@@ -56,8 +57,10 @@ BEGIN
   END IF;
 
   -- Validate or find branch
-  IF _branch_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.branches WHERE id = _branch_id AND business_id = target_biz_id) THEN
-    target_branch_id := _branch_id;
+  IF _branch_id IS NOT NULL AND TRIM(_branch_id) <> '' AND EXISTS (
+    SELECT 1 FROM public.branches WHERE id = TRIM(_branch_id)::UUID AND business_id = target_biz_id
+  ) THEN
+    target_branch_id := TRIM(_branch_id)::UUID;
   ELSE
     SELECT id INTO target_branch_id FROM public.branches WHERE business_id = target_biz_id ORDER BY created_at ASC LIMIT 1;
     IF target_branch_id IS NULL THEN
@@ -101,7 +104,24 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.admin_add_staff_member TO authenticated, service_role;
+-- UUID overload in case PostgREST passes UUID types
+CREATE OR REPLACE FUNCTION public.admin_add_staff_member(
+  _email TEXT,
+  _full_name TEXT,
+  _phone TEXT,
+  _role TEXT,
+  _branch_id UUID,
+  _user_id UUID
+)
+RETURNS JSONB
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  SELECT public.admin_add_staff_member(_email, _full_name, _phone, _role, _branch_id::TEXT, _user_id::TEXT);
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, UUID, UUID) TO authenticated, service_role;
 
 -- 2. Update RLS policies so admins have full authority over their staff profiles
 DROP POLICY IF EXISTS "admins insert profiles in own business" ON public.profiles;
@@ -133,3 +153,6 @@ CREATE POLICY "admins manage roles" ON public.user_roles FOR ALL TO authenticate
     public.is_super_admin(auth.uid()) OR
     public.has_role(auth.uid(), 'admin')
   );
+
+-- 4. Reload PostgREST schema cache immediately
+NOTIFY pgrst, 'reload schema';

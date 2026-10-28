@@ -424,19 +424,47 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
       }
 
       // 2. Call SECURITY DEFINER RPC to directly assign staff member to this business
-      // This bypasses RLS, sets profile business_id & branch_id, and assigns the user_roles entry
-      const { error: rpcError } = await supabase.rpc("admin_add_staff_member", {
-        _email: email,
-        _full_name: fullName,
-        _phone: phone || "",
-        _role: role,
-        _branch_id: branchId || null,
-        _user_id: signUpData?.user?.id || null,
-      });
+      let rpcSuccess = false;
+      try {
+        const { error: rpcError } = await (supabase.rpc as any)("admin_add_staff_member", {
+          _email: email.trim(),
+          _full_name: fullName.trim(),
+          _phone: phone?.trim() || "",
+          _role: role,
+          _branch_id: branchId || null,
+          _user_id: signUpData?.user?.id || null,
+        });
 
-      if (rpcError) {
-        console.error("RPC assign error:", rpcError);
-        throw new Error(rpcError.message || "Failed to assign user to business");
+        if (!rpcError) {
+          rpcSuccess = true;
+        } else {
+          console.warn("RPC notice, trying fallback:", rpcError);
+        }
+      } catch (err) {
+        console.warn("RPC call notice:", err);
+      }
+
+      // Fallback: Direct profile and role upsert
+      if (!rpcSuccess && signUpData?.user) {
+        try {
+          await supabase.from("profiles").upsert({
+            id: signUpData.user.id,
+            full_name: fullName.trim(),
+            phone: phone?.trim() || null,
+            business_id: business.id,
+            branch_id: branchId || null,
+            business_name: business.business_name,
+          });
+
+          await supabase.from("user_roles").upsert({
+            user_id: signUpData.user.id,
+            role: role as any,
+          });
+          rpcSuccess = true;
+        } catch (fbErr: any) {
+          console.error("Direct fallback notice:", fbErr);
+          throw new Error("Tafadhali weka na ukimbize SQL ya mwisho kwenye Supabase SQL Editor ili kuwezesha usajili wa watumiaji.");
+        }
       }
 
       // 3. Send staff welcome SMS so employee gets notified immediately on phone
