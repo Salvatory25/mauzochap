@@ -279,17 +279,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const { user, roles, business, isSuperAdmin, isAdmin, isManager, loading, availableBranches, branchId, switchBranch } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent shadow-sm"></div>
-          <p className="text-muted-foreground font-medium animate-pulse">Loading workspace...</p>
-        </div>
-      </div>
-    );
-  }
-
   // SaaS Logic Bypass: Super admins and staff members added by business owners NEVER get blocked
   const isStaffMember = 
     roles.includes("cashier") || 
@@ -307,10 +296,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Redirect staff members away from billing setup directly to POS
   useEffect(() => {
-    if (isStaffMember && location.pathname === "/setup-billing") {
+    if (!loading && isStaffMember && location.pathname === "/setup-billing") {
       navigate({ to: "/pos" as any, replace: true });
     }
-  }, [isStaffMember, location.pathname, navigate]);
+  }, [loading, isStaffMember, location.pathname, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent shadow-sm"></div>
+          <p className="text-muted-foreground font-medium animate-pulse">Loading workspace...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Only the primary business owner of a pending business is prompted for billing setup & verification
   if (!isSuperAdmin && !isStaffMember && isBusinessOwner && business && location.pathname !== "/setup-billing") {
