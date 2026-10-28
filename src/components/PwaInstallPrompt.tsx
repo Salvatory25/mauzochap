@@ -98,13 +98,16 @@ export function PwaInstallPrompt() {
       aria-labelledby="pwa-install-title"
       className="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-sm z-50 animate-in fade-in slide-in-from-bottom-5 duration-300"
     >
-      <div className="p-4 rounded-2xl bg-slate-950/95 backdrop-blur-md border border-slate-800 text-white shadow-2xl shadow-black/60 relative overflow-hidden space-y-3">
+      <div className="p-4 rounded-2xl bg-slate-950/95 backdrop-blur-md border border-purple-900/30 text-white shadow-2xl shadow-violet-950/40 relative overflow-hidden space-y-3">
         {/* Subtle Top Gradient Accent */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-indigo-500" />
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-violet-600 via-purple-500 to-indigo-600" />
+
+        {/* Ambient Brand Glow */}
+        <div className="absolute -top-10 -right-10 w-28 h-28 bg-violet-600/15 rounded-full blur-2xl pointer-events-none" />
 
         {/* Header row: Icon, text, close */}
-        <div className="flex items-start gap-3">
-          <div className="w-11 h-11 rounded-xl bg-white p-1 shrink-0 shadow-md flex items-center justify-center">
+        <div className="flex items-start gap-3 relative z-10">
+          <div className="w-11 h-11 rounded-xl bg-white p-1 shrink-0 shadow-md flex items-center justify-center ring-1 ring-purple-100">
             <img
               src="/images/logo-black.png"
               alt="MauzoChap App"
@@ -115,8 +118,8 @@ export function PwaInstallPrompt() {
           <div className="flex-1 min-w-0 pr-4">
             <h3 id="pwa-install-title" className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
               <span>{lang === "sw" ? "Weka App ya MauzoChap" : "Install MauzoChap App"}</span>
-              <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 text-[9px] font-mono font-bold rounded">
-                BURE
+              <span className="px-1.5 py-0.5 bg-violet-500/20 text-violet-300 border border-violet-500/30 text-[9px] font-mono font-bold rounded">
+                {lang === "sw" ? "BURE" : "FREE"}
               </span>
             </h3>
             <p className="text-[11px] text-slate-300 mt-0.5 leading-snug font-normal">
@@ -128,7 +131,7 @@ export function PwaInstallPrompt() {
 
           <button
             onClick={handleDismiss}
-            aria-label="Funga"
+            aria-label={lang === "sw" ? "Funga" : "Close"}
             className="w-7 h-7 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors shrink-0 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
@@ -137,39 +140,39 @@ export function PwaInstallPrompt() {
 
         {/* iOS Step Guide Modal Popup within Banner */}
         {showIosGuide ? (
-          <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 space-y-2">
+          <div className="p-3 rounded-xl bg-slate-900/90 border border-purple-900/30 text-[11px] text-slate-300 space-y-2 relative z-10">
             <div className="font-bold text-white flex items-center gap-1.5">
-              <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+              <Smartphone className="w-3.5 h-3.5 text-violet-400" />
               <span>{lang === "sw" ? "Jinsi ya Kuweka kwenye iPhone:" : "How to Install on iOS:"}</span>
             </div>
             <ol className="space-y-1.5 list-decimal list-inside text-slate-300">
               <li className="flex items-center gap-1.5">
                 <span>1. Bonyeza kitufe cha</span>
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-800 rounded font-bold text-white">
-                  <Share2 className="w-3 h-3 text-blue-400" /> Share
+                  <Share2 className="w-3 h-3 text-violet-400" /> Share
                 </span>
                 <span>chini ya Safari.</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span>2. Shuka chini na uchague</span>
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-800 rounded font-bold text-white">
-                  <PlusSquare className="w-3 h-3 text-emerald-400" /> Add to Home Screen
+                  <PlusSquare className="w-3 h-3 text-violet-400" /> Add to Home Screen
                 </span>
               </li>
             </ol>
             <button
               onClick={() => setShowIosGuide(false)}
-              className="w-full mt-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors"
+              className="w-full mt-2 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-xs font-bold text-white transition-colors cursor-pointer"
             >
               {lang === "sw" ? "Nimeelewa" : "Got it"}
             </button>
           </div>
         ) : (
           /* Actions Row */
-          <div className="flex items-center gap-2 pt-0.5">
+          <div className="flex items-center gap-2 pt-0.5 relative z-10">
             <button
               onClick={handleInstallClick}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-violet-600/30 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
             >
               <Download className="w-3.5 h-3.5" />
               <span>{lang === "sw" ? "Weka Kwenye Simu" : "Install App"}</span>
@@ -177,7 +180,7 @@ export function PwaInstallPrompt() {
 
             <button
               onClick={handleDismiss}
-              className="px-3 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors cursor-pointer"
+              className="px-3 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs transition-colors cursor-pointer"
             >
               {lang === "sw" ? "Baadaye" : "Later"}
             </button>
