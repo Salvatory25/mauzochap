@@ -425,8 +425,9 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
 
       // 2. Call SECURITY DEFINER RPC to directly assign staff member to this business
       let rpcSuccess = false;
+      let lastErrorMessage = "";
       try {
-        const { error: rpcError } = await (supabase.rpc as any)("admin_add_staff_member", {
+        const { data: rpcData, error: rpcError } = await (supabase.rpc as any)("admin_add_staff_member", {
           _email: email.trim(),
           _full_name: fullName.trim(),
           _phone: phone?.trim() || "",
@@ -435,12 +436,14 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
           _user_id: signUpData?.user?.id || null,
         });
 
-        if (!rpcError) {
+        if (!rpcError && (rpcData as any)?.success) {
           rpcSuccess = true;
-        } else {
+        } else if (rpcError) {
+          lastErrorMessage = rpcError.message;
           console.warn("RPC notice, trying fallback:", rpcError);
         }
-      } catch (err) {
+      } catch (err: any) {
+        lastErrorMessage = err?.message || String(err);
         console.warn("RPC call notice:", err);
       }
 
@@ -463,8 +466,14 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
           rpcSuccess = true;
         } catch (fbErr: any) {
           console.error("Direct fallback notice:", fbErr);
-          throw new Error("Tafadhali weka na ukimbize SQL ya mwisho kwenye Supabase SQL Editor ili kuwezesha usajili wa watumiaji.");
         }
+      }
+
+      if (!rpcSuccess) {
+        throw new Error(
+          lastErrorMessage || 
+          "Imeshindwa kuunganisha mtumiaji kwenye biashara yako. Tafadhali kimbiza faili la pili la SQL kwenye Supabase SQL Editor kwanza."
+        );
       }
 
       // 3. Send staff welcome SMS so employee gets notified immediately on phone

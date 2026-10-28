@@ -2,12 +2,17 @@
 -- Ensures staff added by business owners never get blocked by subscription verification,
 -- and allows business owners to add or assign existing users directly to their business.
 
--- 1. Create admin_add_staff_member RPC function with flexible TEXT parameters
+-- Step 1: Explicitly drop any existing function signatures to prevent Postgres 42P13 errors
+DROP FUNCTION IF EXISTS public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, UUID, UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.admin_add_staff_member CASCADE;
+
+-- Step 2: Create admin_add_staff_member RPC function with flexible TEXT parameters
 CREATE OR REPLACE FUNCTION public.admin_add_staff_member(
   _email TEXT,
   _full_name TEXT,
-  _phone TEXT,
-  _role TEXT,
+  _phone TEXT DEFAULT '',
+  _role TEXT DEFAULT 'cashier',
   _branch_id TEXT DEFAULT NULL,
   _user_id TEXT DEFAULT NULL
 )
@@ -28,21 +33,40 @@ BEGIN
     RAISE EXCEPTION 'Not authenticated';
   END IF;
 
-  -- Verify caller is admin or super_admin
-  IF NOT (public.has_role(caller_id, 'admin') OR public.is_super_admin(caller_id)) THEN
-    RAISE EXCEPTION 'Unauthorized: Only store administrators or super admins can add staff';
+  -- Verify caller is admin, manager, owner or super_admin
+  IF NOT (
+    public.has_role(caller_id, 'admin') OR 
+    public.has_role(caller_id, 'manager') OR 
+    public.has_role(caller_id, 'owner') OR 
+    public.is_super_admin(caller_id)
+  ) THEN
+    RAISE EXCEPTION 'Unauthorized: Only store administrators, managers or super admins can add staff';
   END IF;
 
   -- Get caller's business_id
   SELECT business_id INTO target_biz_id FROM public.profiles WHERE id = caller_id;
+  IF target_biz_id IS NULL THEN
+    -- Fallback: Check if they own any business in public.businesses
+    SELECT id INTO target_biz_id FROM public.businesses WHERE email = (SELECT email FROM auth.users WHERE id = caller_id) LIMIT 1;
+    IF target_biz_id IS NOT NULL THEN
+      UPDATE public.profiles SET business_id = target_biz_id WHERE id = caller_id;
+    END IF;
+  END IF;
+
   IF target_biz_id IS NULL AND NOT public.is_super_admin(caller_id) THEN
     RAISE EXCEPTION 'No business associated with the current administrator profile';
   END IF;
 
   -- Determine target user_id
   IF _user_id IS NOT NULL AND TRIM(_user_id) <> '' THEN
-    target_user_id := TRIM(_user_id)::UUID;
-  ELSIF _email IS NOT NULL AND TRIM(_email) <> '' THEN
+    BEGIN
+      target_user_id := TRIM(_user_id)::UUID;
+    EXCEPTION WHEN OTHERS THEN
+      target_user_id := NULL;
+    END;
+  END IF;
+
+  IF target_user_id IS NULL AND _email IS NOT NULL AND TRIM(_email) <> '' THEN
     SELECT id INTO target_user_id FROM auth.users WHERE LOWER(email) = LOWER(TRIM(_email)) LIMIT 1;
   END IF;
 
@@ -57,11 +81,20 @@ BEGIN
   END IF;
 
   -- Validate or find branch
-  IF _branch_id IS NOT NULL AND TRIM(_branch_id) <> '' AND EXISTS (
-    SELECT 1 FROM public.branches WHERE id = TRIM(_branch_id)::UUID AND business_id = target_biz_id
-  ) THEN
-    target_branch_id := TRIM(_branch_id)::UUID;
-  ELSE
+  IF _branch_id IS NOT NULL AND TRIM(_branch_id) <> '' THEN
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM public.branches 
+        WHERE id = TRIM(_branch_id)::UUID AND business_id = target_biz_id
+      ) THEN
+        target_branch_id := TRIM(_branch_id)::UUID;
+      END IF;
+    EXCEPTION WHEN OTHERS THEN
+      target_branch_id := NULL;
+    END;
+  END IF;
+
+  IF target_branch_id IS NULL THEN
     SELECT id INTO target_branch_id FROM public.branches WHERE business_id = target_biz_id ORDER BY created_at ASC LIMIT 1;
     IF target_branch_id IS NULL THEN
       INSERT INTO public.branches (name, location, business_id)
@@ -104,26 +137,9 @@ BEGIN
 END;
 $$;
 
--- UUID overload in case PostgREST passes UUID types
-CREATE OR REPLACE FUNCTION public.admin_add_staff_member(
-  _email TEXT,
-  _full_name TEXT,
-  _phone TEXT,
-  _role TEXT,
-  _branch_id UUID,
-  _user_id UUID
-)
-RETURNS JSONB
-LANGUAGE sql
-SECURITY DEFINER
-AS $$
-  SELECT public.admin_add_staff_member(_email, _full_name, _phone, _role, _branch_id::TEXT, _user_id::TEXT);
-$$;
-
 GRANT EXECUTE ON FUNCTION public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, UUID, UUID) TO authenticated, service_role;
 
--- 2. Update RLS policies so admins have full authority over their staff profiles
+-- Step 3: Update RLS policies so admins have full authority over their staff profiles
 DROP POLICY IF EXISTS "admins insert profiles in own business" ON public.profiles;
 CREATE POLICY "admins insert profiles in own business" ON public.profiles FOR INSERT TO authenticated
   WITH CHECK (
@@ -142,7 +158,7 @@ CREATE POLICY "admins update profiles in own business" ON public.profiles FOR UP
     auth.uid() = id
   );
 
--- 3. Update user_roles RLS so admins can manage roles in their business
+-- Step 4: Update user_roles RLS so admins can manage roles in their business
 DROP POLICY IF EXISTS "admins manage roles" ON public.user_roles;
 CREATE POLICY "admins manage roles" ON public.user_roles FOR ALL TO authenticated
   USING (
@@ -154,5 +170,5 @@ CREATE POLICY "admins manage roles" ON public.user_roles FOR ALL TO authenticate
     public.has_role(auth.uid(), 'admin')
   );
 
--- 4. Reload PostgREST schema cache immediately
+-- Step 5: Reload PostgREST schema cache immediately
 NOTIFY pgrst, 'reload schema';
