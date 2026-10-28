@@ -5,6 +5,7 @@
 -- Step 1: Explicitly drop any existing function signatures to prevent Postgres 42P13 errors
 DROP FUNCTION IF EXISTS public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, UUID, UUID) CASCADE;
 DROP FUNCTION IF EXISTS public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.admin_add_staff_member(JSONB) CASCADE;
 DROP FUNCTION IF EXISTS public.admin_add_staff_member CASCADE;
 
 -- Step 2: Create admin_add_staff_member RPC function with flexible TEXT parameters
@@ -138,6 +139,27 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated, service_role;
+
+-- Overload with single JSONB parameter (matches PostgREST fallback directly)
+CREATE OR REPLACE FUNCTION public.admin_add_staff_member(payload JSONB)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+BEGIN
+  RETURN public.admin_add_staff_member(
+    payload->>'_email',
+    payload->>'_full_name',
+    COALESCE(payload->>'_phone', ''),
+    COALESCE(payload->>'_role', 'cashier'),
+    payload->>'_branch_id',
+    payload->>'_user_id'
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_add_staff_member(JSONB) TO anon, authenticated, service_role;
 
 -- Step 3: Update RLS policies so admins have full authority over their staff profiles
 DROP POLICY IF EXISTS "admins insert profiles in own business" ON public.profiles;
