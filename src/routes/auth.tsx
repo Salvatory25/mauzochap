@@ -151,11 +151,15 @@ function AuthPage() {
         {mode === "signup" ? (
           <MultiStepRegister
             onSuccess={() => {
-              const pkg = params.get("package");
-              if (pkg) {
-                navigate({ to: `/setup-billing?package=${pkg}` as any, replace: true });
+              if (inviteId) {
+                navigate({ to: "/pos" as any, replace: true });
               } else {
-                navigate({ to: "/setup-billing", replace: true });
+                const pkg = params.get("package");
+                if (pkg) {
+                  navigate({ to: `/setup-billing?package=${pkg}` as any, replace: true });
+                } else {
+                  navigate({ to: "/setup-billing", replace: true });
+                }
               }
             }}
             onSwitchToSignIn={() => setMode("signin")}

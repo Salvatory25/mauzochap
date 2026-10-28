@@ -1190,6 +1190,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_add_staff_member: {
+        Args: {
+          _email: string
+          _full_name: string
+          _phone: string
+          _role: string
+          _branch_id?: string | null
+          _user_id?: string | null
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -285,7 +285,16 @@ export function MultiStepRegister({
               full_name: fullName,
               phone: phone,
               business_name: inviteId ? inviteBusinessName || businessName : businessName,
+              ...(inviteId ? { business_id: inviteId } : {}),
+              ...(inviteBranch ? { branch_id: inviteBranch } : {}),
             });
+
+          if (inviteId) {
+            await supabase.from("user_roles").upsert({
+              user_id: data.user.id,
+              role: (inviteRole || "cashier") as any,
+            });
+          }
 
           // Send appropriate welcome SMS via SwalaSMS
           if (phone) {

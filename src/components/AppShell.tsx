@@ -290,8 +290,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // SaaS Logic Bypass for super admins
-  if (!isSuperAdmin && business && location.pathname !== "/setup-billing") {
+  // SaaS Logic Bypass for super admins and staff members added by business owners
+  // Determine if current user is the primary merchant owner who created the business
+  const isBusinessOwner = !!(
+    business?.email && user?.email 
+      ? business.email.toLowerCase() === user.email.toLowerCase() 
+      : (roles.includes("admin") || roles.includes("owner")) && !roles.includes("cashier")
+  );
+
+  // Staff members (Cashiers, Managers, or added staff) are given direct access by the owner
+  const isStaffMember = roles.includes("cashier") || roles.includes("manager") || !isBusinessOwner;
+
+  // Only the primary business owner is prompted for initial subscription setup & verification
+  if (!isSuperAdmin && !isStaffMember && business && location.pathname !== "/setup-billing") {
     if (business.account_status === "pending") {
       return (
         <Blocker

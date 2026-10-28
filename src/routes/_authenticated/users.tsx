@@ -403,7 +403,8 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
         }
       );
 
-      const { data: signUpData, error } = await tempClient.auth.signUp({
+      // 1. Create or register auth user with temporary client
+      const { data: signUpData, error: signUpError } = await tempClient.auth.signUp({
         email,
         password,
         options: {
@@ -417,42 +418,40 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
         }
       });
 
-      if (error) throw error;
-
-      // Confirm profiles & roles directly for immediate authority
-      if (signUpData?.user) {
-        try {
-          await supabase.from("profiles").upsert({
-            id: signUpData.user.id,
-            full_name: fullName,
-            phone: phone || null,
-            business_id: business.id,
-            branch_id: branchId || null,
-            business_name: business.business_name,
-          });
-
-          await supabase.from("user_roles").upsert({
-            user_id: signUpData.user.id,
-            role: role as any,
-          });
-        } catch (syncErr) {
-          console.warn("Direct user sync notice:", syncErr);
-        }
-
-        // Send staff welcome SMS so employee gets notified immediately on phone
-        if (phone) {
-          sendStaffWelcomeSMS({
-            phone,
-            fullName,
-            businessName: business.business_name,
-            role,
-            email,
-          }).catch((e) => console.warn("Staff SMS notice:", e));
-        }
+      // Ignore if user is already registered in auth, we will link them via RPC
+      if (signUpError && !signUpError.message?.toLowerCase().includes("already registered")) {
+        throw signUpError;
       }
-      
-      toast.success(`Akaunti ya ${fullName} imeundwa kikamilifu! Anaweza kuingia moja kwa moja bila kizuizi.`);
-      qc.invalidateQueries({ queryKey: ["users-list"] });
+
+      // 2. Call SECURITY DEFINER RPC to directly assign staff member to this business
+      // This bypasses RLS, sets profile business_id & branch_id, and assigns the user_roles entry
+      const { error: rpcError } = await supabase.rpc("admin_add_staff_member", {
+        _email: email,
+        _full_name: fullName,
+        _phone: phone || "",
+        _role: role,
+        _branch_id: branchId || null,
+        _user_id: signUpData?.user?.id || null,
+      });
+
+      if (rpcError) {
+        console.error("RPC assign error:", rpcError);
+        throw new Error(rpcError.message || "Failed to assign user to business");
+      }
+
+      // 3. Send staff welcome SMS so employee gets notified immediately on phone
+      if (phone) {
+        sendStaffWelcomeSMS({
+          phone,
+          fullName,
+          businessName: business.business_name,
+          role,
+          email,
+        }).catch((e) => console.warn("Staff SMS notice:", e));
+      }
+
+      toast.success(`Akaunti ya ${fullName} imeundwa na kuunganishwa kikamilifu! Anaweza kuingia moja kwa moja bila kizuizi.`);
+      await qc.invalidateQueries({ queryKey: ["users-list"] });
       onClose();
     } catch (err: any) {
       toast.error(err.message || "Failed to create user account");
