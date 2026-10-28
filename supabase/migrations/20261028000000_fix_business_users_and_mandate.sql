@@ -1,8 +1,25 @@
 -- Migration: Fix business user assignment, ensure business owner authority, and allow business admins to manage profiles
 -- Description:
--- 1. Updates handle_new_user() so users added to an existing business are linked directly to that business without creating dummy pending businesses
--- 2. Grants business admins full authority over users within their own business
--- 3. Enables business admins to update profiles (like branch_id) for users in their business
+-- 1. Updates handle_new_user() using TEXT for roles to be compatible with all PostgreSQL/Supabase setups
+-- 2. Ensures target_role does not depend on custom enums that may not exist
+-- 3. Grants business admins full authority over staff in their business without superadmin approval
+
+-- Safely create app_role type if it does not already exist
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'app_role') THEN
+    CREATE TYPE public.app_role AS ENUM ('admin', 'manager', 'cashier', 'owner', 'super_admin');
+  END IF;
+END $$;
+
+-- Overload/Ensure has_role works with TEXT so RLS policies never fail on role types
+CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role TEXT)
+RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles 
+    WHERE user_id = _user_id AND role::TEXT = _role
+  );
+$$;
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -10,7 +27,7 @@ DECLARE
   user_count INTEGER;
   target_biz_id UUID;
   target_branch_id UUID;
-  target_role public.app_role;
+  target_role TEXT;
   selected_pkg TEXT;
 BEGIN
   SELECT COUNT(*) INTO user_count FROM public.user_roles;
@@ -35,7 +52,7 @@ BEGIN
     END IF;
     
     -- Target role chosen by the business owner (admin, manager, or cashier)
-    target_role := COALESCE(NEW.raw_user_meta_data->>'role', 'cashier')::public.app_role;
+    target_role := COALESCE(NEW.raw_user_meta_data->>'role', 'cashier');
 
     -- Create profile linked directly to the business owner's business
     INSERT INTO public.profiles (id, full_name, business_name, phone, business_id, branch_id)
