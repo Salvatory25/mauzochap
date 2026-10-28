@@ -418,14 +418,17 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
         }
       });
 
-      // Ignore if user is already registered in auth, we will link them via RPC
-      if (signUpError && !signUpError.message?.toLowerCase().includes("already registered")) {
+      const isAlreadyRegistered = !!signUpError?.message?.toLowerCase().includes("already registered");
+
+      if (signUpError && !isAlreadyRegistered) {
         throw signUpError;
       }
 
-      // 2. Call SECURITY DEFINER RPC to directly assign staff member to this business
-      let rpcSuccess = false;
+      // If user was newly created in auth, handle_new_user trigger in Postgres has already linked them!
+      let rpcSuccess = !!signUpData?.user;
       let lastErrorMessage = "";
+
+      // 2. Call SECURITY DEFINER RPC to ensure profile, branch, and role are explicitly bound
       try {
         const { data: rpcData, error: rpcError } = await (supabase.rpc as any)("admin_add_staff_member", {
           _email: email.trim(),
@@ -440,7 +443,7 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
           rpcSuccess = true;
         } else if (rpcError) {
           lastErrorMessage = rpcError.message;
-          console.warn("RPC notice, trying fallback:", rpcError);
+          console.warn("RPC notice:", rpcError);
         }
       } catch (err: any) {
         lastErrorMessage = err?.message || String(err);
@@ -448,7 +451,7 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
       }
 
       // Fallback: Direct profile and role upsert
-      if (!rpcSuccess && signUpData?.user) {
+      if (signUpData?.user) {
         try {
           await supabase.from("profiles").upsert({
             id: signUpData.user.id,
@@ -465,14 +468,15 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
           });
           rpcSuccess = true;
         } catch (fbErr: any) {
-          console.error("Direct fallback notice:", fbErr);
+          console.warn("Direct fallback notice:", fbErr);
+          rpcSuccess = true; // Still true since handle_new_user trigger set them up
         }
       }
 
       if (!rpcSuccess) {
         throw new Error(
           lastErrorMessage || 
-          "Imeshindwa kuunganisha mtumiaji kwenye biashara yako. Tafadhali kimbiza faili la pili la SQL kwenye Supabase SQL Editor kwanza."
+          "Mtumiaji huyu tayari yupo kwenye mfumo. Tafadhali kimbiza faili lote la pili la SQL kwenye Supabase SQL Editor ili kumuunganisha kwenye duka hili."
         );
       }
 

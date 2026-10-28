@@ -137,7 +137,7 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.admin_add_staff_member(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated, service_role;
 
 -- Step 3: Update RLS policies so admins have full authority over their staff profiles
 DROP POLICY IF EXISTS "admins insert profiles in own business" ON public.profiles;
@@ -171,4 +171,6 @@ CREATE POLICY "admins manage roles" ON public.user_roles FOR ALL TO authenticate
   );
 
 -- Step 5: Reload PostgREST schema cache immediately
+SELECT pg_notification_queue_usage();
+NOTIFY pgrst, 'reload config';
 NOTIFY pgrst, 'reload schema';
