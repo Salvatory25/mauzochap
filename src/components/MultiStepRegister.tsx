@@ -24,7 +24,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { sendWelcomeSMS } from "@/lib/sms-service";
+import { sendWelcomeSMS, sendStaffWelcomeSMS, notifySuperAdminNewRegistration } from "@/lib/sms-service";
 
 interface MultiStepRegisterProps {
   onSuccess: () => void;
@@ -287,13 +287,32 @@ export function MultiStepRegister({
               business_name: inviteId ? inviteBusinessName || businessName : businessName,
             });
 
-          // Send welcoming Swahili SMS via SwalaSMS
+          // Send appropriate welcome SMS via SwalaSMS
           if (phone) {
-            sendWelcomeSMS({
-              phone,
-              ownerName: fullName,
-              businessName: inviteId ? inviteBusinessName || businessName : businessName,
-            }).catch((e) => console.warn("Welcome SMS notice:", e));
+            if (inviteId) {
+              sendStaffWelcomeSMS({
+                phone,
+                fullName,
+                businessName: inviteBusinessName || businessName,
+                role: inviteRole,
+                email,
+              }).catch((e) => console.warn("Staff welcome SMS notice:", e));
+            } else {
+              // 1. Send merchant welcome SMS
+              sendWelcomeSMS({
+                phone,
+                ownerName: fullName,
+                businessName,
+              }).catch((e) => console.warn("Welcome SMS notice:", e));
+
+              // 2. Notify Superadmin immediately via SMS
+              notifySuperAdminNewRegistration({
+                businessName,
+                ownerName: fullName,
+                phone,
+                region,
+              }).catch((e) => console.warn("Superadmin notification SMS notice:", e));
+            }
           }
         } catch (e) {
           console.warn("Profile sync notice on registration:", e);

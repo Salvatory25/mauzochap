@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { CreditCard, CheckCircle2, Package, ArrowRight, Clock, RefreshCw, AlertCircle, Sparkles } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendEmail } from "@/lib/email";
+import { notifySuperAdminNewOrder } from "@/lib/sms-service";
 
 export const Route = createFileRoute("/_authenticated/setup-billing")({
   component: SetupBilling,
@@ -160,7 +161,17 @@ function SetupBilling() {
         
       if (pErr) throw pErr;
 
-      // 3. Send mock email notification to the administrator
+      // 3. Notify Super Admin via SMS immediately
+      notifySuperAdminNewOrder({
+        businessName: business.business_name,
+        ownerName: business.owner_name || undefined,
+        phone: business.phone || undefined,
+        packageName: selectedInfo.name,
+        amount: selectedInfo.price,
+        paymentRef: cleanRef,
+      }).catch((e) => console.warn("Superadmin order SMS notice:", e));
+
+      // 4. Send email notification to the administrator
       const submissionDate = new Date();
       sendEmail({
         to: "admin@mauzochap.com",
@@ -168,7 +179,7 @@ function SetupBilling() {
         body: `Hello Admin,\n\nA new subscription payment reference has been submitted and requires verification.\n\nCustomer details:\n- Business Name: ${business.business_name}\n- Owner Name: ${business.owner_name || "N/A"}\n- Email: ${business.email || "N/A"}\n- Phone: ${business.phone || "N/A"}\n\nPayment details:\n- Selected Plan: ${selectedInfo.name}\n- Amount: ${selectedInfo.price.toLocaleString()} TZS\n- Transaction Reference: ${cleanRef}\n- Submission Time: ${submissionDate.toLocaleString()}\n- Current Status: Pending Verification\n\nPlease log in to the Super Admin panel to verify this payment.\n\nBest,\nMauzoChap System`
       });
 
-      // 4. Send in-app notification (we insert into the database table public.notifications)
+      // 5. Send in-app notification (we insert into the database table public.notifications)
       await supabase.from("notifications" as any).insert({
         business_id: business.id,
         title: "Payment Submitted Successfully",

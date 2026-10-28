@@ -21,6 +21,7 @@ import {
   PhoneCall,
   History,
   TrendingUp,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -38,9 +39,23 @@ export const Route = createFileRoute("/_authenticated/sms")({
 });
 
 function SMSManagementPage() {
-  const { business, user } = useAuth();
+  const { isSuperAdmin, business, user } = useAuth();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<"single" | "daily" | "bulk" | "history">("single");
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+        <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+          <ShieldAlert className="h-6 w-6 text-destructive" />
+        </div>
+        <h2 className="text-xl font-bold">Unauthorized Access</h2>
+        <p className="text-muted-foreground max-w-md">
+          Usimamizi wa SMS na Ujumbe unapatikana kwa Super Admin pekee. Akaunti za biashara hupokea jumbe za kiotomatiki moja kwa moja kwenye simu zao.
+        </p>
+      </div>
+    );
+  }
 
   // Single SMS state
   const [recipientPhone, setRecipientPhone] = useState("");

@@ -348,7 +348,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const nav = isSuperAdmin ? [
     { to: "/super-admin", icon: ShieldAlert, label: "Super Admin" },
-    { to: "/sms", icon: MessageSquare, label: "SMS Management" },
+    { to: "/sms", icon: MessageSquare, label: "SMS & Ujumbe" },
     { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
   ] : [
     { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
@@ -359,7 +359,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { to: "/invoices", icon: FileText, label: "Invoices" },
     { to: "/customers", icon: Users, label: t("customers") },
     { to: "/suppliers", icon: Truck, label: t("suppliers") },
-    { to: "/sms", icon: MessageSquare, label: "SMS & Ujumbe" },
     ...(isManager ? [
       { to: "/expenses", icon: Wallet, label: t("expenses") },
       { to: "/reports", icon: BarChart3, label: t("reports") },

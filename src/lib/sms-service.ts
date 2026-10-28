@@ -97,6 +97,8 @@ export async function sendSMS({
   }
 }
 
+export const SUPERADMIN_PHONE = "+255627274168";
+
 /**
  * Send Swahili Welcome SMS upon new merchant registration
  */
@@ -114,6 +116,84 @@ export async function sendWelcomeSMS({
 
   return sendSMS({
     recipient: phone,
+    body,
+    senderId: SENDER_ID,
+  });
+}
+
+/**
+ * Send Welcome SMS when a business owner adds a staff member (Cashier / Manager / Admin)
+ */
+export async function sendStaffWelcomeSMS({
+  phone,
+  fullName,
+  businessName,
+  role,
+  email,
+}: {
+  phone: string;
+  fullName: string;
+  businessName: string;
+  role: string;
+  email?: string;
+}): Promise<SMSResponse> {
+  const roleName = role === "admin" ? "Msimamizi (Admin)" : role === "manager" ? "Meneja" : "Muuzaji (Cashier)";
+  const body = `Habari ${fullName}, umewekwa rasmi kama ${roleName} katika duka la ${businessName} kwenye mfumo wa MauzoChap POS.${email ? ` Tumia email: ${email}` : ""} Ingia https://www.mauzochap.co.tz kuanza kazi. Msaada: +255627274168.`;
+
+  return sendSMS({
+    recipient: phone,
+    body,
+    senderId: SENDER_ID,
+  });
+}
+
+/**
+ * Notify Super Admin immediately via SMS when a new business signs up
+ */
+export async function notifySuperAdminNewRegistration({
+  businessName,
+  ownerName,
+  phone,
+  region,
+  packageName,
+}: {
+  businessName: string;
+  ownerName: string;
+  phone: string;
+  region?: string;
+  packageName?: string;
+}): Promise<SMSResponse> {
+  const body = `MauzoChap Alert: Usajili mpya wa duka!\n• Duka: ${businessName}\n• Mmiliki: ${ownerName}\n• Simu: ${phone}\n• Mkoa: ${region || "Tanzania"}\n• Kifurushi: ${(packageName || "Kilimanjaro").toUpperCase()}`;
+
+  return sendSMS({
+    recipient: SUPERADMIN_PHONE,
+    body,
+    senderId: SENDER_ID,
+  });
+}
+
+/**
+ * Notify Super Admin immediately via SMS when a new subscription order / payment reference is submitted
+ */
+export async function notifySuperAdminNewOrder({
+  businessName,
+  ownerName,
+  phone,
+  packageName,
+  amount,
+  paymentRef,
+}: {
+  businessName: string;
+  ownerName?: string;
+  phone?: string;
+  packageName: string;
+  amount: number;
+  paymentRef: string;
+}): Promise<SMSResponse> {
+  const body = `MauzoChap Alert: Malipo mapya yanasubiri uhakiki!\n• Duka: ${businessName}\n• Kifurushi: ${packageName.toUpperCase()}\n• Kiasi: TZS ${amount.toLocaleString()}\n• Namba ya Muamala: ${paymentRef}${phone ? `\n• Simu: ${phone}` : ""}\nIngia Super Admin kuthibitisha.`;
+
+  return sendSMS({
+    recipient: SUPERADMIN_PHONE,
     body,
     senderId: SENDER_ID,
   });

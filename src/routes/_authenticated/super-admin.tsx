@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ShieldAlert, Building2, CreditCard, Activity, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { ShieldAlert, Building2, CreditCard, Activity, CheckCircle2, XCircle, Clock, MessageSquare, ArrowRight } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { sendEmail } from "@/lib/email";
 
@@ -214,19 +214,30 @@ function SuperAdminDashboard() {
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-border mb-4 overflow-x-auto no-scrollbar">
-        <button
-          onClick={() => setActiveTab("businesses")}
-          className={`px-3.5 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap ${activeTab === "businesses" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+      <div className="flex items-center justify-between border-b border-border mb-4 overflow-x-auto no-scrollbar gap-2">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveTab("businesses")}
+            className={`px-3.5 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "businesses" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            Businesses ({businesses.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("payments")}
+            className={`px-3.5 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === "payments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            Payments & Verifications ({payments.length})
+          </button>
+        </div>
+
+        <Link
+          to="/sms"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors shrink-0 mb-1"
         >
-          Businesses ({businesses.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("payments")}
-          className={`px-3.5 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap ${activeTab === "payments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-        >
-          Payments & Verifications ({payments.length})
-        </button>
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>SMS & Ujumbe Console</span>
+          <ArrowRight className="w-3 h-3 ml-0.5" />
+        </Link>
       </div>
 
       {activeTab === "businesses" && (
