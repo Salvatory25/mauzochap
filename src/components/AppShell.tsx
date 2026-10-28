@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   Boxes,
@@ -290,19 +290,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // SaaS Logic Bypass for super admins and staff members added by business owners
+  // SaaS Logic Bypass: Super admins and staff members added by business owners NEVER get blocked
+  const isStaffMember = 
+    roles.includes("cashier") || 
+    roles.includes("manager") ||
+    !!user?.user_metadata?.business_id ||
+    !!user?.user_metadata?.role ||
+    (!!business?.email && !!user?.email && business.email.toLowerCase() !== user.email.toLowerCase());
+
   // Determine if current user is the primary merchant owner who created the business
-  const isBusinessOwner = !!(
-    business?.email && user?.email 
-      ? business.email.toLowerCase() === user.email.toLowerCase() 
-      : (roles.includes("admin") || roles.includes("owner")) && !roles.includes("cashier")
+  const isBusinessOwner = !isStaffMember && !!(
+    (business?.email && user?.email && business.email.toLowerCase() === user.email.toLowerCase()) ||
+    roles.includes("owner") ||
+    roles.includes("admin")
   );
 
-  // Staff members (Cashiers, Managers, or added staff) are given direct access by the owner
-  const isStaffMember = roles.includes("cashier") || roles.includes("manager") || !isBusinessOwner;
+  // Redirect staff members away from billing setup directly to POS
+  useEffect(() => {
+    if (isStaffMember && location.pathname === "/setup-billing") {
+      navigate({ to: "/pos" as any, replace: true });
+    }
+  }, [isStaffMember, location.pathname, navigate]);
 
-  // Only the primary business owner is prompted for initial subscription setup & verification
-  if (!isSuperAdmin && !isStaffMember && business && location.pathname !== "/setup-billing") {
+  // Only the primary business owner of a pending business is prompted for billing setup & verification
+  if (!isSuperAdmin && !isStaffMember && isBusinessOwner && business && location.pathname !== "/setup-billing") {
     if (business.account_status === "pending") {
       return (
         <Blocker

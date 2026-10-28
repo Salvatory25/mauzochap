@@ -105,8 +105,15 @@ function AuthPage() {
         setMode("signin");
         return;
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
+        const redirectParam = params.get("redirect");
+        const userMeta = signInData?.user?.user_metadata;
+        const isStaff = !!(userMeta?.business_id || userMeta?.role === "cashier" || userMeta?.role === "manager");
+        const targetDestination = redirectParam || (isStaff ? "/pos" : "/dashboard");
+        navigate({ to: targetDestination as any, replace: true });
+        return;
       }
       const redirectParam = params.get("redirect");
       navigate({ to: (redirectParam || "/dashboard") as any, replace: true });

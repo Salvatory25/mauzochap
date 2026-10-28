@@ -61,23 +61,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .single()
         ]);
 
-        if (!mounted) return;
+        const targetBizId = sessionUser.user_metadata?.business_id || profileRes.data?.business_id;
+        const targetBranchId = sessionUser.user_metadata?.branch_id || profileRes.data?.branch_id;
 
-        const rolesList = (rolesRes.data?.map((r) => r.role) ?? []) as Role[];
+        // Auto-heal profile and role if user was invited/added with metadata
+        if (sessionUser.user_metadata?.business_id && profileRes.data?.business_id !== targetBizId) {
+          supabase
+            .from("profiles")
+            .update({ business_id: targetBizId, branch_id: targetBranchId })
+            .eq("id", sessionUser.id)
+            .then();
+        }
+
+        let rolesList = (rolesRes.data?.map((r) => r.role) ?? []) as Role[];
+        if (rolesList.length === 0 && sessionUser.user_metadata?.role) {
+          const metaRole = sessionUser.user_metadata.role as Role;
+          rolesList = [metaRole];
+          supabase.from("user_roles").upsert({ user_id: sessionUser.id, role: metaRole as any }).then();
+        }
         setRoles(rolesList);
 
-        if (profileRes.data) {
-          setBranchId(profileRes.data.branch_id);
-          if (profileRes.data.business_id) {
-            const [{ data: bData }, { data: branchesData }] = await Promise.all([
-              supabase.from("businesses").select("*").eq("id", profileRes.data.business_id).single(),
-              supabase.from("branches").select("id, name").eq("business_id", profileRes.data.business_id)
-            ]);
-            
-            if (mounted) {
-              if (bData) setBusiness(bData);
-              if (branchesData) setAvailableBranches(branchesData);
-            }
+        if (targetBranchId) {
+          setBranchId(targetBranchId);
+        }
+
+        if (targetBizId) {
+          const [{ data: bData }, { data: branchesData }] = await Promise.all([
+            supabase.from("businesses").select("*").eq("id", targetBizId).single(),
+            supabase.from("branches").select("id, name").eq("business_id", targetBizId)
+          ]);
+          
+          if (mounted) {
+            if (bData) setBusiness(bData);
+            if (branchesData) setAvailableBranches(branchesData);
           }
         }
       } catch (err) {
