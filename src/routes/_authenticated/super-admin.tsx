@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ShieldAlert, Building2, CreditCard, Activity, CheckCircle2, XCircle, Clock, MessageSquare, ArrowRight } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { sendEmail } from "@/lib/email";
+import { enrichMerchantsWithPhones } from "@/lib/merchant-phone-sync";
 
 export const Route = createFileRoute("/_authenticated/super-admin")({
   component: SuperAdminDashboard,
@@ -25,7 +26,7 @@ function SuperAdminDashboard() {
   const [pPage, setPPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
 
-  const { data: businesses = [], isLoading: bLoading } = useQuery({
+  const { data: rawBusinesses = [], isLoading: bLoading } = useQuery({
     queryKey: ["super-admin-businesses"],
     enabled: isSuperAdmin,
     queryFn: async () => {
@@ -47,6 +48,24 @@ function SuperAdminDashboard() {
       return data as any[];
     },
   });
+
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["super-admin-profiles-phones"],
+    enabled: isSuperAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, phone, business_id, business_name");
+      if (error) return [];
+      return data || [];
+    },
+  });
+
+  const businesses = enrichMerchantsWithPhones(rawBusinesses as any[], profiles as any[]).map((eb, idx) => ({
+    ...rawBusinesses[idx],
+    ...eb,
+    phone: eb.effectivePhone || rawBusinesses[idx]?.phone || "",
+  }));
 
   if (!isSuperAdmin) {
     return <div className="p-8 text-center text-muted-foreground">Unauthorized. Super Admin access required.</div>;
@@ -353,7 +372,15 @@ function SuperAdminDashboard() {
                       </td>
 
                       <td className="px-3 py-3 text-xs">
-                        <div className="font-medium text-foreground">{b.phone || "No phone"}</div>
+                        <div className="font-medium text-foreground">
+                          {b.phone ? (
+                            b.phone
+                          ) : (
+                            <Link to="/sms" className="text-amber-600 hover:underline font-semibold">
+                              + Weka Simu (SMS)
+                            </Link>
+                          )}
+                        </div>
                         <div className="text-muted-foreground text-[11px] truncate max-w-[160px]">{b.email}</div>
                       </td>
 

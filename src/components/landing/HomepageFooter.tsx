@@ -104,6 +104,11 @@ export function HomepageFooter({
                   </Link>
                 </li>
                 <li>
+                  <Link to="/guide" className="hover:text-white transition-colors text-violet-300 font-bold">
+                    {t.nav.guide} (How to Use)
+                  </Link>
+                </li>
+                <li>
                   <Link to="/about" className="hover:text-white transition-colors">
                     Kuhusu MauzoChap
                   </Link>

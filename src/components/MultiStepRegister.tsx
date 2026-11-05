@@ -294,6 +294,15 @@ export function MultiStepRegister({
               user_id: data.user.id,
               role: (inviteRole || "cashier") as any,
             });
+          } else if (data.session && email) {
+            await supabase
+              .from("businesses")
+              .update({
+                phone: phone || null,
+                owner_name: ownerName || fullName,
+                business_name: businessName,
+              })
+              .eq("email", email);
           }
 
           // Send appropriate welcome SMS via SwalaSMS

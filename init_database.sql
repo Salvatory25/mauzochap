@@ -807,3 +807,55 @@ GRANT EXECUTE ON FUNCTION public.is_admin_or_manager(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_super_admin(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.current_business_id() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_business_name(UUID) TO anon, authenticated;
+
+
+-- Super Admin Merchants Directory RPC (merges businesses, profiles & auth.users phone metadata)
+CREATE OR REPLACE FUNCTION public.super_admin_get_merchants_directory()
+RETURNS TABLE (
+  id UUID,
+  business_name TEXT,
+  owner_name TEXT,
+  phone TEXT,
+  email TEXT,
+  package TEXT,
+  account_status TEXT,
+  expiry_date DATE,
+  created_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_super_admin(auth.uid()) THEN
+    RAISE EXCEPTION 'Unauthorized: Super Admin access required.';
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    b.id,
+    b.business_name,
+    COALESCE(
+      NULLIF(b.owner_name, ''),
+      (SELECT p.full_name FROM public.profiles p WHERE p.business_id = b.id AND NULLIF(p.full_name, '') IS NOT NULL ORDER BY p.created_at ASC LIMIT 1),
+      (SELECT NULLIF(u.raw_user_meta_data->>'full_name', '') FROM auth.users u WHERE LOWER(u.email) = LOWER(b.email) LIMIT 1),
+      'Owner'
+    )::TEXT AS owner_name,
+    COALESCE(
+      NULLIF(TRIM(b.phone), ''),
+      (SELECT NULLIF(TRIM(p.phone), '') FROM public.profiles p WHERE p.business_id = b.id AND NULLIF(TRIM(p.phone), '') IS NOT NULL ORDER BY p.created_at ASC LIMIT 1),
+      (SELECT NULLIF(TRIM(u.raw_user_meta_data->>'phone'), '') FROM auth.users u WHERE LOWER(u.email) = LOWER(b.email) LIMIT 1),
+      (SELECT NULLIF(TRIM(u.phone), '') FROM auth.users u WHERE LOWER(u.email) = LOWER(b.email) LIMIT 1)
+    )::TEXT AS phone,
+    b.email,
+    b.package::TEXT,
+    b.account_status,
+    b.expiry_date,
+    b.created_at
+  FROM public.businesses b
+  ORDER BY b.created_at DESC;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.super_admin_get_merchants_directory() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.super_admin_get_merchants_directory() TO authenticated;

@@ -6,6 +6,7 @@ export interface LandingTranslation {
     forBusiness: string;
     pricing: string;
     dailySms: string;
+    guide: string;
     signIn: string;
     getStarted: string;
     seeDemo: string;
@@ -129,6 +130,7 @@ export const landingTranslations: Record<Lang, LandingTranslation> = {
       forBusiness: "For Business",
       pricing: "Pricing",
       dailySms: "Daily SMS",
+      guide: "User Guide",
       signIn: "Sign in",
       getStarted: "Get Started",
       seeDemo: "See Demo",
@@ -383,6 +385,7 @@ export const landingTranslations: Record<Lang, LandingTranslation> = {
       forBusiness: "Kwa Biashara",
       pricing: "Vifurushi",
       dailySms: "SMS ya Siku",
+      guide: "Mwongozo",
       signIn: "Ingia",
       getStarted: "Anza Sasa",
       seeDemo: "Tazama Demo",

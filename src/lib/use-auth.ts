@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .eq("user_id", sessionUser.id),
           supabase
             .from("profiles")
-            .select("branch_id, business_id")
+            .select("branch_id, business_id, phone, full_name")
             .eq("id", sessionUser.id)
             .single()
         ]);
@@ -92,7 +92,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ]);
           
           if (mounted) {
-            if (bData) setBusiness(bData);
+            if (bData) {
+              const metaPhone = (sessionUser.user_metadata?.phone || (profileRes.data as any)?.phone || "").trim();
+              if (!bData.phone && metaPhone && (!bData.email || bData.email.toLowerCase() === sessionUser.email?.toLowerCase())) {
+                bData.phone = metaPhone;
+                const bizTable = supabase.from("businesses") as any;
+                bizTable.update?.({ phone: metaPhone })?.eq?.("id", bData.id)?.then?.();
+              }
+              setBusiness(bData);
+            }
             if (branchesData) setAvailableBranches(branchesData);
           }
         }

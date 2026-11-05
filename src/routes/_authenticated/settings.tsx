@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const t = useT();
-  const { user, isAdmin } = useAuth();
+  const { user, business, isAdmin } = useAuth();
   
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -49,6 +49,16 @@ function SettingsPage() {
       }
       const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
       if (error) throw error;
+      if (isAdmin && business?.id) {
+        await supabase
+          .from("businesses")
+          .update({
+            phone: phone || null,
+            business_name: businessName || business.business_name,
+            owner_name: fullName || business.owner_name,
+          })
+          .eq("id", business.id);
+      }
       toast.success("Settings saved successfully");
     } catch (err: unknown) {
       toast.error((err as Error).message);

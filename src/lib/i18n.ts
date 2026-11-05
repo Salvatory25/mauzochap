@@ -38,6 +38,7 @@ export const dict = {
   inventory: { en: "Inventory", sw: "Ghala/Stoo" },
   users: { en: "Users", sw: "Watumiaji" },
   settings: { en: "Settings", sw: "Mipangilio" },
+  guide: { en: "User Guide", sw: "Mwongozo" },
   reports: { en: "Reports", sw: "Ripoti" },
   expenses: { en: "Expenses", sw: "Matumizi" },
   signIn: { en: "Sign in", sw: "Ingia" },

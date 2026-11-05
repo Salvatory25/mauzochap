@@ -18,6 +18,7 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ElectronicsRouteImport } from './routes/electronics'
 import { Route as FashionRouteImport } from './routes/fashion'
 import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as HardwareRouteImport } from './routes/hardware'
 import { Route as InventoryManagementSystemRouteImport } from './routes/inventory-management-system'
 import { Route as MauzoRouteImport } from './routes/mauzo'
@@ -35,6 +36,7 @@ import { Route as WholesaleRouteImport } from './routes/wholesale'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
+import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
 import { Route as AuthenticatedLocationsRouteImport } from './routes/_authenticated/locations'
@@ -95,6 +97,11 @@ const FashionRoute = FashionRouteImport.update({
 const FeaturesRoute = FeaturesRouteImport.update({
   id: '/features',
   path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HardwareRoute = HardwareRouteImport.update({
@@ -181,6 +188,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
   id: '/expenses',
   path: '/expenses',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedInventoryRoute = AuthenticatedInventoryRouteImport.update({
@@ -279,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/electronics': typeof ElectronicsRoute
   '/fashion': typeof FashionRoute
   '/features': typeof FeaturesRoute
+  '/guide': typeof GuideRoute
   '/hardware': typeof HardwareRoute
   '/inventory-management-system': typeof InventoryManagementSystemRoute
   '/mauzo': typeof MauzoRoute
@@ -296,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/invoices': typeof AuthenticatedInvoicesRoute
   '/locations': typeof AuthenticatedLocationsRoute
@@ -323,6 +337,7 @@ export interface FileRoutesByTo {
   '/electronics': typeof ElectronicsRoute
   '/fashion': typeof FashionRoute
   '/features': typeof FeaturesRoute
+  '/guide': typeof GuideRoute
   '/hardware': typeof HardwareRoute
   '/inventory-management-system': typeof InventoryManagementSystemRoute
   '/mauzo': typeof MauzoRoute
@@ -340,6 +355,7 @@ export interface FileRoutesByTo {
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
+  '/help': typeof AuthenticatedHelpRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/invoices': typeof AuthenticatedInvoicesRoute
   '/locations': typeof AuthenticatedLocationsRoute
@@ -369,6 +385,7 @@ export interface FileRoutesById {
   '/electronics': typeof ElectronicsRoute
   '/fashion': typeof FashionRoute
   '/features': typeof FeaturesRoute
+  '/guide': typeof GuideRoute
   '/hardware': typeof HardwareRoute
   '/inventory-management-system': typeof InventoryManagementSystemRoute
   '/mauzo': typeof MauzoRoute
@@ -386,6 +403,7 @@ export interface FileRoutesById {
   '/_authenticated/customers': typeof AuthenticatedCustomersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
+  '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
   '/_authenticated/invoices': typeof AuthenticatedInvoicesRoute
   '/_authenticated/locations': typeof AuthenticatedLocationsRoute
@@ -415,6 +433,7 @@ export interface FileRouteTypes {
     | '/electronics'
     | '/fashion'
     | '/features'
+    | '/guide'
     | '/hardware'
     | '/inventory-management-system'
     | '/mauzo'
@@ -432,6 +451,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/expenses'
+    | '/help'
     | '/inventory'
     | '/invoices'
     | '/locations'
@@ -459,6 +479,7 @@ export interface FileRouteTypes {
     | '/electronics'
     | '/fashion'
     | '/features'
+    | '/guide'
     | '/hardware'
     | '/inventory-management-system'
     | '/mauzo'
@@ -476,6 +497,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/expenses'
+    | '/help'
     | '/inventory'
     | '/invoices'
     | '/locations'
@@ -504,6 +526,7 @@ export interface FileRouteTypes {
     | '/electronics'
     | '/fashion'
     | '/features'
+    | '/guide'
     | '/hardware'
     | '/inventory-management-system'
     | '/mauzo'
@@ -521,6 +544,7 @@ export interface FileRouteTypes {
     | '/_authenticated/customers'
     | '/_authenticated/dashboard'
     | '/_authenticated/expenses'
+    | '/_authenticated/help'
     | '/_authenticated/inventory'
     | '/_authenticated/invoices'
     | '/_authenticated/locations'
@@ -550,6 +574,7 @@ export interface RootRouteChildren {
   ElectronicsRoute: typeof ElectronicsRoute
   FashionRoute: typeof FashionRoute
   FeaturesRoute: typeof FeaturesRoute
+  GuideRoute: typeof GuideRoute
   HardwareRoute: typeof HardwareRoute
   InventoryManagementSystemRoute: typeof InventoryManagementSystemRoute
   MauzoRoute: typeof MauzoRoute
@@ -632,6 +657,13 @@ declare module '@tanstack/react-router' {
       path: '/features'
       fullPath: '/features'
       preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hardware': {
@@ -751,6 +783,13 @@ declare module '@tanstack/react-router' {
       path: '/expenses'
       fullPath: '/expenses'
       preLoaderRoute: typeof AuthenticatedExpensesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/help': {
+      id: '/_authenticated/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AuthenticatedHelpRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/inventory': {
@@ -879,6 +918,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
+  AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
   AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRoute
   AuthenticatedLocationsRoute: typeof AuthenticatedLocationsRoute
@@ -899,6 +939,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
+  AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
   AuthenticatedInvoicesRoute: AuthenticatedInvoicesRoute,
   AuthenticatedLocationsRoute: AuthenticatedLocationsRoute,
@@ -928,6 +969,7 @@ const rootRouteChildren: RootRouteChildren = {
   ElectronicsRoute: ElectronicsRoute,
   FashionRoute: FashionRoute,
   FeaturesRoute: FeaturesRoute,
+  GuideRoute: GuideRoute,
   HardwareRoute: HardwareRoute,
   InventoryManagementSystemRoute: InventoryManagementSystemRoute,
   MauzoRoute: MauzoRoute,

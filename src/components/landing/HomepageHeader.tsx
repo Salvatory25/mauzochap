@@ -84,6 +84,12 @@ export function HomepageHeader({
           >
             Blog
           </Link>
+          <Link
+            to="/guide"
+            className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600"
+          >
+            {t.nav.guide}
+          </Link>
           <a
             href="/#daily-sms"
             className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600 text-violet-700 font-extrabold"
@@ -194,7 +200,13 @@ export function HomepageHeader({
               onClick={closeMenu}
               className="py-2 px-3 rounded-lg hover:bg-purple-50 hover:text-violet-600"
             >
-              Blog & Miongozo
+              Blog
+          </Link>
+          <Link
+            to="/guide"
+            className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600"
+          >
+            {t.nav.guide}
             </Link>
             <a
               href="/#daily-sms"

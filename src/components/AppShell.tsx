@@ -26,6 +26,7 @@ import {
   Clock,
   Sparkles,
   MessageSquare,
+  BookOpen,
   X,
 } from "lucide-react";
 import {
@@ -371,6 +372,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const nav = isSuperAdmin ? [
     { to: "/super-admin", icon: ShieldAlert, label: "Super Admin" },
     { to: "/sms", icon: MessageSquare, label: "SMS & Ujumbe" },
+    { to: "/help", icon: BookOpen, label: t("guide") },
     { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
   ] : [
     { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
@@ -390,6 +392,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       { to: "/locations", icon: MapPin, label: "Locations" },
     ] : []),
     { to: "/tools", icon: Sparkles, label: "Tools" },
+    { to: "/help", icon: BookOpen, label: t("guide") },
     { to: "/settings", icon: Settings, label: t("settings") },
   ];
 
