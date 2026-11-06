@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -66,6 +66,31 @@ function SuperAdminDashboard() {
     ...eb,
     phone: eb.effectivePhone || rawBusinesses[idx]?.phone || "",
   }));
+
+  const autoSyncedIds = useRef<Set<string>>(new Set());
+
+  // Automatically backfill recovered phone numbers into businesses table in Supabase
+  useEffect(() => {
+    if (!isSuperAdmin || businesses.length === 0) return;
+
+    const recoverable = businesses.filter(
+      (b) =>
+        b.phone &&
+        !rawBusinesses.find((rb) => rb.id === b.id)?.phone &&
+        !autoSyncedIds.current.has(b.id),
+    );
+
+    if (recoverable.length === 0) return;
+    recoverable.forEach((b) => autoSyncedIds.current.add(b.id));
+
+    Promise.all(
+      recoverable.map((b) =>
+        supabase.from("businesses").update({ phone: b.phone }).eq("id", b.id),
+      ),
+    ).then(() => {
+      qc.invalidateQueries({ queryKey: ["super-admin-businesses"] });
+    });
+  }, [isSuperAdmin, businesses, rawBusinesses, qc]);
 
   if (!isSuperAdmin) {
     return <div className="p-8 text-center text-muted-foreground">Unauthorized. Super Admin access required.</div>;

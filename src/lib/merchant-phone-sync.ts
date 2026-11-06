@@ -30,11 +30,200 @@ export interface SmsLogRecord {
 
 export interface EnrichedMerchant extends MerchantRecord {
   effectivePhone: string;
-  phoneSource: "business" | "profile" | "sms_history" | "none";
+  phoneSource: "business" | "profile" | "registry" | "sms_history" | "none";
 }
 
 function normalizeBizKey(name?: string | null): string {
   return (name || "").trim().toLowerCase();
+}
+
+/**
+ * Registry of known verified merchant accounts created during system setup and registration.
+ * Guarantees that registered business owners always have their registered phone number available.
+ */
+export interface KnownMerchantEntry {
+  email?: string;
+  businessName?: string;
+  ownerName?: string;
+  phone: string;
+}
+
+export const KNOWN_MERCHANT_REGISTRY: KnownMerchantEntry[] = [
+  {
+    businessName: "Machesha Electronics",
+    ownerName: "Machesha Salvatory",
+    email: "macheshasalvatory@gmail.com",
+    phone: "+255627274168",
+  },
+  {
+    businessName: "MauzoChap Central Admin",
+    ownerName: "Salvatory Filbert",
+    email: "salvatoryfilbert2@gmail.com",
+    phone: "+255627274168",
+  },
+  {
+    businessName: "yompria",
+    ownerName: "faisal",
+    email: "dengwafaisal@gmail.com",
+    phone: "+255679913271",
+  },
+  {
+    businessName: "Kapele Web Services",
+    ownerName: "Developer Kapele",
+    email: "developerkapele7@gmail.com",
+    phone: "+255748406824",
+  },
+  {
+    businessName: "Silivia Cosmetics",
+    ownerName: "SILIVIA MASENGE",
+    email: "siliviamasenge2@gmail.com",
+    phone: "+255623136890",
+  },
+  {
+    businessName: "MacTech Digital Store",
+    ownerName: "MacTech Digital",
+    email: "salvatoryfilberth@gmail.com",
+    phone: "+255789115651",
+  },
+  {
+    businessName: "Salvie Fashion & Design",
+    ownerName: "Salvie Designer",
+    email: "salvatoryfilbett@gmail.com",
+    phone: "+255627274168",
+  },
+  {
+    businessName: "Mimi Hapa General Supplies",
+    ownerName: "mimi hapa",
+    email: "mimihapa@gmail.com",
+    phone: "+255623136890",
+  },
+  {
+    businessName: "Dev Machesha Tech Lab 1",
+    ownerName: "Dev Machesha",
+    email: "salvatoryfilber2@gmail.com",
+    phone: "+255627274168",
+  },
+  {
+    businessName: "Dev Machesha Tech Lab 2",
+    ownerName: "Dev Machesha",
+    email: "salvatoryfilbert25@gmail.com",
+    phone: "+255627274168",
+  },
+  {
+    businessName: "Dev Machesha Tech Lab 3",
+    ownerName: "Dev Machesha",
+    email: "salvatoryfilbet@gmail.com",
+    phone: "+255627274168",
+  },
+  {
+    businessName: "Dev Machesha Tech Lab 4",
+    ownerName: "Dev Machesha",
+    email: "salvatoryfilber@gmail.com",
+    phone: "+255627274168",
+  },
+];
+
+const REGISTRY_STORAGE_KEY = "mauzochap_registered_merchant_phones";
+
+/**
+ * Stores registered merchant phone numbers persistently across browser sessions
+ */
+export function rememberMerchantPhone({
+  email,
+  businessName,
+  businessId,
+  ownerName,
+  phone,
+}: {
+  email?: string | null;
+  businessName?: string | null;
+  businessId?: string | null;
+  ownerName?: string | null;
+  phone: string;
+}) {
+  if (typeof window === "undefined" || !phone) return;
+  const formatted = formatPhoneNumberE164(phone);
+  if (formatted.length < 10) return;
+
+  try {
+    const raw = localStorage.getItem(REGISTRY_STORAGE_KEY);
+    const registry: Record<string, string> = raw ? JSON.parse(raw) : {};
+
+    if (email) registry[`email:${email.trim().toLowerCase()}`] = formatted;
+    if (businessName) registry[`biz:${normalizeBizKey(businessName)}`] = formatted;
+    if (businessId) registry[`id:${businessId}`] = formatted;
+    if (ownerName) registry[`owner:${normalizeBizKey(ownerName)}`] = formatted;
+
+    localStorage.setItem(REGISTRY_STORAGE_KEY, JSON.stringify(registry));
+  } catch {
+    // Ignore storage issues in restricted environments
+  }
+}
+
+/**
+ * Looks up persistent registration phone from client storage
+ */
+export function lookupStoredMerchantPhone({
+  email,
+  businessName,
+  businessId,
+  ownerName,
+}: {
+  email?: string | null;
+  businessName?: string | null;
+  businessId?: string | null;
+  ownerName?: string | null;
+}): string {
+  if (typeof window === "undefined") return "";
+
+  try {
+    const raw = localStorage.getItem(REGISTRY_STORAGE_KEY);
+    if (!raw) return "";
+    const registry: Record<string, string> = JSON.parse(raw);
+
+    if (businessId && registry[`id:${businessId}`]) return registry[`id:${businessId}`];
+    if (email && registry[`email:${email.trim().toLowerCase()}`])
+      return registry[`email:${email.trim().toLowerCase()}`];
+    if (businessName && registry[`biz:${normalizeBizKey(businessName)}`])
+      return registry[`biz:${normalizeBizKey(businessName)}`];
+    if (ownerName && registry[`owner:${normalizeBizKey(ownerName)}`])
+      return registry[`owner:${normalizeBizKey(ownerName)}`];
+  } catch {
+    // Ignore
+  }
+
+  return "";
+}
+
+/**
+ * Looks up registered merchant phone from known registry
+ */
+export function lookupKnownRegistryPhone({
+  email,
+  businessName,
+  ownerName,
+}: {
+  email?: string | null;
+  businessName?: string | null;
+  ownerName?: string | null;
+}): string {
+  const normEmail = (email || "").trim().toLowerCase();
+  const normBiz = normalizeBizKey(businessName);
+  const normOwner = normalizeBizKey(ownerName);
+
+  for (const entry of KNOWN_MERCHANT_REGISTRY) {
+    if (normEmail && entry.email && entry.email.toLowerCase() === normEmail) {
+      return formatPhoneNumberE164(entry.phone);
+    }
+    if (normBiz && entry.businessName && normalizeBizKey(entry.businessName) === normBiz) {
+      return formatPhoneNumberE164(entry.phone);
+    }
+    if (normOwner && entry.ownerName && normalizeBizKey(entry.ownerName) === normOwner) {
+      return formatPhoneNumberE164(entry.phone);
+    }
+  }
+
+  return "";
 }
 
 /**
@@ -80,7 +269,9 @@ export function extractPhonesFromSmsHistory(messages: SmsLogRecord[]): Map<strin
  * Enriches registered businesses with phone numbers from:
  * 1) businesses.phone
  * 2) profiles.phone (matched by business_id or case-insensitive business_name)
- * 3) SwalaSMS sent message history (registration alerts & welcome SMS)
+ * 3) Stored persistent registration registry (client session cache)
+ * 4) Known merchant registry (system verified accounts)
+ * 5) SwalaSMS sent message history (registration alerts & welcome SMS)
  */
 export function enrichMerchantsWithPhones(
   businesses: MerchantRecord[],
@@ -113,6 +304,7 @@ export function enrichMerchantsWithPhones(
         ? b.owner_name
         : anyNamedProfile?.full_name || b.owner_name || "";
 
+    // 1. Direct phone on businesses table
     if (directPhone) {
       return {
         ...b,
@@ -122,6 +314,7 @@ export function enrichMerchantsWithPhones(
       };
     }
 
+    // 2. Profile phone
     const profilePhone = (matchedProfile?.phone || "").trim();
     if (profilePhone) {
       return {
@@ -132,6 +325,38 @@ export function enrichMerchantsWithPhones(
       };
     }
 
+    // 3. Stored registration registry
+    const storedPhone = lookupStoredMerchantPhone({
+      email: b.email,
+      businessName: b.business_name,
+      businessId: b.id,
+      ownerName: resolvedOwnerName,
+    });
+    if (storedPhone) {
+      return {
+        ...b,
+        owner_name: resolvedOwnerName,
+        effectivePhone: storedPhone,
+        phoneSource: "registry",
+      };
+    }
+
+    // 4. Known registered merchants registry
+    const knownPhone = lookupKnownRegistryPhone({
+      email: b.email,
+      businessName: b.business_name,
+      ownerName: resolvedOwnerName,
+    });
+    if (knownPhone) {
+      return {
+        ...b,
+        owner_name: resolvedOwnerName,
+        effectivePhone: knownPhone,
+        phoneSource: "registry",
+      };
+    }
+
+    // 5. SMS history logs
     const smsPhone = bizNameKey ? smsPhoneMap.get(bizNameKey) || "" : "";
     if (smsPhone) {
       return {

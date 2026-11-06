@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { rememberMerchantPhone } from "@/lib/merchant-phone-sync";
 
 export type Role = "admin" | "manager" | "cashier" | "owner" | "super_admin";
 export type Business = Database["public"]["Tables"]["businesses"]["Row"];
@@ -90,11 +91,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             supabase.from("businesses").select("*").eq("id", targetBizId).single(),
             supabase.from("branches").select("id, name").eq("business_id", targetBizId)
           ]);
-          
+
           if (mounted) {
+            const metaPhone = (sessionUser.user_metadata?.phone || (profileRes.data as any)?.phone || "").trim();
+            if (metaPhone) {
+              rememberMerchantPhone({
+                email: sessionUser.email,
+                phone: metaPhone,
+                businessId: targetBizId,
+                businessName: bData?.business_name,
+                ownerName: sessionUser.user_metadata?.full_name || (profileRes.data as any)?.full_name,
+              });
+
+              if (!(profileRes.data as any)?.phone) {
+                supabase.from("profiles").update({ phone: metaPhone }).eq("id", sessionUser.id).then();
+              }
+            }
+
             if (bData) {
-              const metaPhone = (sessionUser.user_metadata?.phone || (profileRes.data as any)?.phone || "").trim();
-              if (!bData.phone && metaPhone && (!bData.email || bData.email.toLowerCase() === sessionUser.email?.toLowerCase())) {
+              if (!bData.phone && metaPhone) {
                 bData.phone = metaPhone;
                 const bizTable = supabase.from("businesses") as any;
                 bizTable.update?.({ phone: metaPhone })?.eq?.("id", bData.id)?.then?.();

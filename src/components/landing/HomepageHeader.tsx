@@ -33,8 +33,8 @@ export function HomepageHeader({
   return (
     <header
       className={`sticky top-0 z-40 transition-all duration-200 ${scrolled
-          ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-purple-100 py-3"
-          : "bg-white/90 backdrop-blur-sm border-b border-purple-50 py-4"
+        ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-purple-100 py-3"
+        : "bg-white/90 backdrop-blur-sm border-b border-purple-50 py-4"
         }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
@@ -105,8 +105,8 @@ export function HomepageHeader({
             <button
               onClick={() => lang !== "en" && onToggleLang()}
               className={`px-2 py-1 rounded-md transition-colors cursor-pointer ${lang === "en"
-                  ? "bg-violet-600 text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+                ? "bg-violet-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
                 }`}
             >
               EN
@@ -115,8 +115,8 @@ export function HomepageHeader({
             <button
               onClick={() => lang !== "sw" && onToggleLang()}
               className={`px-2 py-1 rounded-md transition-colors cursor-pointer ${lang === "sw"
-                  ? "bg-violet-600 text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+                ? "bg-violet-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
                 }`}
             >
               SW
@@ -201,12 +201,12 @@ export function HomepageHeader({
               className="py-2 px-3 rounded-lg hover:bg-purple-50 hover:text-violet-600"
             >
               Blog
-          </Link>
-          <Link
-            to="/guide"
-            className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600"
-          >
-            {t.nav.guide}
+            </Link>
+            <Link
+              to="/guide"
+              className="hover:text-violet-600 transition-colors focus:outline-none focus-visible:text-violet-600"
+            >
+              {t.nav.guide}
             </Link>
             <a
               href="/#daily-sms"

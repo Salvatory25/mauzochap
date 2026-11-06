@@ -220,7 +220,9 @@ function SMSManagementPage() {
     const recoverable = enrichedMerchants.filter(
       (m) =>
         m.effectivePhone &&
-        (m.phoneSource === "profile" || m.phoneSource === "sms_history") &&
+        (m.phoneSource === "profile" ||
+          m.phoneSource === "registry" ||
+          m.phoneSource === "sms_history") &&
         !autoSyncedIds.current.has(m.id),
     );
 

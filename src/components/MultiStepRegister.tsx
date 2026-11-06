@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sendWelcomeSMS, sendStaffWelcomeSMS, notifySuperAdminNewRegistration } from "@/lib/sms-service";
+import { rememberMerchantPhone } from "@/lib/merchant-phone-sync";
 
 interface MultiStepRegisterProps {
   onSuccess: () => void;
@@ -294,15 +295,28 @@ export function MultiStepRegister({
               user_id: data.user.id,
               role: (inviteRole || "cashier") as any,
             });
-          } else if (data.session && email) {
-            await supabase
+          }
+
+          // Always remember the phone number locally and attempt business sync
+          if (phone) {
+            rememberMerchantPhone({
+              email,
+              businessName: inviteId ? inviteBusinessName || businessName : businessName,
+              ownerName: ownerName || fullName,
+              phone,
+              businessId: inviteId || undefined,
+            });
+
+            // Resilient update on businesses table
+            supabase
               .from("businesses")
               .update({
-                phone: phone || null,
+                phone: phone,
                 owner_name: ownerName || fullName,
                 business_name: businessName,
               })
-              .eq("email", email);
+              .or(`email.eq.${email},email.eq.${email.toLowerCase()}`)
+              .then();
           }
 
           // Send appropriate welcome SMS via SwalaSMS
