@@ -160,3 +160,4 @@ CREATE POLICY "admins manage roles" ON public.user_roles FOR ALL TO authenticate
 
 -- 4. Notify PostgREST to reload schema
 NOTIFY pgrst, 'reload schema';
+
