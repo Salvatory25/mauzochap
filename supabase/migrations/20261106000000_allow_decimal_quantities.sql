@@ -100,9 +100,14 @@ BEGIN
   RETURN NEW;
 END; $$;
 
--- 3. Delete orphaned or test supplier records ('Yolanda') and suppliers without valid business association
-DELETE FROM public.suppliers WHERE LOWER(name) LIKE '%yolanda%';
-DELETE FROM public.suppliers WHERE business_id IS NULL;
+-- 3. Delete orphaned or test supplier records ('Yolanda') and suppliers without valid business association (if table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'suppliers') THEN
+    DELETE FROM public.suppliers WHERE LOWER(name) LIKE '%yolanda%';
+    DELETE FROM public.suppliers WHERE business_id IS NULL;
+  END IF;
+END $$;
 
 -- 4. Ensure suppliers table enforces business_id tenant isolation
 DO $$

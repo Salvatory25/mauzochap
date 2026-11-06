@@ -126,12 +126,17 @@ DROP POLICY IF EXISTS "auth insert sales" ON public.sales;
 CREATE POLICY "auth insert sales" ON public.sales FOR INSERT TO authenticated WITH CHECK (true);
 DROP POLICY IF EXISTS "auth update sales" ON public.sales;
 CREATE POLICY "auth update sales" ON public.sales FOR UPDATE TO authenticated USING (true);
+DROP POLICY IF EXISTS "auth delete sales" ON public.sales;
+CREATE POLICY "auth delete sales" ON public.sales FOR DELETE TO authenticated USING (true);
 
 DROP POLICY IF EXISTS "auth read sale_items" ON public.sale_items;
 CREATE POLICY "auth read sale_items" ON public.sale_items FOR SELECT TO authenticated USING (true);
 DROP POLICY IF EXISTS "auth insert sale_items" ON public.sale_items;
 CREATE POLICY "auth insert sale_items" ON public.sale_items FOR INSERT TO authenticated WITH CHECK (true);
-DROP POLICY IF EXISTS "auth update sale_items" ON public.sale_items FOR UPDATE TO authenticated USING (true);
+DROP POLICY IF EXISTS "auth update sale_items" ON public.sale_items;
+CREATE POLICY "auth update sale_items" ON public.sale_items FOR UPDATE TO authenticated USING (true);
+DROP POLICY IF EXISTS "auth delete sale_items" ON public.sale_items;
+CREATE POLICY "auth delete sale_items" ON public.sale_items FOR DELETE TO authenticated USING (true);
 
 DROP POLICY IF EXISTS "auth read products" ON public.products;
 CREATE POLICY "auth read products" ON public.products FOR SELECT TO authenticated USING (true);
@@ -139,6 +144,8 @@ DROP POLICY IF EXISTS "auth insert products" ON public.products;
 CREATE POLICY "auth insert products" ON public.products FOR INSERT TO authenticated WITH CHECK (true);
 DROP POLICY IF EXISTS "auth update products" ON public.products;
 CREATE POLICY "auth update products" ON public.products FOR UPDATE TO authenticated USING (true);
+DROP POLICY IF EXISTS "auth delete products" ON public.products;
+CREATE POLICY "auth delete products" ON public.products FOR DELETE TO authenticated USING (true);
 
 DROP POLICY IF EXISTS "auth read invoices" ON public.invoices;
 CREATE POLICY "auth read invoices" ON public.invoices FOR SELECT TO authenticated USING (true);
@@ -146,12 +153,17 @@ DROP POLICY IF EXISTS "auth insert invoices" ON public.invoices;
 CREATE POLICY "auth insert invoices" ON public.invoices FOR INSERT TO authenticated WITH CHECK (true);
 DROP POLICY IF EXISTS "auth update invoices" ON public.invoices;
 CREATE POLICY "auth update invoices" ON public.invoices FOR UPDATE TO authenticated USING (true);
+DROP POLICY IF EXISTS "auth delete invoices" ON public.invoices;
+CREATE POLICY "auth delete invoices" ON public.invoices FOR DELETE TO authenticated USING (true);
 
 DROP POLICY IF EXISTS "auth read invoice_items" ON public.invoice_items;
 CREATE POLICY "auth read invoice_items" ON public.invoice_items FOR SELECT TO authenticated USING (true);
 DROP POLICY IF EXISTS "auth insert invoice_items" ON public.invoice_items;
 CREATE POLICY "auth insert invoice_items" ON public.invoice_items FOR INSERT TO authenticated WITH CHECK (true);
-DROP POLICY IF EXISTS "auth update invoice_items" ON public.invoice_items FOR UPDATE TO authenticated USING (true);
+DROP POLICY IF EXISTS "auth update invoice_items" ON public.invoice_items;
+CREATE POLICY "auth update invoice_items" ON public.invoice_items FOR UPDATE TO authenticated USING (true);
+DROP POLICY IF EXISTS "auth delete invoice_items" ON public.invoice_items;
+CREATE POLICY "auth delete invoice_items" ON public.invoice_items FOR DELETE TO authenticated USING (true);
 
 GRANT ALL ON public.sales TO authenticated, anon, service_role;
 GRANT ALL ON public.sale_items TO authenticated, anon, service_role;
