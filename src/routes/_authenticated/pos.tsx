@@ -300,15 +300,9 @@ function POSPage() {
       cancelSale();
       qc.invalidateQueries();
     } catch (err: unknown) {
-      const msg = (err as Error)?.message || "";
-      if (msg.includes("invalid input syntax for type integer") || msg.includes("type integer")) {
-        toast.error(
-          "Hitilafu ya Database: Safu ya 'quantity' inahitaji kubadilishwa kuwa NUMERIC kwenye Supabase SQL Editor ili kuruhusu vipimo vya desimali (1.5, 2.5).",
-          { duration: 8000 }
-        );
-      } else {
-        toast.error((err as Error).message);
-      }
+      console.error("[POS Sale Error]", err);
+      const msg = (err as any)?.message || (err as any)?.details || String(err);
+      toast.error(msg, { duration: 8000 });
     } finally {
       setSubmitting(false);
     }

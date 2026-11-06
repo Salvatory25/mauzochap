@@ -1,64 +1,20 @@
 -- ==============================================================================
--- MAUZOCHAP COMPLETE PRODUCTION HOTFIX MIGRATION (100% BULLETPROOF & SELF-HEALING)
+-- MAUZOCHAP COMPLETE PRODUCTION HOTFIX MIGRATION (DIRECT & VERIFIABLE)
 -- Run this in your Supabase Dashboard:
 -- https://supabase.com/dashboard/project/mnopesayeoklyymowmwc/sql/new
---
--- Safely resolves:
--- 1. "invalid input syntax for type integer: '2.5'" / "1.5" across POS, Sales, Invoices & Stock
--- 2. Removes test supplier 'Yolanda' & enforces tenant isolation (safely checking if table exists)
--- 3. Syncs and shows newly created staff members in the Users dashboard immediately
--- 4. Enables 2-step SMS OTP password reset flow (request & verify)
 -- ==============================================================================
 
--- ------------------------------------------------------------------------------
--- 1. CONVERT QUANTITY & STOCK COLUMNS TO NUMERIC(12,3) FOR FRACTIONAL SALES
--- ------------------------------------------------------------------------------
-DO $$
-BEGIN
-  -- sale_items.quantity
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'sale_items' AND column_name = 'quantity') THEN
-    EXECUTE 'ALTER TABLE public.sale_items ALTER COLUMN quantity TYPE NUMERIC(12,3)';
-  END IF;
+-- 1. DIRECT COLUMN CONVERSIONS TO NUMERIC(12,3) (FOR FRACTIONAL QUANTITIES LIKE 1.5, 2.5)
+ALTER TABLE public.sale_items ALTER COLUMN quantity TYPE NUMERIC(12,3);
+ALTER TABLE public.invoice_items ALTER COLUMN quantity TYPE NUMERIC(12,3);
+ALTER TABLE public.products ALTER COLUMN stock_quantity TYPE NUMERIC(12,3);
+ALTER TABLE IF EXISTS public.branch_inventory ALTER COLUMN stock_quantity TYPE NUMERIC(12,3);
+ALTER TABLE IF EXISTS public.stock_movements ALTER COLUMN quantity_change TYPE NUMERIC(12,3);
+ALTER TABLE IF EXISTS public.purchase_items ALTER COLUMN quantity TYPE NUMERIC(12,3);
+ALTER TABLE IF EXISTS public.stock_transfers ALTER COLUMN quantity TYPE NUMERIC(12,3);
+ALTER TABLE IF EXISTS public.product_batches ALTER COLUMN stock_quantity TYPE NUMERIC(12,3);
 
-  -- invoice_items.quantity
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'invoice_items' AND column_name = 'quantity') THEN
-    EXECUTE 'ALTER TABLE public.invoice_items ALTER COLUMN quantity TYPE NUMERIC(12,3)';
-  END IF;
-
-  -- products.stock_quantity
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'products' AND column_name = 'stock_quantity') THEN
-    EXECUTE 'ALTER TABLE public.products ALTER COLUMN stock_quantity TYPE NUMERIC(12,3)';
-  END IF;
-
-  -- branch_inventory.stock_quantity
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'branch_inventory' AND column_name = 'stock_quantity') THEN
-    EXECUTE 'ALTER TABLE public.branch_inventory ALTER COLUMN stock_quantity TYPE NUMERIC(12,3)';
-  END IF;
-
-  -- stock_movements.quantity_change
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'stock_movements' AND column_name = 'quantity_change') THEN
-    EXECUTE 'ALTER TABLE public.stock_movements ALTER COLUMN quantity_change TYPE NUMERIC(12,3)';
-  END IF;
-
-  -- purchase_items.quantity
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'purchase_items' AND column_name = 'quantity') THEN
-    EXECUTE 'ALTER TABLE public.purchase_items ALTER COLUMN quantity TYPE NUMERIC(12,3)';
-  END IF;
-
-  -- stock_transfers.quantity
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'stock_transfers' AND column_name = 'quantity') THEN
-    EXECUTE 'ALTER TABLE public.stock_transfers ALTER COLUMN quantity TYPE NUMERIC(12,3)';
-  END IF;
-
-  -- product_batches.stock_quantity
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'product_batches' AND column_name = 'stock_quantity') THEN
-    EXECUTE 'ALTER TABLE public.product_batches ALTER COLUMN stock_quantity TYPE NUMERIC(12,3)';
-  END IF;
-END $$;
-
--- ------------------------------------------------------------------------------
--- 2. UPDATE STOCK DECREMENT TRIGGER FUNCTIONS (USES TEXT & DYNAMIC EXECUTION)
--- ------------------------------------------------------------------------------
+-- 2. UPDATE STOCK DECREMENT TRIGGER FUNCTIONS
 CREATE OR REPLACE FUNCTION public.decrement_stock_on_sale()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
@@ -81,13 +37,13 @@ BEGIN
 
     -- Update branch stock if branch is known
     IF v_branch_id IS NOT NULL THEN
-      SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'branch_inventory') INTO v_has_branch_inv;
+      SELECT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'branch_inventory') INTO v_has_branch_inv;
       IF v_has_branch_inv THEN
         EXECUTE 'UPDATE public.branch_inventory SET stock_quantity = stock_quantity - $1 WHERE branch_id = $2 AND product_id = $3'
         USING NEW.quantity, v_branch_id, NEW.product_id;
       END IF;
 
-      SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'stock_movements') INTO v_has_stock_mov;
+      SELECT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'stock_movements') INTO v_has_stock_mov;
       IF v_has_stock_mov THEN
         EXECUTE 'INSERT INTO public.stock_movements (business_id, product_id, branch_id, movement_type, quantity_change, reference_id) VALUES ($1, $2, $3, ''sale'', -$4, $5)'
         USING COALESCE(NEW.business_id, v_biz_id), NEW.product_id, v_branch_id, NEW.quantity, NEW.sale_id;
@@ -97,6 +53,11 @@ BEGIN
   RETURN NEW;
 END; $$;
 
+DROP TRIGGER IF EXISTS trg_decrement_stock ON public.sale_items;
+CREATE TRIGGER trg_decrement_stock 
+AFTER INSERT ON public.sale_items
+FOR EACH ROW EXECUTE FUNCTION public.decrement_stock_on_sale();
+
 CREATE OR REPLACE FUNCTION public.process_completed_sale_stock()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
@@ -105,8 +66,8 @@ DECLARE
   v_has_stock_mov BOOLEAN;
 BEGIN
   IF NEW.status::TEXT = 'completed' AND (OLD.status::TEXT = 'pending' OR OLD.status::TEXT IS NULL) THEN
-    SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'branch_inventory') INTO v_has_branch_inv;
-    SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'stock_movements') INTO v_has_stock_mov;
+    SELECT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'branch_inventory') INTO v_has_branch_inv;
+    SELECT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'stock_movements') INTO v_has_stock_mov;
 
     FOR item IN SELECT * FROM public.sale_items WHERE sale_id = NEW.id
     LOOP
@@ -126,12 +87,10 @@ BEGIN
   RETURN NEW;
 END; $$;
 
--- ------------------------------------------------------------------------------
--- 3. REMOVE TEST SUPPLIER 'YOLANDA' & ENFORCE STRICT SUPPLIER TENANT ISOLATION (SAFE EXECUTION)
--- ------------------------------------------------------------------------------
+-- 3. REMOVE TEST SUPPLIERS & ENFORCE TENANT ISOLATION (IF TABLE EXISTS)
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'suppliers') THEN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'suppliers') THEN
     EXECUTE 'DELETE FROM public.suppliers WHERE LOWER(name) LIKE ''%yolanda%''';
     EXECUTE 'DELETE FROM public.suppliers WHERE business_id IS NULL';
     EXECUTE 'ALTER TABLE public.suppliers ENABLE ROW LEVEL SECURITY';
@@ -155,9 +114,7 @@ BEGIN
   END IF;
 END $$;
 
--- ------------------------------------------------------------------------------
--- 4. AUTO-SYNC STAFF ACCOUNTS & ROLES TO PROFILES (DYNAMIC TYPE-SAFE)
--- ------------------------------------------------------------------------------
+-- 4. AUTO-SYNC STAFF ACCOUNTS & ROLES TO PROFILES
 DO $$
 DECLARE
   v_role_type TEXT;
@@ -221,7 +178,7 @@ BEGIN
       AND (p.business_id IS NULL OR p.business_id <> (u.raw_user_meta_data->>'business_id')::UUID);
   END IF;
 
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_roles') THEN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user_roles') THEN
     SELECT udt_name INTO v_role_type 
     FROM information_schema.columns 
     WHERE table_schema = 'public' AND table_name = 'user_roles' AND column_name = 'role';
@@ -316,7 +273,7 @@ BEGIN
       AND (p.business_id IS NULL OR p.business_id <> _business_id);
   END IF;
 
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_roles') THEN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user_roles') THEN
     SELECT udt_name INTO v_role_type 
     FROM information_schema.columns 
     WHERE table_schema = 'public' AND table_name = 'user_roles' AND column_name = 'role';
@@ -344,9 +301,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.sync_business_staff(UUID) TO anon, authenticated, service_role;
 
--- ------------------------------------------------------------------------------
 -- 5. PASSWORD RESET VIA SMS OTP TABLE & FUNCTIONS
--- ------------------------------------------------------------------------------
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS public.otp_verifications (
@@ -363,7 +318,6 @@ CREATE TABLE IF NOT EXISTS public.otp_verifications (
 
 CREATE INDEX IF NOT EXISTS idx_otp_verifications_phone_code ON public.otp_verifications(phone, otp_code);
 CREATE INDEX IF NOT EXISTS idx_otp_verifications_email_code ON public.otp_verifications(email, otp_code);
-
 ALTER TABLE public.otp_verifications ENABLE ROW LEVEL SECURITY;
 
 CREATE OR REPLACE FUNCTION public.request_password_reset_otp(_identifier TEXT)
@@ -397,7 +351,7 @@ BEGIN
   WHERE LOWER(email) = LOWER(_identifier)
   LIMIT 1;
 
-  SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'businesses') INTO v_has_businesses;
+  SELECT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'businesses') INTO v_has_businesses;
 
   IF target_user_id IS NOT NULL THEN
     SELECT phone INTO target_phone FROM public.profiles WHERE id = target_user_id AND phone IS NOT NULL AND phone <> '' LIMIT 1;
@@ -526,7 +480,7 @@ BEGIN
     SELECT id INTO target_user_id FROM public.profiles WHERE phone = target_phone LIMIT 1;
   END IF;
 
-  SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'businesses') INTO v_has_businesses;
+  SELECT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'businesses') INTO v_has_businesses;
 
   IF target_user_id IS NULL AND target_phone IS NOT NULL AND target_phone <> '' AND v_has_businesses THEN
     EXECUTE 'SELECT u.id FROM auth.users u JOIN public.businesses b ON LOWER(u.email) = LOWER(b.email) WHERE b.phone = $1 LIMIT 1'
@@ -554,7 +508,10 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.verify_otp_and_reset_password(TEXT, TEXT, TEXT) TO anon, authenticated, service_role;
 
--- ------------------------------------------------------------------------------
--- 6. RELOAD SCHEMA CACHE
--- ------------------------------------------------------------------------------
+-- 6. RELOAD SCHEMA CACHE & VERIFY
 NOTIFY pgrst, 'reload schema';
+
+SELECT table_name, column_name, data_type 
+FROM information_schema.columns 
+WHERE table_name IN ('sale_items', 'invoice_items', 'products', 'branch_inventory', 'stock_movements')
+  AND column_name IN ('quantity', 'stock_quantity', 'quantity_change');
