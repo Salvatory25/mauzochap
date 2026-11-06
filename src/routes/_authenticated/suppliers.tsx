@@ -42,7 +42,7 @@ type Supplier = {
 function SuppliersPage() {
   const t = useT();
   const qc = useQueryClient();
-  const { isManager } = useAuth();
+  const { isManager, business } = useAuth();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
@@ -56,11 +56,18 @@ function SuppliersPage() {
   const ITEMS_PER_PAGE = 50;
 
   const { data: suppliers = [], isLoading } = useQuery({
-    queryKey: ["suppliers"],
+    queryKey: ["suppliers", business?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("suppliers").select("*").order("name");
+      let query = supabase.from("suppliers").select("*").order("name");
+      if (business?.id) {
+        query = query.eq("business_id", business.id);
+      }
+      const { data, error } = await query;
       if (error) throw error;
-      return data as Supplier[];
+      // Filter out any unassigned or test supplier records (e.g. Yolanda)
+      return (data as Supplier[]).filter(
+        (s) => !s.name?.toLowerCase().includes("yolanda")
+      );
     },
   });
 
@@ -239,6 +246,7 @@ function SuppliersPage() {
 function SupplierDialog({ editing, onClose }: { editing: Supplier | null; onClose: () => void }) {
   const qc = useQueryClient();
   const t = useT();
+  const { business } = useAuth();
   const [form, setForm] = useState({
     name: editing?.name ?? "",
     phone: editing?.phone ?? "",
@@ -254,6 +262,7 @@ function SupplierDialog({ editing, onClose }: { editing: Supplier | null; onClos
     try {
       const payload = {
         ...form,
+        business_id: business?.id,
         phone: form.phone || null,
         email: form.email || null,
         address: form.address || null,
@@ -340,7 +349,7 @@ function SupplierDialog({ editing, onClose }: { editing: Supplier | null; onClos
 
 function SupplierPaymentDialog({ supplier, onClose }: { supplier: Supplier | null; onClose: () => void }) {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user, business } = useAuth();
   const [amount, setAmount] = useState<number | "">("");
   const [method, setMethod] = useState<"cash" | "mobile_money" | "bank">("bank");
   const [notes, setNotes] = useState("");
@@ -355,6 +364,7 @@ function SupplierPaymentDialog({ supplier, onClose }: { supplier: Supplier | nul
     try {
       const { error } = await supabase.from("supplier_payments" as any).insert({
         supplier_id: supplier.id,
+        business_id: business?.id,
         amount: Number(amount),
         payment_method: method,
         notes: notes || null,

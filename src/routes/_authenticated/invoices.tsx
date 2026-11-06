@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useT, formatTZS, formatDate } from "@/lib/i18n";
@@ -39,11 +39,12 @@ import {
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import { CreateInvoiceDialog } from "@/components/invoices/CreateInvoiceDialog";
 import { useBusinessLogo } from "@/lib/business-logo";
 import { LogoUploader } from "@/components/LogoUploader";
+import { PdfViewerDialog } from "@/components/common/PdfViewerDialog";
+import { generateInvoicePdfDoc, buildOfficialWhatsAppSummary } from "@/lib/pdf-generator";
+import { generateQrDataUrl } from "@/lib/qr-generator";
 
 export const Route = createFileRoute("/_authenticated/invoices")({
   component: InvoicesPage,
@@ -108,6 +109,10 @@ function InvoicesPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [printFormat, setPrintFormat] = useState<"a4" | "thermal">("a4");
+  
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [viewingPdfBlob, setViewingPdfBlob] = useState<Blob | null>(null);
+  const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
@@ -238,161 +243,126 @@ function InvoicesPage() {
     return "All Time";
   };
 
-  // PDF Export
-  const downloadPDF = (invoice: Invoice) => {
+  // PDF Generation Helper
+  const getInvoicePdfDoc = async (invoice: Invoice) => {
+    return await generateInvoicePdfDoc({
+      invoice_number: invoice.invoice_number,
+      created_at: invoice.created_at,
+      business_name: business?.business_name,
+      business_phone: business?.phone,
+      business_email: business?.email,
+      business_location: (business as any)?.address || undefined,
+      logo: logo,
+      customer_name: invoice.customers?.name,
+      customer_phone: invoice.customers?.phone,
+      customer_email: invoice.customers?.email,
+      customer_address: invoice.customers?.address,
+      cashier_name: invoice.profiles?.full_name,
+      payment_method: invoice.payment_method,
+      payment_status: invoice.payment_status,
+      subtotal: invoice.subtotal,
+      discount: invoice.discount,
+      tax: invoice.tax,
+      total_amount: invoice.total_amount,
+      amount_paid: invoice.amount_paid,
+      balance: invoice.balance,
+      items: (invoice.invoice_items || []).map((item) => ({
+        name: item.products?.name || "Bidhaa / Huduma",
+        sku: item.products?.sku,
+        unit: item.products?.unit,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        subtotal: item.subtotal,
+      })),
+    });
+  };
+
+  const openInvoicePdfViewer = async (invoice: Invoice) => {
     try {
-      const doc = new jsPDF("p", "mm", "a4");
-      const businessName = business?.business_name || "MauzoChap System";
-      
-      // Header Banner
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, doc.internal.pageSize.getWidth(), 38, "F");
-
-      doc.setFontSize(20);
-      doc.setTextColor(255, 255, 255);
-
-      if (logo && logo.startsWith("data:image/")) {
-        try {
-          doc.addImage(logo, "PNG", 14, 6, 22, 22);
-          doc.text(businessName.toUpperCase(), 40, 18);
-          doc.setFontSize(9);
-          doc.setTextColor(156, 163, 175);
-          doc.text("Official Tax Invoice", 40, 26);
-        } catch {
-          doc.text(businessName.toUpperCase(), 14, 18);
-          doc.setFontSize(9);
-          doc.setTextColor(156, 163, 175);
-          doc.text("Professional Invoice Management", 14, 26);
-        }
-      } else {
-        doc.text(businessName.toUpperCase(), 14, 18);
-        doc.setFontSize(9);
-        doc.setTextColor(156, 163, 175);
-        doc.text("Professional Invoice Management", 14, 26);
-      }
-
-      doc.setFontSize(18);
-      doc.setTextColor(255, 255, 255);
-      doc.text("INVOICE", doc.internal.pageSize.getWidth() - 50, 18);
-
-      doc.setFontSize(10);
-      doc.setTextColor(255, 255, 255);
-      doc.text(`#${invoice.invoice_number}`, doc.internal.pageSize.getWidth() - 50, 26);
-
-      // Business & Invoice Info
-      doc.setTextColor(15, 23, 42);
-      doc.setFontSize(10);
-      doc.text("Date:", 14, 48);
-      doc.text(formatDate(invoice.created_at), 35, 48);
-
-      doc.text("Cashier:", 14, 54);
-      doc.text(invoice.profiles?.full_name || "System", 35, 54);
-
-      doc.text("Billed To:", doc.internal.pageSize.getWidth() - 85, 48);
-      doc.setFont("Helvetica", "bold");
-      doc.text(invoice.customers?.name || "Walk-in Customer", doc.internal.pageSize.getWidth() - 85, 54);
-      doc.setFont("Helvetica", "normal");
-      
-      if (invoice.customers?.phone) {
-        doc.text(`Phone: ${invoice.customers.phone}`, doc.internal.pageSize.getWidth() - 85, 60);
-      }
-      if (invoice.customers?.email) {
-        doc.text(`Email: ${invoice.customers.email}`, doc.internal.pageSize.getWidth() - 85, 66);
-      }
-
-      // Divider
-      doc.setDrawColor(226, 232, 240);
-      doc.line(14, 72, doc.internal.pageSize.getWidth() - 14, 72);
-
-      // Table Items
-      const tableColumns = ["Product Description", "Qty", "Unit Price (TZS)", "Total (TZS)"];
-      const tableRows = (invoice.invoice_items || []).map((item) => [
-        item.products?.name || "Unknown Product",
-        item.quantity,
-        formatTZS(item.unit_price),
-        formatTZS(item.subtotal),
-      ]);
-
-      autoTable(doc, {
-        startY: 78,
-        head: [tableColumns],
-        body: tableRows,
-        theme: 'striped',
-        headStyles: { fillColor: [15, 23, 42], textColor: 255 },
-        styles: { fontSize: 9, cellPadding: 3 },
-      });
-
-      let finalY = (doc as any).lastAutoTable.finalY || 80;
-
-      // Totals
-      doc.setFont("Helvetica", "normal");
-      doc.text("Subtotal:", doc.internal.pageSize.getWidth() - 85, finalY + 12);
-      doc.text(formatTZS(invoice.subtotal), doc.internal.pageSize.getWidth() - 35, finalY + 12, { align: "right" });
-
-      if (invoice.discount > 0) {
-        doc.text("Discount:", doc.internal.pageSize.getWidth() - 85, finalY + 18);
-        doc.text(`-${formatTZS(invoice.discount)}`, doc.internal.pageSize.getWidth() - 35, finalY + 18, { align: "right" });
-      }
-
-      if (invoice.tax > 0) {
-        doc.text("Tax:", doc.internal.pageSize.getWidth() - 85, finalY + 24);
-        doc.text(formatTZS(invoice.tax), doc.internal.pageSize.getWidth() - 35, finalY + 24, { align: "right" });
-      }
-
-      doc.setFont("Helvetica", "bold");
-      doc.text("Total Amount:", doc.internal.pageSize.getWidth() - 85, finalY + 30);
-      doc.text(formatTZS(invoice.total_amount), doc.internal.pageSize.getWidth() - 35, finalY + 30, { align: "right" });
-
-      doc.text("Amount Paid:", doc.internal.pageSize.getWidth() - 85, finalY + 36);
-      doc.setTextColor(16, 185, 129); // Green
-      doc.text(formatTZS(invoice.amount_paid), doc.internal.pageSize.getWidth() - 35, finalY + 36, { align: "right" });
-
-      doc.setTextColor(15, 23, 42);
-      doc.text("Balance Due:", doc.internal.pageSize.getWidth() - 85, finalY + 42);
-      if (invoice.balance > 0) {
-        doc.setTextColor(239, 68, 68); // Red
-      }
-      doc.text(formatTZS(invoice.balance), doc.internal.pageSize.getWidth() - 35, finalY + 42, { align: "right" });
-
-      // QR Code
-      const qrData = encodeURIComponent(`Invoice: ${invoice.invoice_number}\nTotal: ${invoice.total_amount}\nBalance: ${invoice.balance}`);
-      doc.addImage(
-        `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`,
-        "JPEG",
-        14,
-        finalY + 10,
-        30,
-        30
-      );
-      doc.setTextColor(156, 163, 175);
-      doc.setFontSize(8);
-      doc.setFont("Helvetica", "normal");
-      doc.text("Scan to verify", 14, finalY + 43);
-
-      // Footer
-      const pageHeight = doc.internal.pageSize.getHeight();
-      doc.text(`Thank you for your business! Asante!`, doc.internal.pageSize.getWidth() / 2, pageHeight - 15, { align: "center" });
-      doc.text(`Powered by MauzoChap POS`, doc.internal.pageSize.getWidth() / 2, pageHeight - 10, { align: "center" });
-
-      doc.save(`Invoice_${invoice.invoice_number}.pdf`);
-      toast.success("PDF Downloaded successfully");
+      setViewingInvoice(invoice);
+      const doc = await getInvoicePdfDoc(invoice);
+      const blob = doc.output("blob");
+      setViewingPdfBlob(blob);
+      setPdfViewerOpen(true);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to generate PDF");
+      console.error("Failed to generate PDF viewer:", err);
+      toast.error("Imeshindwa kufungua PDF ya ankara.");
     }
   };
 
-  // Sharing handlers
-  const shareWhatsApp = (invoice: Invoice) => {
-    const text = `Hello *${invoice.customers?.name || "Customer"}*,\n\nHere is your invoice *#${invoice.invoice_number}* from *${business?.business_name || "MauzoChap Store"}*.\n\n*Invoice Summary:*\n- Total: *${formatTZS(invoice.total_amount)}*\n- Paid: *${formatTZS(invoice.amount_paid)}*\n- Balance Due: *${invoice.balance > 0 ? `_${formatTZS(invoice.balance)}_ ⚠️` : `_No outstanding balance_`}\n- Status: *${invoice.payment_status}*\n\nThank you for choosing us!`;
-    const encoded = encodeURIComponent(text);
-    const phone = invoice.customers?.phone ? invoice.customers.phone.replace(/[^0-9]/g, "") : "";
-    window.open(`https://wa.me/${phone}?text=${encoded}`, "_blank");
+  const downloadPDF = async (invoice: Invoice) => {
+    try {
+      const doc = await getInvoicePdfDoc(invoice);
+      doc.save(`Invoice_${invoice.invoice_number}.pdf`);
+      toast.success("PDF imepakuliwa kikamilifu!");
+    } catch (err) {
+      console.error("Failed to download PDF:", err);
+      toast.error("Imeshindwa kupakua PDF ya ankara.");
+    }
+  };
+
+  // WhatsApp Document Sharing
+  const shareWhatsApp = async (invoice: Invoice) => {
+    try {
+      const summaryText = buildOfficialWhatsAppSummary({
+        invoiceNumber: invoice.invoice_number,
+        businessName: business?.business_name || "MauzoChap Store",
+        customerName: invoice.customers?.name,
+        createdAt: invoice.created_at,
+        total: invoice.total_amount,
+        paid: invoice.amount_paid,
+        balance: invoice.balance,
+        paymentStatus: invoice.payment_status,
+      });
+
+      const doc = await getInvoicePdfDoc(invoice);
+      const blob = doc.output("blob");
+      const fileName = `Ankara_${invoice.invoice_number}.pdf`;
+      const pdfFile = new File([blob], fileName, { type: "application/pdf" });
+
+      // Native Web Share API (Mobile phones / tablets)
+      if (typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        try {
+          await navigator.share({
+            files: [pdfFile],
+            title: `Ankara #${invoice.invoice_number}`,
+            text: summaryText,
+          });
+          toast.success("Ankara ya PDF imeshirikishwa WhatsApp kikamilifu!");
+          return;
+        } catch (shareErr: any) {
+          if (shareErr.name === "AbortError") return;
+          console.log("Web share cancelled or unsupported, fallback to desktop download:", shareErr);
+        }
+      }
+
+      // Desktop fallback: Auto-download the PDF and launch WhatsApp Web
+      doc.save(fileName);
+      const phone = invoice.customers?.phone ? invoice.customers.phone.replace(/[^0-9]/g, "") : "";
+      const textParam = encodeURIComponent(
+        `${summaryText}\n\n📄 _(Nyaraka rasmi ya PDF ya ankara imepakuliwa, iambatanishe hapa mteja aipokee)_`
+      );
+      const waUrl = phone ? `https://wa.me/${phone}?text=${textParam}` : `https://wa.me/?text=${textParam}`;
+      window.open(waUrl, "_blank");
+      toast.success("PDF imepakuliwa na WhatsApp imefunguliwa!");
+    } catch (err) {
+      console.error("Error sharing invoice via WhatsApp:", err);
+      toast.error("Imeshindwa kushiriki ankara WhatsApp.");
+    }
   };
 
   const shareEmail = (invoice: Invoice) => {
-    const subject = `Invoice #${invoice.invoice_number} from ${business?.business_name || "Our Store"}`;
-    const body = `Hello ${invoice.customers?.name || "Customer"},\n\nThank you for your business. Here is a summary of your invoice #${invoice.invoice_number}.\n\nTotal Amount: ${formatTZS(invoice.total_amount)}\nAmount Paid: ${formatTZS(invoice.amount_paid)}\nBalance Due: ${formatTZS(invoice.balance)}\n\nBest regards,\n${business?.business_name || "MauzoChap Store"}`;
+    const subject = `Ankara Rasmi ya Kodi #${invoice.invoice_number} - ${business?.business_name || "MauzoChap Store"}`;
+    const body = 
+      `Habari ${invoice.customers?.name || "Mteja wetu"},\n\n` +
+      `Tafadhali pokea muhtasari wa ankara yako #${invoice.invoice_number} kutoka ${business?.business_name || "MauzoChap Store"}:\n\n` +
+      `Jumla ya Ankara: ${formatTZS(invoice.total_amount)}\n` +
+      `Kiasi Kilicholipwa: ${formatTZS(invoice.amount_paid)}\n` +
+      `Baki Inayodaiwa: ${formatTZS(invoice.balance)}\n` +
+      `Hali ya Malipo: ${invoice.payment_status}\n\n` +
+      `Nyaraka rasmi ya PDF imeandaliwa kwa ajili yako.\n\n` +
+      `Wako mwaminifu,\n` +
+      `${business?.business_name || "MauzoChap POS"}`;
     const mailto = `mailto:${invoice.customers?.email || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
   };
@@ -671,6 +641,24 @@ function InvoicesPage() {
                     <Button
                       size="icon"
                       variant="ghost"
+                      className="h-8 w-8 text-primary/80 hover:text-primary hover:bg-primary/10"
+                      onClick={() => openInvoicePdfViewer(inv)}
+                      title="Fungua PDF Viewer"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                      onClick={() => shareWhatsApp(inv)}
+                      title="Tuma WhatsApp (PDF)"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       className="h-8 w-8 text-muted-foreground"
                       onClick={() => downloadPDF(inv)}
                       title="Download PDF"
@@ -737,12 +725,15 @@ function InvoicesPage() {
                   </button>
                 </div>
 
+                <Button variant="outline" size="sm" onClick={() => openInvoicePdfViewer(selectedInvoice!)}>
+                  <FileText className="h-4 w-4 mr-1.5 text-primary" /> Tazama PDF
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => handlePrint(selectedInvoice!)}>
                   <Printer className="h-4 w-4 mr-1.5" /> Print
                 </Button>
                 
                 <Button variant="outline" size="sm" onClick={() => downloadPDF(selectedInvoice!)}>
-                  <Download className="h-4 w-4 mr-1.5" /> PDF
+                  <Download className="h-4 w-4 mr-1.5" /> Pakua PDF
                 </Button>
               </div>
             </DialogTitle>
@@ -762,7 +753,10 @@ function InvoicesPage() {
               <div className="mt-8 border-t pt-4 flex flex-wrap gap-2 justify-between no-print">
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => shareWhatsApp(selectedInvoice)}>
-                    <Share2 className="h-4 w-4 mr-1.5 text-success" /> Share WhatsApp
+                    <Share2 className="h-4 w-4 mr-1.5 text-emerald-600" /> Tuma WhatsApp (PDF)
+                  </Button>
+                  <Button variant="outline" onClick={() => openInvoicePdfViewer(selectedInvoice)}>
+                    <FileText className="h-4 w-4 mr-1.5 text-primary" /> PDF Viewer
                   </Button>
                   <Button variant="outline" onClick={() => shareEmail(selectedInvoice)}>
                     <Mail className="h-4 w-4 mr-1.5 text-info" /> Email Invoice
@@ -782,6 +776,30 @@ function InvoicesPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Built-in PDF Viewer & Native Document Sharer */}
+      <PdfViewerDialog
+        open={pdfViewerOpen}
+        onOpenChange={setPdfViewerOpen}
+        title={viewingInvoice ? `Ankara #${viewingInvoice.invoice_number}` : "Nyaraka ya PDF"}
+        fileName={viewingInvoice ? `Ankara_${viewingInvoice.invoice_number}.pdf` : "ankara.pdf"}
+        pdfBlob={viewingPdfBlob}
+        recipientPhone={viewingInvoice?.customers?.phone}
+        whatsappSummary={
+          viewingInvoice
+            ? buildOfficialWhatsAppSummary({
+                invoiceNumber: viewingInvoice.invoice_number,
+                businessName: business?.business_name || "MauzoChap Store",
+                customerName: viewingInvoice.customers?.name,
+                createdAt: viewingInvoice.created_at,
+                total: viewingInvoice.total_amount,
+                paid: viewingInvoice.amount_paid,
+                balance: viewingInvoice.balance,
+                paymentStatus: viewingInvoice.payment_status,
+              })
+            : ""
+        }
+      />
+
       {/* Create Custom Invoice Dialog */}
       <CreateInvoiceDialog
         open={createDialogOpen}
@@ -789,6 +807,29 @@ function InvoicesPage() {
         onInvoiceCreated={handleInvoiceCreated}
       />
     </div>
+  );
+}
+
+function InvoiceQrCode({ text, size = 64, className = "" }: { text: string; size?: number; className?: string }) {
+  const [dataUrl, setDataUrl] = useState<string>("");
+
+  useEffect(() => {
+    generateQrDataUrl(text, size * 2).then((url) => {
+      if (url) setDataUrl(url);
+    });
+  }, [text, size]);
+
+  if (!dataUrl) {
+    return <div style={{ width: size, height: size }} className={`bg-gray-100 rounded border ${className}`} />;
+  }
+
+  return (
+    <img
+      src={dataUrl}
+      alt="QR Verification"
+      style={{ width: size, height: size }}
+      className={`object-contain border p-0.5 bg-white rounded shadow-xs ${className}`}
+    />
   );
 }
 
@@ -901,10 +942,9 @@ function A4InvoiceView({ invoice, business, logo }: { invoice: Invoice; business
       {/* Summary Footer */}
       <div className="mt-12 flex justify-between items-start gap-12 border-t pt-6">
         <div className="flex-1 max-w-sm text-[10px] text-gray-400 leading-normal flex items-start gap-4">
-          <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(`Invoice: ${invoice.invoice_number}\nTotal: ${invoice.total_amount}\nBalance: ${invoice.balance}`)}`}
-            alt="QR Verification"
-            className="w-16 h-16 object-contain border p-0.5 bg-white rounded shadow-sm"
+          <InvoiceQrCode
+            text={`Invoice: ${invoice.invoice_number}\nTotal: ${invoice.total_amount}\nBalance: ${invoice.balance}`}
+            size={64}
           />
           <div>
             <p className="font-bold text-gray-500 uppercase tracking-wider mb-0.5">Verification QR Code</p>
@@ -1051,10 +1091,9 @@ function ThermalInvoiceView({ invoice, business, logo }: { invoice: Invoice; bus
 
       {/* Micro QR Code */}
       <div className="flex flex-col items-center mt-3 gap-1">
-        <img
-          src={`https://api.qrserver.com/v1/create-qr-code/?size=80&data=${encodeURIComponent(`Invoice: ${invoice.invoice_number}\nTotal: ${invoice.total_amount}\nBalance: ${invoice.balance}`)}`}
-          alt="QR"
-          className="w-16 h-16 border rounded bg-white p-0.5"
+        <InvoiceQrCode
+          text={`Invoice: ${invoice.invoice_number}\nTotal: ${invoice.total_amount}\nBalance: ${invoice.balance}`}
+          size={56}
         />
         <span className="text-[8px] text-gray-400">Scan to Verify</span>
       </div>

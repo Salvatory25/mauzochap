@@ -1,13 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { useT, formatTZS, formatDate } from "@/lib/i18n";
 import { useState, useEffect, useRef } from "react";
-import { Printer, X, MessageCircle, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Printer, X, MessageCircle, Image as ImageIcon, Loader2, FileText, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { useBusinessLogo } from "@/lib/business-logo";
 import { LogoUploader } from "@/components/LogoUploader";
+import { PdfViewerDialog } from "@/components/common/PdfViewerDialog";
+import { generateInvoicePdfDoc, buildOfficialWhatsAppSummary } from "@/lib/pdf-generator";
+import { generateQrDataUrl } from "@/lib/qr-generator";
 
 type SaleData = {
   id: string;
@@ -124,21 +127,17 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
 
   const handleShareWhatsApp = () => {
     const isProforma = sale.status === "pending";
-    const docTitle = isProforma ? "PROFORMA INVOICE" : "RISITI YA MALIPO";
-    const receiptText = `*${businessName.toUpperCase()}*\n` +
-      `📍 ${locationName}\n` +
-      `--------------------------------\n` +
-      `📄 *${docTitle}:* #${sale.receipt_number}\n` +
-      `📅 Tarehe: ${formatDate(sale.created_at)}\n` +
-      `💳 Njia ya Malipo: ${sale.payment_method.replace("_", " ").toUpperCase()}\n` +
-      `--------------------------------\n` +
-      sale.items.map(i => `• ${i.name}\n   ${i.qty} x ${formatTZS(i.price)} = ${formatTZS(i.qty * i.price)}`).join('\n') +
-      `\n--------------------------------\n` +
-      `*JUMLA KUU / TOTAL: ${formatTZS(sale.total)}*\n` +
-      (sale.amount_paid ? `Kiasi Kilicholipwa: ${formatTZS(sale.amount_paid)}\n` : '') +
-      `--------------------------------\n` +
-      `Asante kwa kutuunga mkono! Karibu tena.\n` +
-      `_Imezalishwa na MauzoChap POS (mauzochap.co.tz)_`;
+    const receiptText = buildOfficialWhatsAppSummary({
+      invoiceNumber: sale.receipt_number,
+      businessName: businessName,
+      customerName: "Walk-in Customer",
+      createdAt: sale.created_at,
+      total: sale.total,
+      paid: sale.amount_paid,
+      balance: Math.max(0, sale.total - sale.amount_paid),
+      paymentStatus: sale.amount_paid >= sale.total ? "Paid" : (sale.amount_paid > 0 ? "Partial" : "Unpaid"),
+      items: sale.items,
+    });
 
     const url = `https://wa.me/?text=${encodeURIComponent(receiptText)}`;
     window.open(url, "_blank");
@@ -146,31 +145,87 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
 
   const receiptRef = useRef<HTMLDivElement>(null);
   const [sharingImage, setSharingImage] = useState(false);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+
+  const handleOpenPdfViewer = async () => {
+    try {
+      const doc = await generateInvoicePdfDoc({
+        invoice_number: sale.receipt_number,
+        created_at: sale.created_at,
+        business_name: businessName,
+        business_location: locationName,
+        logo: logo,
+        customer_name: "Walk-in Customer / Mteja wa Kawaida",
+        payment_method: sale.payment_method,
+        payment_status: sale.amount_paid >= sale.total ? "Paid" : (sale.amount_paid > 0 ? "Partial" : "Unpaid"),
+        subtotal: sale.subtotal,
+        discount: sale.discount,
+        tax: sale.tax,
+        total_amount: sale.total,
+        amount_paid: sale.amount_paid,
+        balance: Math.max(0, sale.total - sale.amount_paid),
+        notes: sale.notes,
+        items: sale.items.map((i) => ({
+          name: i.name,
+          quantity: i.qty,
+          unit_price: i.price,
+          subtotal: i.qty * i.price,
+        })),
+      });
+
+      const blob = doc.output("blob");
+      setPdfBlob(blob);
+      setPdfViewerOpen(true);
+    } catch (err) {
+      console.error("Failed to generate receipt PDF:", err);
+      toast.error("Imeshindwa kufungua PDF ya risiti.");
+    }
+  };
 
   const handleShareWhatsAppImage = async () => {
     if (!receiptRef.current) return;
     setSharingImage(true);
     try {
       const element = (receiptRef.current.querySelector(".print-area") as HTMLElement) || receiptRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
+      
+      let canvas: HTMLCanvasElement;
+      try {
+        canvas = await html2canvas(element, {
+          scale: Math.min(window.devicePixelRatio || 2, 2),
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          backgroundColor: "#ffffff",
+          imageTimeout: 2500,
+          ignoreElements: (el) => el.classList.contains("no-print"),
+        });
+      } catch (firstErr) {
+        console.warn("First html2canvas pass notice, retrying with fallback settings:", firstErr);
+        canvas = await html2canvas(element, {
+          scale: 1.5,
+          logging: false,
+          backgroundColor: "#ffffff",
+          ignoreElements: (el) => el.tagName === "IMG" || el.classList.contains("no-print"),
+        });
+      }
 
-      const isProforma = sale.status === "pending";
-      const docTitle = isProforma ? "PROFORMA INVOICE" : "RISITI YA MALIPO";
-      const captionText = `*${businessName.toUpperCase()}*\n` +
-        `📍 ${locationName}\n` +
-        `📄 *${docTitle}:* #${sale.receipt_number}\n` +
-        `💰 *JUMLA: ${formatTZS(sale.total)}*\n` +
-        `📅 Tarehe: ${formatDate(sale.created_at)}\n` +
-        `Asante kwa kutuunga mkono! Karibu tena.\n` +
-        `_Imezalishwa na MauzoChap POS (mauzochap.co.tz)_`;
+      const captionText = buildOfficialWhatsAppSummary({
+        invoiceNumber: sale.receipt_number,
+        businessName: businessName,
+        customerName: "Walk-in Customer",
+        createdAt: sale.created_at,
+        total: sale.total,
+        paid: sale.amount_paid,
+        balance: Math.max(0, sale.total - sale.amount_paid),
+        paymentStatus: sale.amount_paid >= sale.total ? "Paid" : (sale.amount_paid > 0 ? "Partial" : "Unpaid"),
+        items: sale.items,
+      });
 
       canvas.toBlob(async (blob) => {
         if (!blob) {
-          toast.error("Imeshindikana kutengeneza picha ya risiti.");
+          console.warn("toBlob was empty, falling back to PDF viewer.");
+          await handleOpenPdfViewer();
           setSharingImage(false);
           return;
         }
@@ -179,7 +234,7 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
         const file = new File([blob], fileName, { type: "image/png" });
 
         // Native Web Share API (mobile phones & tablets - directly shares the image to WhatsApp!)
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        if (typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
             await navigator.share({
               files: [file],
@@ -189,7 +244,11 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
             toast.success("Risiti ya picha imeshirikishwa kikamilifu WhatsApp!");
             setSharingImage(false);
             return;
-          } catch (shareErr) {
+          } catch (shareErr: any) {
+            if (shareErr.name === "AbortError") {
+              setSharingImage(false);
+              return;
+            }
             console.log("Web share cancelled or unsupported, using desktop download fallback:", shareErr);
           }
         }
@@ -209,8 +268,9 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
         setSharingImage(false);
       }, "image/png");
     } catch (err) {
-      console.error("Failed to generate receipt image:", err);
-      toast.error("Hitilafu wakati wa kutengeneza picha ya risiti.");
+      console.error("Failed to generate receipt image, falling back to PDF view:", err);
+      toast.info("Inazalisha PDF ya risiti kwa ubora zaidi...");
+      await handleOpenPdfViewer();
       setSharingImage(false);
     }
   };
@@ -247,6 +307,14 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
           </div>
           <Button onClick={handlePrint} variant="outline" className="border-border">
             <Printer className="h-4 w-4 mr-2" /> {t("print")}
+          </Button>
+          <Button
+            onClick={handleOpenPdfViewer}
+            variant="outline"
+            className="border-primary/50 text-primary hover:bg-primary/10 font-bold gap-1.5"
+            title="Tazama muundo kamili wa PDF kwenye PDF Viewer"
+          >
+            <FileText className="h-4 w-4" /> Tazama PDF
           </Button>
           <Button 
             onClick={handleShareWhatsAppImage} 
@@ -290,6 +358,26 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
           <A4Receipt sale={sale} businessName={businessName} locationName={locationName} logo={logo} />
         )}
       </div>
+
+      {/* Built-in PDF Viewer & Native WhatsApp Document Sharer */}
+      <PdfViewerDialog
+        open={pdfViewerOpen}
+        onOpenChange={setPdfViewerOpen}
+        title={`${businessName} - Risiti #${sale.receipt_number}`}
+        fileName={`Risiti_${sale.receipt_number}.pdf`}
+        pdfBlob={pdfBlob}
+        whatsappSummary={buildOfficialWhatsAppSummary({
+          invoiceNumber: sale.receipt_number,
+          businessName: businessName,
+          customerName: "Walk-in Customer",
+          createdAt: sale.created_at,
+          total: sale.total,
+          paid: sale.amount_paid,
+          balance: Math.max(0, sale.total - sale.amount_paid),
+          paymentStatus: sale.amount_paid >= sale.total ? "Paid" : (sale.amount_paid > 0 ? "Partial" : "Unpaid"),
+          items: sale.items,
+        })}
+      />
     </div>
   );
 }
