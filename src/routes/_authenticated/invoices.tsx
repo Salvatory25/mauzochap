@@ -34,11 +34,16 @@ import {
   TrendingUp,
   CreditCard,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { CreateInvoiceDialog } from "@/components/invoices/CreateInvoiceDialog";
+import { useBusinessLogo } from "@/lib/business-logo";
+import { LogoUploader } from "@/components/LogoUploader";
 
 export const Route = createFileRoute("/_authenticated/invoices")({
   component: InvoicesPage,
@@ -93,6 +98,7 @@ function InvoicesPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const { isAdmin, isManager, user, business } = useAuth();
+  const { logo } = useBusinessLogo(business?.id);
   
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState<DateFilter>("month");
@@ -100,6 +106,7 @@ function InvoicesPage() {
   
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [printFormat, setPrintFormat] = useState<"a4" | "thermal">("a4");
   
   const [page, setPage] = useState(1);
@@ -241,13 +248,28 @@ function InvoicesPage() {
       doc.setFillColor(15, 23, 42);
       doc.rect(0, 0, doc.internal.pageSize.getWidth(), 38, "F");
 
-      doc.setFontSize(22);
+      doc.setFontSize(20);
       doc.setTextColor(255, 255, 255);
-      doc.text(businessName.toUpperCase(), 14, 18);
-      
-      doc.setFontSize(9);
-      doc.setTextColor(156, 163, 175);
-      doc.text("Professional Invoice Management", 14, 26);
+
+      if (logo && logo.startsWith("data:image/")) {
+        try {
+          doc.addImage(logo, "PNG", 14, 6, 22, 22);
+          doc.text(businessName.toUpperCase(), 40, 18);
+          doc.setFontSize(9);
+          doc.setTextColor(156, 163, 175);
+          doc.text("Official Tax Invoice", 40, 26);
+        } catch {
+          doc.text(businessName.toUpperCase(), 14, 18);
+          doc.setFontSize(9);
+          doc.setTextColor(156, 163, 175);
+          doc.text("Professional Invoice Management", 14, 26);
+        }
+      } else {
+        doc.text(businessName.toUpperCase(), 14, 18);
+        doc.setFontSize(9);
+        doc.setTextColor(156, 163, 175);
+        doc.text("Professional Invoice Management", 14, 26);
+      }
 
       doc.setFontSize(18);
       doc.setTextColor(255, 255, 255);
@@ -410,21 +432,55 @@ function InvoicesPage() {
     document.title = originalTitle;
   };
 
+  const handleInvoiceCreated = async (newInvoiceId: string) => {
+    try {
+      const { data } = await supabase
+        .from("invoices")
+        .select(`
+          *,
+          customers(name, phone, email, address),
+          invoice_items(
+            id, product_id, quantity, unit_price, subtotal,
+            products(name, sku, unit, cost)
+          )
+        `)
+        .eq("id", newInvoiceId)
+        .single();
+
+      if (data) {
+        setSelectedInvoice(data as unknown as Invoice);
+        setDetailOpen(true);
+      }
+    } catch (e) {
+      console.warn("Could not load newly created invoice:", e);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4 no-print">
+      <div className="flex items-center justify-between flex-wrap gap-4 no-print border-b border-border pb-4">
         <div>
-          <h1 className="text-3xl font-bold">Invoices</h1>
-          <p className="text-sm text-muted-foreground">Manage and track your customer invoices.</p>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-mono font-bold uppercase tracking-wider mb-1">
+            <FileText className="w-3.5 h-3.5" />
+            <span>Tax Invoices & Billing Management</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            Ankara (Invoices)
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Tengeneza ankara za kodi zenye nembo ya biashara yako, fuatilia malipo na madeni ya wateja.
+          </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <LogoUploader compact businessId={business?.id} />
+
           {/* Date Filter Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-10 border-border">
-                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+              <Button variant="outline" className="h-10 text-xs sm:text-sm border-border">
+                <CalendarIcon className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
                 {getFilterLabel()}
               </Button>
             </DropdownMenuTrigger>
@@ -440,13 +496,22 @@ function InvoicesPage() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm h-10 w-36"
+            className="rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm h-10 w-32"
           >
-            <option value="all">All Statuses</option>
+            <option value="all">Statuses (All)</option>
             <option value="Paid">Paid</option>
             <option value="Partial">Partial</option>
             <option value="Unpaid">Unpaid</option>
           </select>
+
+          {/* Primary Create Invoice Button */}
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            className="h-10 bg-primary text-primary-foreground font-bold shadow-sm gap-2 text-xs sm:text-sm px-4"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Unda Ankara Mpya</span>
+          </Button>
         </div>
       </div>
 
@@ -532,8 +597,25 @@ function InvoicesPage() {
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
-                  {t("noData")}
+                <td colSpan={8} className="px-4 py-12 text-center">
+                  <div className="max-w-sm mx-auto space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-base text-foreground">Hakuna ankara zilizopatikana</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Bofya kitufe cha "+ Unda Ankara Mpya" hapo juu au hapa chini ili kutoa ankara ya kwanza kwa mteja wako.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => setCreateDialogOpen(true)}
+                      className="text-xs font-bold bg-primary text-primary-foreground gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Unda Ankara ya Kwanza</span>
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -669,10 +751,10 @@ function InvoicesPage() {
           {selectedInvoice && (
             <div className="py-4">
               {printFormat === "a4" ? (
-                <A4InvoiceView invoice={selectedInvoice} business={business} />
+                <A4InvoiceView invoice={selectedInvoice} business={business} logo={logo} />
               ) : (
                 <div className="flex justify-center bg-muted/10 py-6 border rounded-lg">
-                  <ThermalInvoiceView invoice={selectedInvoice} business={business} />
+                  <ThermalInvoiceView invoice={selectedInvoice} business={business} logo={logo} />
                 </div>
               )}
 
@@ -699,12 +781,19 @@ function InvoicesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Create Custom Invoice Dialog */}
+      <CreateInvoiceDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onInvoiceCreated={handleInvoiceCreated}
+      />
     </div>
   );
 }
 
 // A4 Layout Component
-function A4InvoiceView({ invoice, business }: { invoice: Invoice; business: any }) {
+function A4InvoiceView({ invoice, business, logo }: { invoice: Invoice; business: any; logo?: string | null }) {
   const isProforma = invoice.payment_method === 'credit' && invoice.payment_status === 'Unpaid';
   const docTitle = isProforma ? "PROFORMA INVOICE" : (invoice.balance > 0 ? "TAX INVOICE" : "INVOICE RECEIPT");
   
@@ -713,16 +802,26 @@ function A4InvoiceView({ invoice, business }: { invoice: Invoice; business: any 
       <div>
         {/* Header */}
         <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="h-8 w-8 rounded-lg bg-primary grid place-items-center text-primary-foreground font-extrabold text-sm">MC</span>
+          <div className="flex items-start gap-3">
+            {logo ? (
+              <img
+                src={logo}
+                alt={business?.business_name || "Logo"}
+                className="h-12 w-auto max-w-[120px] object-contain rounded"
+              />
+            ) : (
+              <span className="h-10 w-10 rounded-lg bg-primary grid place-items-center text-primary-foreground font-extrabold text-sm">
+                {(business?.business_name || "MC").substring(0, 2).toUpperCase()}
+              </span>
+            )}
+            <div>
               <h2 className="text-2xl font-black tracking-tight text-gray-900">
                 {business?.business_name || "MauzoChap System"}
               </h2>
+              <p className="text-xs text-gray-500 mt-1 font-medium">
+                {business?.email || "info@mauzochap.com"} {business?.phone ? `· ${business.phone}` : ""}
+              </p>
             </div>
-            <p className="text-xs text-gray-500 mt-2 font-medium">
-              {business?.email || "info@mauzochap.com"} · {business?.phone || ""}
-            </p>
           </div>
           <div className="text-right">
             <div className="text-xs font-bold text-primary uppercase tracking-wider print:text-black">
@@ -874,10 +973,19 @@ function A4InvoiceView({ invoice, business }: { invoice: Invoice; business: any 
 }
 
 // Thermal Receipt Component
-function ThermalInvoiceView({ invoice, business }: { invoice: Invoice; business: any }) {
+function ThermalInvoiceView({ invoice, business, logo }: { invoice: Invoice; business: any; logo?: string | null }) {
   return (
     <div className="print-area bg-white text-black font-mono text-[11px] p-4 shadow-sm w-[290px] border-x">
       <div className="text-center">
+        {logo && (
+          <div className="flex justify-center mb-1.5">
+            <img
+              src={logo}
+              alt="Logo"
+              className="h-10 max-w-[140px] object-contain filter grayscale contrast-125"
+            />
+          </div>
+        )}
         <div className="font-bold text-sm uppercase">{business?.business_name || "MauzoChap Store"}</div>
         <div className="text-[9px] uppercase">{business?.email || ""}</div>
         <div className="text-[10px] mt-1 font-bold">TAX INVOICE</div>

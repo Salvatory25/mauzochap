@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Settings, Save } from "lucide-react";
+import { Settings, Save, Image as ImageIcon } from "lucide-react";
+import { LogoUploader } from "@/components/LogoUploader";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -130,6 +131,20 @@ function SettingsPage() {
             </Button>
           </div>
         </form>
+      </div>
+
+      {/* Store Branding & Logo */}
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <ImageIcon className="h-5 w-5 text-primary" />
+            <span>Store Logo & Branding</span>
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Pakia logo ya duka lako ili itokee kiotomatiki juu ya risiti za mashine (thermal 80mm & 58mm) na ankara za kodi (A4 Invoices).
+          </p>
+        </div>
+        <LogoUploader businessId={business?.id} />
       </div>
     </div>
   );

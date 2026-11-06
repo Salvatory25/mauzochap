@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
+import { useBusinessLogo } from "@/lib/business-logo";
+import { LogoUploader } from "@/components/LogoUploader";
 
 type SaleData = {
   id: string;
@@ -44,6 +46,7 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
   const t = useT();
   const [format, setFormat] = useState<"thermal" | "a4">("thermal");
   const { business, branchId: userBranchId } = useAuth();
+  const { logo } = useBusinessLogo(sale.business_id || business?.id);
   const [businessName, setBusinessName] = useState<string>("Silivia Cosmetics");
   const [locationName, setLocationName] = useState<string>("Tanzania");
 
@@ -269,6 +272,11 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
           >
             <MessageCircle className="h-4 w-4 mr-1.5 text-emerald-600" /> WhatsApp Text
           </Button>
+          <LogoUploader
+            compact
+            businessId={sale.business_id || business?.id}
+            className="border-dashed"
+          />
           <Button variant="ghost" onClick={onClose}>
             <X className="h-4 w-4 mr-2" /> Close
           </Button>
@@ -277,9 +285,9 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
 
       <div ref={receiptRef} className="flex justify-center p-2 bg-muted/20 rounded-2xl border border-border/40">
         {format === "thermal" ? (
-          <ThermalReceipt sale={sale} businessName={businessName} locationName={locationName} />
+          <ThermalReceipt sale={sale} businessName={businessName} locationName={locationName} logo={logo} />
         ) : (
-          <A4Receipt sale={sale} businessName={businessName} locationName={locationName} />
+          <A4Receipt sale={sale} businessName={businessName} locationName={locationName} logo={logo} />
         )}
       </div>
     </div>
@@ -290,10 +298,12 @@ function ThermalReceipt({
   sale,
   businessName,
   locationName,
+  logo,
 }: {
   sale: SaleData;
   businessName: string;
   locationName: string;
+  logo?: string | null;
 }) {
   const isSplit = sale.notes?.startsWith("Split Payment:");
   const isProforma = sale.status === "pending";
@@ -305,6 +315,15 @@ function ThermalReceipt({
       style={{ width: "302px" }}
     >
       <div className="text-center">
+        {logo && (
+          <div className="flex justify-center mb-2">
+            <img
+              src={logo}
+              alt="Logo"
+              className="max-h-12 max-w-[140px] object-contain filter grayscale contrast-125"
+            />
+          </div>
+        )}
         <div className="font-bold text-base uppercase">{businessName}</div>
         <div className="text-[10px] uppercase">{locationName}</div>
         <div className="text-[10px] mt-1 font-bold">{docTitle}</div>
@@ -380,10 +399,12 @@ function A4Receipt({
   sale,
   businessName,
   locationName,
+  logo,
 }: {
   sale: SaleData;
   businessName: string;
   locationName: string;
+  logo?: string | null;
 }) {
   const isSplit = sale.notes?.startsWith("Split Payment:");
   const isProforma = sale.status === "pending";
@@ -396,15 +417,24 @@ function A4Receipt({
     >
       <div>
         {/* Header Section */}
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 capitalize">
-              {businessName}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5 font-medium">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary print:hidden"></span>
-              {locationName}
-            </p>
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex items-center gap-4">
+            {logo && (
+              <img
+                src={logo}
+                alt="Business Logo"
+                className="h-16 w-auto max-w-[150px] object-contain rounded-lg border border-gray-100 p-1"
+              />
+            )}
+            <div>
+              <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 capitalize">
+                {businessName}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5 font-medium">
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-primary/20 border border-primary print:hidden"></span>
+                {locationName}
+              </p>
+            </div>
           </div>
           <div className="text-right">
             <div className="text-xs font-semibold text-primary uppercase tracking-wider print:text-black">
