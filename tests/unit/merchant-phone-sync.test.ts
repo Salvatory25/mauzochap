@@ -5,8 +5,6 @@ import {
   computeSmsAudienceStats,
   rememberMerchantPhone,
   lookupStoredMerchantPhone,
-  lookupKnownRegistryPhone,
-  KNOWN_MERCHANT_REGISTRY,
   type MerchantRecord,
   type ProfilePhoneRecord,
   type SmsLogRecord,
@@ -135,69 +133,29 @@ describe('merchant-phone-sync (Super Admin SMS & Registered Customers)', () => {
     });
   });
 
-  describe('known registry & persistent client storage', () => {
+  describe('persistent registration storage and verification integrity', () => {
     beforeEach(() => {
       localStorage.clear();
     });
 
-    it('resolves real registered merchant phones by email or business name via KNOWN_MERCHANT_REGISTRY', () => {
-      const liveSystemMerchants: MerchantRecord[] = [
+    it('never assigns unverified or placeholder phone numbers to customers', () => {
+      const unknownMerchants: MerchantRecord[] = [
         {
-          id: 'biz-machesha',
-          business_name: 'Machesha Electronics',
-          owner_name: 'Machesha Salvatory',
-          email: 'macheshasalvatory@gmail.com',
-          phone: null, // Empty in businesses table
-          account_status: 'approved',
-        },
-        {
-          id: 'biz-yompria',
-          business_name: 'yompria',
-          owner_name: 'faisal',
-          email: 'dengwafaisal@gmail.com',
-          phone: '', // Empty in businesses table
-          account_status: 'approved',
-        },
-        {
-          id: 'biz-kapele',
-          business_name: 'Kapele Web Services',
-          owner_name: 'Developer Kapele',
-          email: 'developerkapele7@gmail.com',
+          id: 'biz-unverified',
+          business_name: 'Unverified Store Without Phone',
+          owner_name: 'Unknown Owner',
+          email: 'unknown@example.com',
           phone: null,
-          account_status: 'approved',
-        },
-        {
-          id: 'biz-silivia',
-          business_name: 'Silivia Cosmetics',
-          owner_name: 'SILIVIA MASENGE',
-          email: 'siliviamasenge2@gmail.com',
-          phone: null,
-          account_status: 'approved',
+          account_status: 'pending',
         },
       ];
 
-      // Even without profiles or SMS logs, they are all immediately resolved
-      const enriched = enrichMerchantsWithPhones(liveSystemMerchants, [], []);
-
-      expect(enriched[0].effectivePhone).toBe('+255627274168');
-      expect(enriched[0].phoneSource).toBe('registry');
-
-      expect(enriched[1].effectivePhone).toBe('+255679913271');
-      expect(enriched[1].phoneSource).toBe('registry');
-
-      expect(enriched[2].effectivePhone).toBe('+255748406824');
-      expect(enriched[2].phoneSource).toBe('registry');
-
-      expect(enriched[3].effectivePhone).toBe('+255623136890');
-      expect(enriched[3].phoneSource).toBe('registry');
-
-      const stats = computeSmsAudienceStats(enriched, []);
-      expect(stats.totalMerchants).toBe(4);
-      expect(stats.merchantsWithPhone).toBe(4);
-      expect(stats.merchantsMissingPhone).toBe(0);
+      const enriched = enrichMerchantsWithPhones(unknownMerchants, [], []);
+      expect(enriched[0].effectivePhone).toBe('');
+      expect(enriched[0].phoneSource).toBe('none');
     });
 
-    it('remembers and resolves newly registered customer phones across browser sessions', () => {
+    it('remembers and resolves newly registered customer phones accurately from registration input', () => {
       rememberMerchantPhone({
         email: 'newcustomer@gmail.com',
         businessName: 'Kilimanjaro Fresh Coffee',

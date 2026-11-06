@@ -37,92 +37,6 @@ function normalizeBizKey(name?: string | null): string {
   return (name || "").trim().toLowerCase();
 }
 
-/**
- * Registry of known verified merchant accounts created during system setup and registration.
- * Guarantees that registered business owners always have their registered phone number available.
- */
-export interface KnownMerchantEntry {
-  email?: string;
-  businessName?: string;
-  ownerName?: string;
-  phone: string;
-}
-
-export const KNOWN_MERCHANT_REGISTRY: KnownMerchantEntry[] = [
-  {
-    businessName: "Machesha Electronics",
-    ownerName: "Machesha Salvatory",
-    email: "macheshasalvatory@gmail.com",
-    phone: "+255627274168",
-  },
-  {
-    businessName: "MauzoChap Central Admin",
-    ownerName: "Salvatory Filbert",
-    email: "salvatoryfilbert2@gmail.com",
-    phone: "+255627274168",
-  },
-  {
-    businessName: "yompria",
-    ownerName: "faisal",
-    email: "dengwafaisal@gmail.com",
-    phone: "+255679913271",
-  },
-  {
-    businessName: "Kapele Web Services",
-    ownerName: "Developer Kapele",
-    email: "developerkapele7@gmail.com",
-    phone: "+255748406824",
-  },
-  {
-    businessName: "Silivia Cosmetics",
-    ownerName: "SILIVIA MASENGE",
-    email: "siliviamasenge2@gmail.com",
-    phone: "+255623136890",
-  },
-  {
-    businessName: "MacTech Digital Store",
-    ownerName: "MacTech Digital",
-    email: "salvatoryfilberth@gmail.com",
-    phone: "+255789115651",
-  },
-  {
-    businessName: "Salvie Fashion & Design",
-    ownerName: "Salvie Designer",
-    email: "salvatoryfilbett@gmail.com",
-    phone: "+255627274168",
-  },
-  {
-    businessName: "Mimi Hapa General Supplies",
-    ownerName: "mimi hapa",
-    email: "mimihapa@gmail.com",
-    phone: "+255623136890",
-  },
-  {
-    businessName: "Dev Machesha Tech Lab 1",
-    ownerName: "Dev Machesha",
-    email: "salvatoryfilber2@gmail.com",
-    phone: "+255627274168",
-  },
-  {
-    businessName: "Dev Machesha Tech Lab 2",
-    ownerName: "Dev Machesha",
-    email: "salvatoryfilbert25@gmail.com",
-    phone: "+255627274168",
-  },
-  {
-    businessName: "Dev Machesha Tech Lab 3",
-    ownerName: "Dev Machesha",
-    email: "salvatoryfilbet@gmail.com",
-    phone: "+255627274168",
-  },
-  {
-    businessName: "Dev Machesha Tech Lab 4",
-    ownerName: "Dev Machesha",
-    email: "salvatoryfilber@gmail.com",
-    phone: "+255627274168",
-  },
-];
-
 const REGISTRY_STORAGE_KEY = "mauzochap_registered_merchant_phones";
 
 /**
@@ -190,37 +104,6 @@ export function lookupStoredMerchantPhone({
       return registry[`owner:${normalizeBizKey(ownerName)}`];
   } catch {
     // Ignore
-  }
-
-  return "";
-}
-
-/**
- * Looks up registered merchant phone from known registry
- */
-export function lookupKnownRegistryPhone({
-  email,
-  businessName,
-  ownerName,
-}: {
-  email?: string | null;
-  businessName?: string | null;
-  ownerName?: string | null;
-}): string {
-  const normEmail = (email || "").trim().toLowerCase();
-  const normBiz = normalizeBizKey(businessName);
-  const normOwner = normalizeBizKey(ownerName);
-
-  for (const entry of KNOWN_MERCHANT_REGISTRY) {
-    if (normEmail && entry.email && entry.email.toLowerCase() === normEmail) {
-      return formatPhoneNumberE164(entry.phone);
-    }
-    if (normBiz && entry.businessName && normalizeBizKey(entry.businessName) === normBiz) {
-      return formatPhoneNumberE164(entry.phone);
-    }
-    if (normOwner && entry.ownerName && normalizeBizKey(entry.ownerName) === normOwner) {
-      return formatPhoneNumberE164(entry.phone);
-    }
   }
 
   return "";
@@ -325,7 +208,7 @@ export function enrichMerchantsWithPhones(
       };
     }
 
-    // 3. Stored registration registry
+    // 3. Stored registration registry (saved when customer typed phone during registration)
     const storedPhone = lookupStoredMerchantPhone({
       email: b.email,
       businessName: b.business_name,
@@ -341,22 +224,7 @@ export function enrichMerchantsWithPhones(
       };
     }
 
-    // 4. Known registered merchants registry
-    const knownPhone = lookupKnownRegistryPhone({
-      email: b.email,
-      businessName: b.business_name,
-      ownerName: resolvedOwnerName,
-    });
-    if (knownPhone) {
-      return {
-        ...b,
-        owner_name: resolvedOwnerName,
-        effectivePhone: knownPhone,
-        phoneSource: "registry",
-      };
-    }
-
-    // 5. SMS history logs
+    // 4. SMS history logs (from actual sent welcome SMS / registration alerts)
     const smsPhone = bizNameKey ? smsPhoneMap.get(bizNameKey) || "" : "";
     if (smsPhone) {
       return {

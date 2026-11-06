@@ -30,6 +30,25 @@ function SuperAdminDashboard() {
     queryKey: ["super-admin-businesses"],
     enabled: isSuperAdmin,
     queryFn: async () => {
+      // 1. Try directory RPC which reads authentic registration phone from auth.users metadata
+      try {
+        const { data: rpcData, error: rpcError } = await (supabase as any).rpc(
+          "super_admin_get_merchants_directory",
+        );
+        if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+          const { data: paymentsData } = await supabase
+            .from("payments")
+            .select("id, business_id, payment_reference, verification_status, amount, created_at");
+
+          return rpcData.map((b: any) => ({
+            ...b,
+            payments: (paymentsData || []).filter((p) => p.business_id === b.id),
+          }));
+        }
+      } catch {
+        // Fallback to table query if migration not yet applied
+      }
+
       const { data, error } = await supabase
         .from("businesses")
         .select("*, payments(id, payment_reference, verification_status, amount, created_at)")
