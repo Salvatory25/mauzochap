@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useT, formatTZS, formatDate } from "@/lib/i18n";
-import { TrendingUp, Boxes, Users, AlertTriangle, CreditCard, Activity, FileText, CheckCircle, AlertCircle, ArrowRight, ShieldAlert, Clock } from "lucide-react";
+import { TrendingUp, Boxes, Users, AlertTriangle, CreditCard, Activity, FileText, CheckCircle, AlertCircle, ArrowRight, ShieldAlert, Clock, Wallet } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -36,7 +36,8 @@ function Dashboard() {
         lowStockRes,
         customersRes,
         debtsRes,
-        invoicesRes
+        invoicesRes,
+        expensesRes
       ] = await Promise.all([
         (() => {
           let q = supabase.from("sales").select("total").gte("created_at", today.toISOString()).eq("status", "completed");
@@ -75,6 +76,11 @@ function Dashboard() {
             .select("id, balance, payment_status, created_at, sales!inner(branch_id)");
           if (branchId) q = q.eq("sales.branch_id", branchId);
           return q;
+        })(),
+        (() => {
+          let q = supabase.from("expenses").select("amount");
+          if (branchId) q = q.eq("branch_id", branchId);
+          return q;
         })()
       ]);
 
@@ -86,6 +92,11 @@ function Dashboard() {
 
       const sumDebts = (rows: { balance: number | null }[] | null) =>
         (rows ?? []).reduce((s: number, r: { balance: number | null }) => s + Number(r.balance || 0), 0);
+
+      const totalExpenses = (expensesRes.data ?? []).reduce(
+        (acc: number, r: { amount: number | null | string }) => acc + Number(r.amount || 0),
+        0
+      );
 
       const monthTotal = sum(monthRes.data);
       const monthCount = monthRes.data?.length || 0;
@@ -161,6 +172,7 @@ function Dashboard() {
         lowStock: lowStockList,
         customerCount: customersRes.count ?? 0,
         pendingDebts: sumDebts(debtsRes.data),
+        totalExpenses,
         avgOrderValue,
         chartData,
         totalInvoicesCount,
@@ -230,6 +242,7 @@ function Dashboard() {
 
   const secondaryCards = [
     { label: t("pendingDebts"), value: formatTZS(stats?.pendingDebts ?? 0), icon: CreditCard, color: "text-warning" },
+    { label: t("expenses"), value: formatTZS(stats?.totalExpenses ?? 0), icon: Wallet, color: "text-destructive" },
     { label: t("totalProducts"), value: String(stats?.productCount ?? 0), icon: Boxes },
     { label: t("customers"), value: String(stats?.customerCount ?? 0), icon: Users },
   ];
@@ -259,17 +272,17 @@ function Dashboard() {
             <div className="space-y-0.5 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs sm:text-sm font-bold text-foreground">
-                  Kifurushi: <span className="uppercase text-primary font-extrabold">{business.package || "Starter"}</span>
+                  {t("plan")}: <span className="uppercase text-primary font-extrabold">{business.package || "Starter"}</span>
                 </span>
                 <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                   business.account_status === "approved" ? "bg-success/15 text-success" : 
                   business.account_status === "pending" ? "bg-amber-500/15 text-amber-600" : "bg-destructive/15 text-destructive"
                 }`}>
-                  {business.account_status === "approved" ? "Active" : business.account_status}
+                  {business.account_status === "approved" ? t("active") : business.account_status}
                 </span>
               </div>
               <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
-                <span>Tarehe ya Kuisha:</span>
+                <span>{t("expiryDate")}:</span>
                 {business.expiry_date ? (() => {
                   const days = Math.ceil((new Date(business.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
                   const isExp = days <= 0;
@@ -277,11 +290,11 @@ function Dashboard() {
                   return (
                     <strong className={isExp ? "text-destructive" : isSoon ? "text-amber-600 font-bold" : "text-foreground font-semibold"}>
                       {new Date(business.expiry_date).toLocaleDateString()}
-                      {isExp ? " (Kimekwisha)" : ` (Zimebaki siku ${days})`}
+                      {isExp ? ` (${t("expired")})` : ` (${t("daysRemaining")} ${days})`}
                     </strong>
                   );
                 })() : (
-                  <span className="italic">Bila kikomo</span>
+                  <span className="italic">{t("unlimited")}</span>
                 )}
               </div>
             </div>
@@ -292,7 +305,7 @@ function Dashboard() {
               to="/setup-billing"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
             >
-              <span>Boresha / Lipia Kifurushi</span>
+              <span>{t("upgradePlan")}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -309,20 +322,20 @@ function Dashboard() {
             <div className="space-y-0.5 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs sm:text-sm font-bold text-destructive">
-                  Tahadhari ya Bidhaa Zinazoisha Muda (Product Expiry Alert)
+                  {t("expiryAlertTitle")}
                 </span>
                 <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider bg-destructive text-destructive-foreground">
-                  {criticalExpiryItems.length} Bidhaa Hatari
+                  {criticalExpiryItems.length} {t("criticalItems")}
                 </span>
               </div>
               <div className="text-xs text-foreground/80 leading-snug">
                 {criticalExpiryItems.some(b => new Date(b.expiry_date!).getTime() < nowMs) ? (
                   <span className="font-semibold text-destructive">
-                    Kuna bidhaa zilizokwisha muda wa matumizi stoo. Ondoa mara moja au ubadilishe!
+                    {t("expiredItemsDesc")}
                   </span>
                 ) : (
                   <span>
-                    Kuna bidhaa zitakazoisha muda ndani ya siku 30 zijazo. Zipe kipaumbele cha mauzo au punguzo!
+                    {t("expiringSoonDesc")}
                   </span>
                 )}
               </div>
@@ -334,7 +347,7 @@ function Dashboard() {
               to="/inventory"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
             >
-              <span>Kagua Kwenye Stoo</span>
+              <span>{t("checkInventory")}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -364,15 +377,15 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* Secondary KPIs (Mobile responsive: 2-col with first full-width for TZS currency, 3-col on desktop) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-        {secondaryCards.map((c, idx) => (
+      {/* Secondary KPIs (Symmetrical 4 cards: 2-col on mobile, 4-col on desktop) */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+        {secondaryCards.map((c) => (
           <div
             key={c.label}
-            className={`rounded-xl border border-border bg-card p-2.5 sm:p-4 flex items-center gap-2.5 sm:gap-4 ${idx === 0 ? "col-span-2 sm:col-span-1" : "col-span-1"} ${isLoading ? 'animate-pulse' : ''}`}
+            className={`rounded-xl border border-border bg-card p-2.5 sm:p-4 flex items-center gap-2.5 sm:gap-4 ${isLoading ? 'animate-pulse' : ''}`}
           >
             <div className="p-2 sm:p-3 bg-muted rounded-xl text-muted-foreground shrink-0">
-              <c.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <c.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${c.color || ''}`} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate">{c.label}</div>
@@ -451,7 +464,7 @@ function Dashboard() {
                 }`}
               >
                 <AlertTriangle className="h-3.5 w-3.5" />
-                <span>Low Stock ({stats?.lowStock?.length || 0})</span>
+                <span>{t("lowStockTab")} ({stats?.lowStock?.length || 0})</span>
               </button>
               <button
                 type="button"
@@ -463,11 +476,11 @@ function Dashboard() {
                 }`}
               >
                 <ShieldAlert className="h-3.5 w-3.5" />
-                <span>Expiry ({criticalExpiryItems.length})</span>
+                <span>{t("expiryTab")} ({criticalExpiryItems.length})</span>
               </button>
             </div>
             <Link to="/inventory" className="text-[11px] font-semibold text-primary hover:underline flex items-center shrink-0">
-              Stoo <ArrowRight className="h-3 w-3 ml-0.5" />
+              {t("inventory")} <ArrowRight className="h-3 w-3 ml-0.5" />
             </Link>
           </div>
           <div className="divide-y divide-border overflow-y-auto max-h-[220px] sm:max-h-[300px]">

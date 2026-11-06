@@ -21,3 +21,4 @@ export async function generateQrDataUrl(text: string, width = 160): Promise<stri
     return "";
   }
 }
+

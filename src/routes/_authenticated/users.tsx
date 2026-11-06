@@ -66,6 +66,15 @@ function UsersPage() {
     queryKey: ["users-list", business?.id],
     enabled: isAdmin && !!business?.id,
     queryFn: async () => {
+      // Auto-heal / sync any staff accounts linked to this business
+      if (business?.id) {
+        try {
+          await (supabase.rpc as any)("sync_business_staff", { _business_id: business.id });
+        } catch {
+          // Fallback if RPC is not yet loaded in active session
+        }
+      }
+
       let query = supabase.from("profiles").select("*, branches(name)");
       if (!roles.includes("super_admin") && business?.id) {
         query = query.eq("business_id", business.id);
@@ -391,6 +400,7 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
     
     setSaving(true);
     try {
+      const normalizedEmail = email.trim().toLowerCase();
       // Create a temporary client with persistSession: false to avoid signing the admin out
       const tempClient = createClient(
         import.meta.env.VITE_SUPABASE_URL,
@@ -404,13 +414,14 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
       );
 
       // 1. Create or register auth user with temporary client
+      let targetUserId: string | null = null;
       const { data: signUpData, error: signUpError } = await tempClient.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: {
           data: {
-            full_name: fullName,
-            phone: phone,
+            full_name: fullName.trim(),
+            phone: phone.trim(),
             business_id: business.id,
             branch_id: branchId || undefined,
             role: role
@@ -419,45 +430,60 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
       });
 
       if (signUpError) {
-        if (signUpError.message?.toLowerCase().includes("already registered")) {
-          throw new Error(
-            `Barua pepe '${email}' tayari imesajiliwa kwenye mfumo. Tafadhali weka barua pepe mpya ya mfanyakazi huyu, au tumia tab ya 'Share Link' ili ajiunge na duka hili.`
-          );
+        if (!signUpError.message?.toLowerCase().includes("already registered")) {
+          throw signUpError;
         }
-        throw signUpError;
+      } else if (signUpData?.user?.id) {
+        targetUserId = signUpData.user.id;
       }
 
-      if (!signUpData?.user) {
-        throw new Error("Imeshindwa kusajili mfanyakazi. Tafadhali hakikisha taarifa zote zimejazwa kwa usahihi.");
+      // 2. Authoritative server-side profile and role link via SECURITY DEFINER function
+      const { error: rpcError } = await supabase.rpc("admin_add_staff_member", {
+        _email: normalizedEmail,
+        _full_name: fullName.trim(),
+        _phone: phone.trim(),
+        _role: role,
+        _branch_id: branchId || null,
+        _user_id: targetUserId,
+      });
+
+      if (rpcError) {
+        console.warn("admin_add_staff_member RPC notice:", rpcError);
+        // Fallback: direct profile & role upsert
+        if (targetUserId) {
+          await supabase.from("profiles").upsert({
+            id: targetUserId,
+            full_name: fullName.trim(),
+            phone: phone?.trim() || null,
+            business_id: business.id,
+            branch_id: branchId || null,
+            business_name: business.business_name,
+          });
+
+          await supabase.from("user_roles").upsert({
+            user_id: targetUserId,
+            role: role as any,
+          });
+        } else {
+          throw new Error(rpcError.message || "Failed to link user to business");
+        }
       }
 
-      // 2. Direct client-side profile confirmation (the PostgreSQL handle_new_user trigger also handles this automatically)
+      // Auto-heal / sync immediately to guarantee appearance in list
       try {
-        await supabase.from("profiles").upsert({
-          id: signUpData.user.id,
-          full_name: fullName.trim(),
-          phone: phone?.trim() || null,
-          business_id: business.id,
-          branch_id: branchId || null,
-          business_name: business.business_name,
-        });
-
-        await supabase.from("user_roles").upsert({
-          user_id: signUpData.user.id,
-          role: role as any,
-        });
-      } catch (upsertErr) {
-        console.warn("Direct profile upsert notice (handled by Postgres trigger):", upsertErr);
+        await (supabase.rpc as any)("sync_business_staff", { _business_id: business.id });
+      } catch {
+        // Safe fallback
       }
 
       // 3. Send staff welcome SMS so employee gets notified immediately on phone
       if (phone) {
         sendStaffWelcomeSMS({
-          phone,
-          fullName,
+          phone: phone.trim(),
+          fullName: fullName.trim(),
           businessName: business.business_name,
           role,
-          email,
+          email: normalizedEmail,
         }).catch((e) => console.warn("Staff SMS notice:", e));
       }
 
@@ -595,7 +621,7 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
           )}
 
           <div className="text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-lg">
-            ℹ️ The user will be created under your business immediately. If email confirmation is enabled in Supabase, they must confirm their email before logging in.
+            ℹ️ {t("userInviteNote")}
           </div>
 
           <div className="flex justify-end gap-2 pt-2 border-t border-border">
