@@ -46,16 +46,20 @@ BEGIN
   END IF;
 END $$;
 
--- 2. Update stock decrement function to handle NUMERIC quantities without integer casting errors
+-- 2. Update stock decrement and movement functions to handle NUMERIC quantities without integer casting errors
 CREATE OR REPLACE FUNCTION public.decrement_stock_on_sale()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
   v_branch_id UUID;
   v_biz_id UUID;
+  v_status public.sale_status;
 BEGIN
-  SELECT branch_id, business_id INTO v_branch_id, v_biz_id FROM public.sales WHERE id = NEW.sale_id;
+  SELECT branch_id, business_id, status INTO v_branch_id, v_biz_id, v_status 
+  FROM public.sales 
+  WHERE id = NEW.sale_id;
 
-  IF NEW.product_id IS NOT NULL THEN
+  -- Only decrement stock if the sale is completed (or status is null / legacy direct sale)
+  IF (v_status IS NULL OR v_status = 'completed') AND NEW.product_id IS NOT NULL THEN
     -- Update overall product stock
     UPDATE public.products 
     SET stock_quantity = stock_quantity - NEW.quantity 
@@ -68,8 +72,30 @@ BEGIN
       WHERE branch_id = v_branch_id AND product_id = NEW.product_id;
       
       INSERT INTO public.stock_movements (business_id, product_id, branch_id, movement_type, quantity_change, reference_id)
-      VALUES (COALESCE(NEW.business_id, v_biz_id), NEW.product_id, v_branch_id, 'sale', -NEW.quantity, NEW.sale_id::TEXT);
+      VALUES (COALESCE(NEW.business_id, v_biz_id), NEW.product_id, v_branch_id, 'sale', -NEW.quantity, NEW.sale_id);
     END IF;
+  END IF;
+  RETURN NEW;
+END; $$;
+
+-- 2b. Update process_completed_sale_stock trigger function for pending-to-completed transition
+CREATE OR REPLACE FUNCTION public.process_completed_sale_stock()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  item RECORD;
+BEGIN
+  IF NEW.status = 'completed' AND OLD.status = 'pending' THEN
+    FOR item IN SELECT * FROM public.sale_items WHERE sale_id = NEW.id
+    LOOP
+      IF item.product_id IS NOT NULL AND NEW.branch_id IS NOT NULL THEN
+        UPDATE public.branch_inventory 
+        SET stock_quantity = stock_quantity - item.quantity 
+        WHERE branch_id = NEW.branch_id AND product_id = item.product_id;
+        
+        INSERT INTO public.stock_movements (business_id, product_id, branch_id, movement_type, quantity_change, reference_id)
+        VALUES (COALESCE(item.business_id, NEW.business_id), item.product_id, NEW.branch_id, 'sale', -item.quantity, NEW.id);
+      END IF;
+    END LOOP;
   END IF;
   RETURN NEW;
 END; $$;
