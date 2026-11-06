@@ -1,11 +1,11 @@
 -- ==============================================================================
--- MAUZOCHAP COMPLETE PRODUCTION HOTFIX MIGRATION (100% BULLETPROOF & IDEMPOTENT)
+-- MAUZOCHAP COMPLETE PRODUCTION HOTFIX MIGRATION (100% BULLETPROOF & SELF-HEALING)
 -- Run this in your Supabase Dashboard:
 -- https://supabase.com/dashboard/project/mnopesayeoklyymowmwc/sql/new
 --
--- This script safely resolves:
+-- Safely resolves:
 -- 1. "invalid input syntax for type integer: '2.5'" / "1.5" across POS, Sales, Invoices & Stock
--- 2. Removes test supplier 'Yolanda' & enforces tenant isolation on suppliers
+-- 2. Removes test supplier 'Yolanda' & enforces tenant isolation (safely checking if table exists)
 -- 3. Syncs and shows newly created staff members in the Users dashboard immediately
 -- 4. Enables 2-step SMS OTP password reset flow (request & verify)
 -- ==============================================================================
@@ -17,47 +17,47 @@ DO $$
 BEGIN
   -- sale_items.quantity
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'sale_items' AND column_name = 'quantity') THEN
-    ALTER TABLE public.sale_items ALTER COLUMN quantity TYPE NUMERIC(12,3);
+    EXECUTE 'ALTER TABLE public.sale_items ALTER COLUMN quantity TYPE NUMERIC(12,3)';
   END IF;
 
   -- invoice_items.quantity
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'invoice_items' AND column_name = 'quantity') THEN
-    ALTER TABLE public.invoice_items ALTER COLUMN quantity TYPE NUMERIC(12,3);
+    EXECUTE 'ALTER TABLE public.invoice_items ALTER COLUMN quantity TYPE NUMERIC(12,3)';
   END IF;
 
   -- products.stock_quantity
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'products' AND column_name = 'stock_quantity') THEN
-    ALTER TABLE public.products ALTER COLUMN stock_quantity TYPE NUMERIC(12,3);
+    EXECUTE 'ALTER TABLE public.products ALTER COLUMN stock_quantity TYPE NUMERIC(12,3)';
   END IF;
 
   -- branch_inventory.stock_quantity
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'branch_inventory' AND column_name = 'stock_quantity') THEN
-    ALTER TABLE public.branch_inventory ALTER COLUMN stock_quantity TYPE NUMERIC(12,3);
+    EXECUTE 'ALTER TABLE public.branch_inventory ALTER COLUMN stock_quantity TYPE NUMERIC(12,3)';
   END IF;
 
   -- stock_movements.quantity_change
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'stock_movements' AND column_name = 'quantity_change') THEN
-    ALTER TABLE public.stock_movements ALTER COLUMN quantity_change TYPE NUMERIC(12,3);
+    EXECUTE 'ALTER TABLE public.stock_movements ALTER COLUMN quantity_change TYPE NUMERIC(12,3)';
   END IF;
 
   -- purchase_items.quantity
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'purchase_items' AND column_name = 'quantity') THEN
-    ALTER TABLE public.purchase_items ALTER COLUMN quantity TYPE NUMERIC(12,3);
+    EXECUTE 'ALTER TABLE public.purchase_items ALTER COLUMN quantity TYPE NUMERIC(12,3)';
   END IF;
 
   -- stock_transfers.quantity
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'stock_transfers' AND column_name = 'quantity') THEN
-    ALTER TABLE public.stock_transfers ALTER COLUMN quantity TYPE NUMERIC(12,3);
+    EXECUTE 'ALTER TABLE public.stock_transfers ALTER COLUMN quantity TYPE NUMERIC(12,3)';
   END IF;
 
   -- product_batches.stock_quantity
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'product_batches' AND column_name = 'stock_quantity') THEN
-    ALTER TABLE public.product_batches ALTER COLUMN stock_quantity TYPE NUMERIC(12,3);
+    EXECUTE 'ALTER TABLE public.product_batches ALTER COLUMN stock_quantity TYPE NUMERIC(12,3)';
   END IF;
 END $$;
 
 -- ------------------------------------------------------------------------------
--- 2. UPDATE STOCK DECREMENT & MOVEMENT TRIGGER FUNCTIONS (USES TEXT TO AVOID TYPE MISSING ERRORS)
+-- 2. UPDATE STOCK DECREMENT TRIGGER FUNCTIONS (USES TEXT & DYNAMIC EXECUTION)
 -- ------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.decrement_stock_on_sale()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
@@ -65,12 +65,14 @@ DECLARE
   v_branch_id UUID;
   v_biz_id UUID;
   v_status TEXT;
+  v_has_branch_inv BOOLEAN;
+  v_has_stock_mov BOOLEAN;
 BEGIN
   SELECT branch_id, business_id, status::TEXT INTO v_branch_id, v_biz_id, v_status 
   FROM public.sales 
   WHERE id = NEW.sale_id;
 
-  -- Only decrement stock if the sale is completed (or status is null / legacy direct sale)
+  -- Only decrement stock if the sale is completed (or status is null / direct sale)
   IF (v_status IS NULL OR v_status = 'completed') AND NEW.product_id IS NOT NULL THEN
     -- Update overall product stock
     UPDATE public.products 
@@ -79,12 +81,17 @@ BEGIN
 
     -- Update branch stock if branch is known
     IF v_branch_id IS NOT NULL THEN
-      UPDATE public.branch_inventory 
-      SET stock_quantity = stock_quantity - NEW.quantity 
-      WHERE branch_id = v_branch_id AND product_id = NEW.product_id;
-      
-      INSERT INTO public.stock_movements (business_id, product_id, branch_id, movement_type, quantity_change, reference_id)
-      VALUES (COALESCE(NEW.business_id, v_biz_id), NEW.product_id, v_branch_id, 'sale', -NEW.quantity, NEW.sale_id);
+      SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'branch_inventory') INTO v_has_branch_inv;
+      IF v_has_branch_inv THEN
+        EXECUTE 'UPDATE public.branch_inventory SET stock_quantity = stock_quantity - $1 WHERE branch_id = $2 AND product_id = $3'
+        USING NEW.quantity, v_branch_id, NEW.product_id;
+      END IF;
+
+      SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'stock_movements') INTO v_has_stock_mov;
+      IF v_has_stock_mov THEN
+        EXECUTE 'INSERT INTO public.stock_movements (business_id, product_id, branch_id, movement_type, quantity_change, reference_id) VALUES ($1, $2, $3, ''sale'', -$4, $5)'
+        USING COALESCE(NEW.business_id, v_biz_id), NEW.product_id, v_branch_id, NEW.quantity, NEW.sale_id;
+      END IF;
     END IF;
   END IF;
   RETURN NEW;
@@ -94,17 +101,25 @@ CREATE OR REPLACE FUNCTION public.process_completed_sale_stock()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
   item RECORD;
+  v_has_branch_inv BOOLEAN;
+  v_has_stock_mov BOOLEAN;
 BEGIN
   IF NEW.status::TEXT = 'completed' AND (OLD.status::TEXT = 'pending' OR OLD.status::TEXT IS NULL) THEN
+    SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'branch_inventory') INTO v_has_branch_inv;
+    SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'stock_movements') INTO v_has_stock_mov;
+
     FOR item IN SELECT * FROM public.sale_items WHERE sale_id = NEW.id
     LOOP
       IF item.product_id IS NOT NULL AND NEW.branch_id IS NOT NULL THEN
-        UPDATE public.branch_inventory 
-        SET stock_quantity = stock_quantity - item.quantity 
-        WHERE branch_id = NEW.branch_id AND product_id = item.product_id;
+        IF v_has_branch_inv THEN
+          EXECUTE 'UPDATE public.branch_inventory SET stock_quantity = stock_quantity - $1 WHERE branch_id = $2 AND product_id = $3'
+          USING item.quantity, NEW.branch_id, item.product_id;
+        END IF;
         
-        INSERT INTO public.stock_movements (business_id, product_id, branch_id, movement_type, quantity_change, reference_id)
-        VALUES (COALESCE(item.business_id, NEW.business_id), item.product_id, NEW.branch_id, 'sale', -item.quantity, NEW.id);
+        IF v_has_stock_mov THEN
+          EXECUTE 'INSERT INTO public.stock_movements (business_id, product_id, branch_id, movement_type, quantity_change, reference_id) VALUES ($1, $2, $3, ''sale'', -$4, $5)'
+          USING COALESCE(item.business_id, NEW.business_id), item.product_id, NEW.branch_id, item.quantity, NEW.id;
+        END IF;
       END IF;
     END LOOP;
   END IF;
@@ -112,101 +127,120 @@ BEGIN
 END; $$;
 
 -- ------------------------------------------------------------------------------
--- 3. REMOVE TEST SUPPLIER 'YOLANDA' & ENFORCE STRICT SUPPLIER TENANT ISOLATION
+-- 3. REMOVE TEST SUPPLIER 'YOLANDA' & ENFORCE STRICT SUPPLIER TENANT ISOLATION (SAFE EXECUTION)
 -- ------------------------------------------------------------------------------
-DELETE FROM public.suppliers WHERE LOWER(name) LIKE '%yolanda%';
-DELETE FROM public.suppliers WHERE business_id IS NULL;
-
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'suppliers') THEN
-    ALTER TABLE public.suppliers ENABLE ROW LEVEL SECURITY;
+    EXECUTE 'DELETE FROM public.suppliers WHERE LOWER(name) LIKE ''%yolanda%''';
+    EXECUTE 'DELETE FROM public.suppliers WHERE business_id IS NULL';
+    EXECUTE 'ALTER TABLE public.suppliers ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "auth read suppliers" ON public.suppliers';
+    EXECUTE 'DROP POLICY IF EXISTS "auth manage suppliers" ON public.suppliers';
+    EXECUTE 'DROP POLICY IF EXISTS "Enable read access for authenticated users" ON public.suppliers';
+    EXECUTE 'DROP POLICY IF EXISTS "Enable insert for authenticated users" ON public.suppliers';
+    EXECUTE 'DROP POLICY IF EXISTS "tenant_read_suppliers" ON public.suppliers';
+    EXECUTE 'DROP POLICY IF EXISTS "tenant_manage_suppliers" ON public.suppliers';
 
-    DROP POLICY IF EXISTS "auth read suppliers" ON public.suppliers;
-    DROP POLICY IF EXISTS "auth manage suppliers" ON public.suppliers;
-    DROP POLICY IF EXISTS "Enable read access for authenticated users" ON public.suppliers;
-    DROP POLICY IF EXISTS "Enable insert for authenticated users" ON public.suppliers;
-    DROP POLICY IF EXISTS "tenant_read_suppliers" ON public.suppliers;
-    DROP POLICY IF EXISTS "tenant_manage_suppliers" ON public.suppliers;
+    EXECUTE '
+      CREATE POLICY "tenant_read_suppliers" ON public.suppliers
+        FOR SELECT TO authenticated
+        USING (business_id IN (SELECT business_id FROM public.profiles WHERE id = auth.uid()))';
 
-    CREATE POLICY "tenant_read_suppliers" ON public.suppliers
-      FOR SELECT TO authenticated
-      USING (
-        business_id IN (
-          SELECT business_id FROM public.profiles WHERE id = auth.uid()
-        )
-      );
-
-    CREATE POLICY "tenant_manage_suppliers" ON public.suppliers
-      FOR ALL TO authenticated
-      USING (
-        business_id IN (
-          SELECT business_id FROM public.profiles WHERE id = auth.uid()
-        )
-      )
-      WITH CHECK (
-        business_id IN (
-          SELECT business_id FROM public.profiles WHERE id = auth.uid()
-        )
-      );
+    EXECUTE '
+      CREATE POLICY "tenant_manage_suppliers" ON public.suppliers
+        FOR ALL TO authenticated
+        USING (business_id IN (SELECT business_id FROM public.profiles WHERE id = auth.uid()))
+        WITH CHECK (business_id IN (SELECT business_id FROM public.profiles WHERE id = auth.uid()))';
   END IF;
 END $$;
 
 -- ------------------------------------------------------------------------------
--- 4. AUTO-SYNC STAFF ACCOUNTS & ROLES TO PROFILES (DYNAMIC TYPE SAFE)
+-- 4. AUTO-SYNC STAFF ACCOUNTS & ROLES TO PROFILES (DYNAMIC TYPE-SAFE)
 -- ------------------------------------------------------------------------------
-INSERT INTO public.profiles (id, full_name, phone, business_id, branch_id)
-SELECT 
-  u.id, 
-  COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''), u.email), 
-  NULLIF(TRIM(u.raw_user_meta_data->>'phone'), ''),
-  (u.raw_user_meta_data->>'business_id')::UUID,
-  CASE 
-    WHEN (u.raw_user_meta_data->>'branch_id') IS NOT NULL AND TRIM(u.raw_user_meta_data->>'branch_id') <> ''
-    THEN (u.raw_user_meta_data->>'branch_id')::UUID
-    ELSE NULL
-  END
-FROM auth.users u
-WHERE (u.raw_user_meta_data->>'business_id') IS NOT NULL
-  AND NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id)
-ON CONFLICT (id) DO UPDATE SET
-  business_id = EXCLUDED.business_id,
-  full_name = COALESCE(NULLIF(TRIM(EXCLUDED.full_name), ''), profiles.full_name),
-  phone = COALESCE(NULLIF(TRIM(EXCLUDED.phone), ''), profiles.phone);
-
-UPDATE public.profiles p
-SET 
-  business_id = (u.raw_user_meta_data->>'business_id')::UUID,
-  branch_id = COALESCE(p.branch_id, NULLIF(TRIM(u.raw_user_meta_data->>'branch_id'), '')::UUID),
-  phone = COALESCE(p.phone, NULLIF(TRIM(u.raw_user_meta_data->>'phone'), '')),
-  full_name = COALESCE(p.full_name, NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''))
-FROM auth.users u
-WHERE p.id = u.id
-  AND (u.raw_user_meta_data->>'business_id') IS NOT NULL
-  AND (p.business_id IS NULL OR p.business_id <> (u.raw_user_meta_data->>'business_id')::UUID);
-
 DO $$
 DECLARE
   v_role_type TEXT;
+  v_has_branch_id BOOLEAN;
 BEGIN
-  SELECT udt_name INTO v_role_type 
-  FROM information_schema.columns 
-  WHERE table_schema = 'public' AND table_name = 'user_roles' AND column_name = 'role';
+  SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'branch_id') INTO v_has_branch_id;
 
-  IF v_role_type = 'app_role' THEN
-    EXECUTE '
-      INSERT INTO public.user_roles (user_id, role)
-      SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')::public.app_role
-      FROM public.profiles p JOIN auth.users u ON p.id = u.id
-      WHERE p.business_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
-      ON CONFLICT DO NOTHING';
+  IF v_has_branch_id THEN
+    INSERT INTO public.profiles (id, full_name, phone, business_id, branch_id)
+    SELECT 
+      u.id, 
+      COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''), u.email), 
+      NULLIF(TRIM(u.raw_user_meta_data->>'phone'), ''),
+      (u.raw_user_meta_data->>'business_id')::UUID,
+      CASE 
+        WHEN (u.raw_user_meta_data->>'branch_id') IS NOT NULL AND TRIM(u.raw_user_meta_data->>'branch_id') <> ''
+        THEN (u.raw_user_meta_data->>'branch_id')::UUID
+        ELSE NULL
+      END
+    FROM auth.users u
+    WHERE (u.raw_user_meta_data->>'business_id') IS NOT NULL
+      AND NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id)
+    ON CONFLICT (id) DO UPDATE SET
+      business_id = EXCLUDED.business_id,
+      full_name = COALESCE(NULLIF(TRIM(EXCLUDED.full_name), ''), profiles.full_name),
+      phone = COALESCE(NULLIF(TRIM(EXCLUDED.phone), ''), profiles.phone);
+
+    UPDATE public.profiles p
+    SET 
+      business_id = (u.raw_user_meta_data->>'business_id')::UUID,
+      branch_id = COALESCE(p.branch_id, NULLIF(TRIM(u.raw_user_meta_data->>'branch_id'), '')::UUID),
+      phone = COALESCE(p.phone, NULLIF(TRIM(u.raw_user_meta_data->>'phone'), '')),
+      full_name = COALESCE(p.full_name, NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''))
+    FROM auth.users u
+    WHERE p.id = u.id
+      AND (u.raw_user_meta_data->>'business_id') IS NOT NULL
+      AND (p.business_id IS NULL OR p.business_id <> (u.raw_user_meta_data->>'business_id')::UUID);
   ELSE
-    EXECUTE '
-      INSERT INTO public.user_roles (user_id, role)
-      SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')
-      FROM public.profiles p JOIN auth.users u ON p.id = u.id
-      WHERE p.business_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
-      ON CONFLICT DO NOTHING';
+    INSERT INTO public.profiles (id, full_name, phone, business_id)
+    SELECT 
+      u.id, 
+      COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''), u.email), 
+      NULLIF(TRIM(u.raw_user_meta_data->>'phone'), ''),
+      (u.raw_user_meta_data->>'business_id')::UUID
+    FROM auth.users u
+    WHERE (u.raw_user_meta_data->>'business_id') IS NOT NULL
+      AND NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id)
+    ON CONFLICT (id) DO UPDATE SET
+      business_id = EXCLUDED.business_id,
+      full_name = COALESCE(NULLIF(TRIM(EXCLUDED.full_name), ''), profiles.full_name),
+      phone = COALESCE(NULLIF(TRIM(EXCLUDED.phone), ''), profiles.phone);
+
+    UPDATE public.profiles p
+    SET 
+      business_id = (u.raw_user_meta_data->>'business_id')::UUID,
+      phone = COALESCE(p.phone, NULLIF(TRIM(u.raw_user_meta_data->>'phone'), '')),
+      full_name = COALESCE(p.full_name, NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''))
+    FROM auth.users u
+    WHERE p.id = u.id
+      AND (u.raw_user_meta_data->>'business_id') IS NOT NULL
+      AND (p.business_id IS NULL OR p.business_id <> (u.raw_user_meta_data->>'business_id')::UUID);
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_roles') THEN
+    SELECT udt_name INTO v_role_type 
+    FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'user_roles' AND column_name = 'role';
+
+    IF v_role_type = 'app_role' THEN
+      EXECUTE '
+        INSERT INTO public.user_roles (user_id, role)
+        SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')::public.app_role
+        FROM public.profiles p JOIN auth.users u ON p.id = u.id
+        WHERE p.business_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
+        ON CONFLICT DO NOTHING';
+    ELSE
+      EXECUTE '
+        INSERT INTO public.user_roles (user_id, role)
+        SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')
+        FROM public.profiles p JOIN auth.users u ON p.id = u.id
+        WHERE p.business_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
+        ON CONFLICT DO NOTHING';
+    END IF;
   END IF;
 END $$;
 
@@ -218,59 +252,90 @@ SET search_path = public, auth
 AS $$
 DECLARE
   v_role_type TEXT;
+  v_has_branch_id BOOLEAN;
 BEGIN
   IF _business_id IS NULL THEN
     RETURN jsonb_build_object('success', false, 'error', 'business_id is required');
   END IF;
 
-  INSERT INTO public.profiles (id, full_name, phone, business_id, branch_id)
-  SELECT 
-    u.id, 
-    COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''), u.email), 
-    NULLIF(TRIM(u.raw_user_meta_data->>'phone'), ''),
-    _business_id,
-    CASE 
-      WHEN (u.raw_user_meta_data->>'branch_id') IS NOT NULL AND TRIM(u.raw_user_meta_data->>'branch_id') <> ''
-      THEN (u.raw_user_meta_data->>'branch_id')::UUID
-      ELSE NULL
-    END
-  FROM auth.users u
-  WHERE (u.raw_user_meta_data->>'business_id')::UUID = _business_id
-    AND NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id)
-  ON CONFLICT (id) DO UPDATE SET
-    business_id = _business_id,
-    full_name = COALESCE(NULLIF(TRIM(EXCLUDED.full_name), ''), profiles.full_name),
-    phone = COALESCE(NULLIF(TRIM(EXCLUDED.phone), ''), profiles.phone);
+  SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'branch_id') INTO v_has_branch_id;
 
-  UPDATE public.profiles p
-  SET 
-    business_id = _business_id,
-    branch_id = COALESCE(p.branch_id, NULLIF(TRIM(u.raw_user_meta_data->>'branch_id'), '')::UUID),
-    phone = COALESCE(p.phone, NULLIF(TRIM(u.raw_user_meta_data->>'phone'), '')),
-    full_name = COALESCE(p.full_name, NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''))
-  FROM auth.users u
-  WHERE p.id = u.id
-    AND (u.raw_user_meta_data->>'business_id')::UUID = _business_id
-    AND (p.business_id IS NULL OR p.business_id <> _business_id);
+  IF v_has_branch_id THEN
+    INSERT INTO public.profiles (id, full_name, phone, business_id, branch_id)
+    SELECT 
+      u.id, 
+      COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''), u.email), 
+      NULLIF(TRIM(u.raw_user_meta_data->>'phone'), ''),
+      _business_id,
+      CASE 
+        WHEN (u.raw_user_meta_data->>'branch_id') IS NOT NULL AND TRIM(u.raw_user_meta_data->>'branch_id') <> ''
+        THEN (u.raw_user_meta_data->>'branch_id')::UUID
+        ELSE NULL
+      END
+    FROM auth.users u
+    WHERE (u.raw_user_meta_data->>'business_id')::UUID = _business_id
+      AND NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id)
+    ON CONFLICT (id) DO UPDATE SET
+      business_id = _business_id,
+      full_name = COALESCE(NULLIF(TRIM(EXCLUDED.full_name), ''), profiles.full_name),
+      phone = COALESCE(NULLIF(TRIM(EXCLUDED.phone), ''), profiles.phone);
 
-  SELECT udt_name INTO v_role_type 
-  FROM information_schema.columns 
-  WHERE table_schema = 'public' AND table_name = 'user_roles' AND column_name = 'role';
-
-  IF v_role_type = 'app_role' THEN
-    EXECUTE '
-      INSERT INTO public.user_roles (user_id, role)
-      SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')::public.app_role
-      FROM public.profiles p JOIN auth.users u ON p.id = u.id
-      WHERE p.business_id = $1 AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
-      ON CONFLICT DO NOTHING' USING _business_id;
+    UPDATE public.profiles p
+    SET 
+      business_id = _business_id,
+      branch_id = COALESCE(p.branch_id, NULLIF(TRIM(u.raw_user_meta_data->>'branch_id'), '')::UUID),
+      phone = COALESCE(p.phone, NULLIF(TRIM(u.raw_user_meta_data->>'phone'), '')),
+      full_name = COALESCE(p.full_name, NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''))
+    FROM auth.users u
+    WHERE p.id = u.id
+      AND (u.raw_user_meta_data->>'business_id')::UUID = _business_id
+      AND (p.business_id IS NULL OR p.business_id <> _business_id);
   ELSE
-    EXECUTE '
-      INSERT INTO public.user_roles (user_id, role)
-      SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')
-      FROM public.profiles p JOIN auth.users u ON p.id = u.id
-      WHERE p.business_id = $1 AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
-      ON CONFLICT DO NOTHING' USING _business_id;
+    INSERT INTO public.profiles (id, full_name, phone, business_id)
+    SELECT 
+      u.id, 
+      COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''), u.email), 
+      NULLIF(TRIM(u.raw_user_meta_data->>'phone'), ''),
+      _business_id
+    FROM auth.users u
+    WHERE (u.raw_user_meta_data->>'business_id')::UUID = _business_id
+      AND NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = u.id)
+    ON CONFLICT (id) DO UPDATE SET
+      business_id = _business_id,
+      full_name = COALESCE(NULLIF(TRIM(EXCLUDED.full_name), ''), profiles.full_name),
+      phone = COALESCE(NULLIF(TRIM(EXCLUDED.phone), ''), profiles.phone);
+
+    UPDATE public.profiles p
+    SET 
+      business_id = _business_id,
+      phone = COALESCE(p.phone, NULLIF(TRIM(u.raw_user_meta_data->>'phone'), '')),
+      full_name = COALESCE(p.full_name, NULLIF(TRIM(u.raw_user_meta_data->>'full_name'), ''))
+    FROM auth.users u
+    WHERE p.id = u.id
+      AND (u.raw_user_meta_data->>'business_id')::UUID = _business_id
+      AND (p.business_id IS NULL OR p.business_id <> _business_id);
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_roles') THEN
+    SELECT udt_name INTO v_role_type 
+    FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'user_roles' AND column_name = 'role';
+
+    IF v_role_type = 'app_role' THEN
+      EXECUTE '
+        INSERT INTO public.user_roles (user_id, role)
+        SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')::public.app_role
+        FROM public.profiles p JOIN auth.users u ON p.id = u.id
+        WHERE p.business_id = $1 AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
+        ON CONFLICT DO NOTHING' USING _business_id;
+    ELSE
+      EXECUTE '
+        INSERT INTO public.user_roles (user_id, role)
+        SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')
+        FROM public.profiles p JOIN auth.users u ON p.id = u.id
+        WHERE p.business_id = $1 AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
+        ON CONFLICT DO NOTHING' USING _business_id;
+    END IF;
   END IF;
 
   RETURN jsonb_build_object('success', true);
@@ -313,6 +378,7 @@ DECLARE
   target_phone TEXT;
   clean_phone TEXT;
   generated_otp TEXT;
+  v_has_businesses BOOLEAN;
 BEGIN
   IF _identifier IS NULL OR TRIM(_identifier) = '' THEN
     RETURN jsonb_build_object('success', false, 'error', 'Tafadhali weka barua pepe au namba ya simu.');
@@ -331,10 +397,13 @@ BEGIN
   WHERE LOWER(email) = LOWER(_identifier)
   LIMIT 1;
 
+  SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'businesses') INTO v_has_businesses;
+
   IF target_user_id IS NOT NULL THEN
     SELECT phone INTO target_phone FROM public.profiles WHERE id = target_user_id AND phone IS NOT NULL AND phone <> '' LIMIT 1;
-    IF target_phone IS NULL THEN
-      SELECT phone INTO target_phone FROM public.businesses WHERE LOWER(email) = LOWER(target_email) AND phone IS NOT NULL AND phone <> '' LIMIT 1;
+    IF target_phone IS NULL AND v_has_businesses THEN
+      EXECUTE 'SELECT phone FROM public.businesses WHERE LOWER(email) = LOWER($1) AND phone IS NOT NULL AND phone <> '''' LIMIT 1'
+      INTO target_phone USING target_email;
     END IF;
   ELSE
     SELECT id, phone INTO target_user_id, target_phone
@@ -344,11 +413,9 @@ BEGIN
 
     IF target_user_id IS NOT NULL THEN
       SELECT email INTO target_email FROM auth.users WHERE id = target_user_id LIMIT 1;
-    ELSE
-      SELECT email, phone INTO target_email, target_phone
-      FROM public.businesses
-      WHERE phone = clean_phone OR phone = _identifier OR phone = ('+255' || SUBSTRING(clean_phone FROM 2))
-      LIMIT 1;
+    ELSIF v_has_businesses THEN
+      EXECUTE 'SELECT email, phone FROM public.businesses WHERE phone = $1 OR phone = $2 OR phone = (''+255'' || SUBSTRING($1 FROM 2)) LIMIT 1'
+      INTO target_email, target_phone USING clean_phone, _identifier;
 
       IF target_email IS NOT NULL THEN
         SELECT id INTO target_user_id FROM auth.users WHERE LOWER(email) = LOWER(target_email) LIMIT 1;
@@ -408,6 +475,7 @@ DECLARE
   target_phone TEXT;
   target_user_id UUID;
   clean_phone TEXT;
+  v_has_businesses BOOLEAN;
 BEGIN
   IF _identifier IS NULL OR TRIM(_identifier) = '' THEN
     RETURN jsonb_build_object('success', false, 'error', 'Tafadhali weka barua pepe au namba ya simu.');
@@ -458,12 +526,11 @@ BEGIN
     SELECT id INTO target_user_id FROM public.profiles WHERE phone = target_phone LIMIT 1;
   END IF;
 
-  IF target_user_id IS NULL AND target_phone IS NOT NULL AND target_phone <> '' THEN
-    SELECT u.id INTO target_user_id 
-    FROM auth.users u
-    JOIN public.businesses b ON LOWER(u.email) = LOWER(b.email)
-    WHERE b.phone = target_phone
-    LIMIT 1;
+  SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'businesses') INTO v_has_businesses;
+
+  IF target_user_id IS NULL AND target_phone IS NOT NULL AND target_phone <> '' AND v_has_businesses THEN
+    EXECUTE 'SELECT u.id FROM auth.users u JOIN public.businesses b ON LOWER(u.email) = LOWER(b.email) WHERE b.phone = $1 LIMIT 1'
+    INTO target_user_id USING target_phone;
   END IF;
 
   IF target_user_id IS NULL THEN
@@ -488,6 +555,6 @@ $$;
 GRANT EXECUTE ON FUNCTION public.verify_otp_and_reset_password(TEXT, TEXT, TEXT) TO anon, authenticated, service_role;
 
 -- ------------------------------------------------------------------------------
--- 6. RELOAD POSTGREST SCHEMA CACHE
+-- 6. RELOAD SCHEMA CACHE
 -- ------------------------------------------------------------------------------
 NOTIFY pgrst, 'reload schema';
