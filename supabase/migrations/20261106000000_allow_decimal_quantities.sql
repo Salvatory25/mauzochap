@@ -52,9 +52,9 @@ RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
   v_branch_id UUID;
   v_biz_id UUID;
-  v_status public.sale_status;
+  v_status TEXT;
 BEGIN
-  SELECT branch_id, business_id, status INTO v_branch_id, v_biz_id, v_status 
+  SELECT branch_id, business_id, status::TEXT INTO v_branch_id, v_biz_id, v_status 
   FROM public.sales 
   WHERE id = NEW.sale_id;
 

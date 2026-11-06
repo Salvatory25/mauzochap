@@ -224,3 +224,4 @@ $$;
 GRANT EXECUTE ON FUNCTION public.verify_otp_and_reset_password(TEXT, TEXT, TEXT) TO anon, authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';
+

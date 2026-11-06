@@ -1,5 +1,5 @@
 -- ==============================================================================
--- MAUZOCHAP COMPLETE PRODUCTION HOTFIX MIGRATION
+-- MAUZOCHAP COMPLETE PRODUCTION HOTFIX MIGRATION (100% BULLETPROOF & IDEMPOTENT)
 -- Run this in your Supabase Dashboard:
 -- https://supabase.com/dashboard/project/mnopesayeoklyymowmwc/sql/new
 --
@@ -57,20 +57,20 @@ BEGIN
 END $$;
 
 -- ------------------------------------------------------------------------------
--- 2. UPDATE STOCK DECREMENT & MOVEMENT TRIGGER FUNCTIONS
+-- 2. UPDATE STOCK DECREMENT & MOVEMENT TRIGGER FUNCTIONS (USES TEXT TO AVOID TYPE MISSING ERRORS)
 -- ------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.decrement_stock_on_sale()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
   v_branch_id UUID;
   v_biz_id UUID;
-  v_status public.sale_status;
+  v_status TEXT;
 BEGIN
-  SELECT branch_id, business_id, status INTO v_branch_id, v_biz_id, v_status 
+  SELECT branch_id, business_id, status::TEXT INTO v_branch_id, v_biz_id, v_status 
   FROM public.sales 
   WHERE id = NEW.sale_id;
 
-  -- Only decrement stock if the sale is completed (or status is null / direct sale)
+  -- Only decrement stock if the sale is completed (or status is null / legacy direct sale)
   IF (v_status IS NULL OR v_status = 'completed') AND NEW.product_id IS NOT NULL THEN
     -- Update overall product stock
     UPDATE public.products 
@@ -95,7 +95,7 @@ RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
   item RECORD;
 BEGIN
-  IF NEW.status = 'completed' AND OLD.status = 'pending' THEN
+  IF NEW.status::TEXT = 'completed' AND (OLD.status::TEXT = 'pending' OR OLD.status::TEXT IS NULL) THEN
     FOR item IN SELECT * FROM public.sale_items WHERE sale_id = NEW.id
     LOOP
       IF item.product_id IS NOT NULL AND NEW.branch_id IS NOT NULL THEN
@@ -153,7 +153,7 @@ BEGIN
 END $$;
 
 -- ------------------------------------------------------------------------------
--- 4. AUTO-SYNC STAFF ACCOUNTS & ROLES TO PROFILES
+-- 4. AUTO-SYNC STAFF ACCOUNTS & ROLES TO PROFILES (DYNAMIC TYPE SAFE)
 -- ------------------------------------------------------------------------------
 INSERT INTO public.profiles (id, full_name, phone, business_id, branch_id)
 SELECT 
@@ -185,15 +185,30 @@ WHERE p.id = u.id
   AND (u.raw_user_meta_data->>'business_id') IS NOT NULL
   AND (p.business_id IS NULL OR p.business_id <> (u.raw_user_meta_data->>'business_id')::UUID);
 
-INSERT INTO public.user_roles (user_id, role)
-SELECT 
-  p.id, 
-  COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>'role'), ''), 'cashier')::public.app_role
-FROM public.profiles p
-JOIN auth.users u ON p.id = u.id
-WHERE p.business_id IS NOT NULL
-  AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
-ON CONFLICT (user_id, role) DO NOTHING;
+DO $$
+DECLARE
+  v_role_type TEXT;
+BEGIN
+  SELECT udt_name INTO v_role_type 
+  FROM information_schema.columns 
+  WHERE table_schema = 'public' AND table_name = 'user_roles' AND column_name = 'role';
+
+  IF v_role_type = 'app_role' THEN
+    EXECUTE '
+      INSERT INTO public.user_roles (user_id, role)
+      SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')::public.app_role
+      FROM public.profiles p JOIN auth.users u ON p.id = u.id
+      WHERE p.business_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
+      ON CONFLICT DO NOTHING';
+  ELSE
+    EXECUTE '
+      INSERT INTO public.user_roles (user_id, role)
+      SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')
+      FROM public.profiles p JOIN auth.users u ON p.id = u.id
+      WHERE p.business_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
+      ON CONFLICT DO NOTHING';
+  END IF;
+END $$;
 
 CREATE OR REPLACE FUNCTION public.sync_business_staff(_business_id UUID)
 RETURNS JSONB
@@ -201,6 +216,8 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth
 AS $$
+DECLARE
+  v_role_type TEXT;
 BEGIN
   IF _business_id IS NULL THEN
     RETURN jsonb_build_object('success', false, 'error', 'business_id is required');
@@ -236,15 +253,25 @@ BEGIN
     AND (u.raw_user_meta_data->>'business_id')::UUID = _business_id
     AND (p.business_id IS NULL OR p.business_id <> _business_id);
 
-  INSERT INTO public.user_roles (user_id, role)
-  SELECT 
-    p.id, 
-    COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>'role'), ''), 'cashier')::public.app_role
-  FROM public.profiles p
-  JOIN auth.users u ON p.id = u.id
-  WHERE p.business_id = _business_id
-    AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
-  ON CONFLICT (user_id, role) DO NOTHING;
+  SELECT udt_name INTO v_role_type 
+  FROM information_schema.columns 
+  WHERE table_schema = 'public' AND table_name = 'user_roles' AND column_name = 'role';
+
+  IF v_role_type = 'app_role' THEN
+    EXECUTE '
+      INSERT INTO public.user_roles (user_id, role)
+      SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')::public.app_role
+      FROM public.profiles p JOIN auth.users u ON p.id = u.id
+      WHERE p.business_id = $1 AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
+      ON CONFLICT DO NOTHING' USING _business_id;
+  ELSE
+    EXECUTE '
+      INSERT INTO public.user_roles (user_id, role)
+      SELECT p.id, COALESCE(NULLIF(TRIM(u.raw_user_meta_data->>''role''), ''''), ''cashier'')
+      FROM public.profiles p JOIN auth.users u ON p.id = u.id
+      WHERE p.business_id = $1 AND NOT EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = p.id)
+      ON CONFLICT DO NOTHING' USING _business_id;
+  END IF;
 
   RETURN jsonb_build_object('success', true);
 END;
