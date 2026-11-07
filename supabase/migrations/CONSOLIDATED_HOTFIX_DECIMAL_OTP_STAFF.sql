@@ -87,7 +87,90 @@ CREATE TABLE IF NOT EXISTS public.invoice_items (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 2. DYNAMICALLY ALTER ALL INTEGER QUANTITY & STOCK COLUMNS TO NUMERIC(12,3)
+-- 2. EXPLICITLY & DYNAMICALLY ALTER ALL QUANTITY & STOCK COLUMNS TO NUMERIC(12,3)
+DO $$
+BEGIN
+  -- sale_items.quantity
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'sale_items') THEN
+    BEGIN
+      ALTER TABLE public.sale_items ALTER COLUMN quantity TYPE NUMERIC(12,3) USING quantity::NUMERIC(12,3);
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+
+  -- invoice_items.quantity
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'invoice_items') THEN
+    BEGIN
+      ALTER TABLE public.invoice_items ALTER COLUMN quantity TYPE NUMERIC(12,3) USING quantity::NUMERIC(12,3);
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+
+  -- products.stock_quantity & low_stock_threshold
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'products') THEN
+    BEGIN
+      ALTER TABLE public.products ALTER COLUMN stock_quantity DROP DEFAULT;
+      ALTER TABLE public.products ALTER COLUMN stock_quantity TYPE NUMERIC(12,3) USING stock_quantity::NUMERIC(12,3);
+      ALTER TABLE public.products ALTER COLUMN stock_quantity SET DEFAULT 0;
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'products' AND column_name = 'low_stock_threshold') THEN
+      BEGIN
+        ALTER TABLE public.products ALTER COLUMN low_stock_threshold DROP DEFAULT;
+        ALTER TABLE public.products ALTER COLUMN low_stock_threshold TYPE NUMERIC(12,3) USING low_stock_threshold::NUMERIC(12,3);
+        ALTER TABLE public.products ALTER COLUMN low_stock_threshold SET DEFAULT 5;
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END IF;
+  END IF;
+
+  -- branch_inventory.stock_quantity
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'branch_inventory') THEN
+    BEGIN
+      ALTER TABLE public.branch_inventory ALTER COLUMN stock_quantity DROP DEFAULT;
+      ALTER TABLE public.branch_inventory ALTER COLUMN stock_quantity TYPE NUMERIC(12,3) USING stock_quantity::NUMERIC(12,3);
+      ALTER TABLE public.branch_inventory ALTER COLUMN stock_quantity SET DEFAULT 0;
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+
+  -- stock_movements.quantity_change
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'stock_movements') THEN
+    BEGIN
+      ALTER TABLE public.stock_movements ALTER COLUMN quantity_change TYPE NUMERIC(12,3) USING quantity_change::NUMERIC(12,3);
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+
+  -- product_batches.stock_quantity
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'product_batches') THEN
+    BEGIN
+      ALTER TABLE public.product_batches ALTER COLUMN stock_quantity DROP DEFAULT;
+      ALTER TABLE public.product_batches ALTER COLUMN stock_quantity TYPE NUMERIC(12,3) USING stock_quantity::NUMERIC(12,3);
+      ALTER TABLE public.product_batches ALTER COLUMN stock_quantity SET DEFAULT 0;
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+
+  -- stock_transfers.quantity
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'stock_transfers') THEN
+    BEGIN
+      ALTER TABLE public.stock_transfers ALTER COLUMN quantity TYPE NUMERIC(12,3) USING quantity::NUMERIC(12,3);
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+
+  -- purchase_items.quantity
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'purchase_items') THEN
+    BEGIN
+      ALTER TABLE public.purchase_items ALTER COLUMN quantity TYPE NUMERIC(12,3) USING quantity::NUMERIC(12,3);
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+END $$;
+
+-- 2b. DYNAMIC SWEEP FOR ANY REMAINING INTEGER QUANTITY / STOCK / QTY / CHANGE COLUMNS
 DO $$
 DECLARE
   r RECORD;
@@ -101,14 +184,21 @@ BEGIN
         column_name ILIKE '%quantity%' 
         OR column_name ILIKE '%stock%' 
         OR column_name ILIKE '%qty%'
+        OR column_name ILIKE '%change%'
       )
   )
   LOOP
     BEGIN
-      EXECUTE format('ALTER TABLE public.%I ALTER COLUMN %I TYPE NUMERIC(12,3);', r.table_name, r.column_name);
-    EXCEPTION WHEN OTHERS THEN
-      -- Continue gracefully if any specific column has constraints
-      NULL;
+      EXECUTE format('ALTER TABLE public.%I ALTER COLUMN %I DROP DEFAULT;', r.table_name, r.column_name);
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+    BEGIN
+      EXECUTE format('ALTER TABLE public.%I ALTER COLUMN %I TYPE NUMERIC(12,3) USING %I::NUMERIC(12,3);', r.table_name, r.column_name, r.column_name);
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+    BEGIN
+      EXECUTE format('ALTER TABLE public.%I ALTER COLUMN %I SET DEFAULT 0;', r.table_name, r.column_name);
+    EXCEPTION WHEN OTHERS THEN NULL;
     END;
   END LOOP;
 END $$;
@@ -216,3 +306,15 @@ FOR EACH ROW EXECUTE FUNCTION public.decrement_stock_on_sale();
 
 -- 5. RELOAD POSTGREST SCHEMA
 NOTIFY pgrst, 'reload schema';
+
+-- 6. VERIFICATION: DISPLAY QUANTITY & STOCK COLUMN TYPES
+SELECT table_name, column_name, data_type 
+FROM information_schema.columns 
+WHERE table_schema = 'public' 
+  AND (
+    column_name ILIKE '%quantity%' 
+    OR column_name ILIKE '%stock%' 
+    OR column_name ILIKE '%qty%'
+    OR column_name ILIKE '%change%'
+  )
+ORDER BY table_name, column_name;
