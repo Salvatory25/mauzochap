@@ -261,60 +261,126 @@ GRANT ALL ON public.products TO authenticated, anon, service_role;
 GRANT ALL ON public.invoices TO authenticated, anon, service_role;
 GRANT ALL ON public.invoice_items TO authenticated, anon, service_role;
 
--- 4. UPDATE STOCK DECREMENT TRIGGER
-CREATE OR REPLACE FUNCTION public.decrement_stock_on_sale()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
-DECLARE
-  v_branch_id UUID;
-  v_biz_id UUID;
-  v_status TEXT;
-  v_has_branch_inv BOOLEAN;
-  v_has_stock_mov BOOLEAN;
+-- 4. DROP ALL OLD TRIGGERS ON SALE_ITEMS TO ELIMINATE ANY HIDDEN INTEGER CASTS
+DO $$
+DECLARE trg RECORD;
 BEGIN
-  SELECT branch_id, business_id, status::TEXT INTO v_branch_id, v_biz_id, v_status 
-  FROM public.sales 
-  WHERE id = NEW.sale_id;
-
-  IF (v_status IS NULL OR v_status = 'completed') AND NEW.product_id IS NOT NULL THEN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'products') THEN
-      UPDATE public.products 
-      SET stock_quantity = stock_quantity - NEW.quantity 
-      WHERE id = NEW.product_id;
-    END IF;
-
-    IF v_branch_id IS NOT NULL THEN
-      SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'branch_inventory') INTO v_has_branch_inv;
-      IF v_has_branch_inv THEN
-        EXECUTE 'UPDATE public.branch_inventory SET stock_quantity = stock_quantity - $1 WHERE branch_id = $2 AND product_id = $3'
-        USING NEW.quantity, v_branch_id, NEW.product_id;
-      END IF;
-
-      SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'stock_movements') INTO v_has_stock_mov;
-      IF v_has_stock_mov THEN
-        EXECUTE 'INSERT INTO public.stock_movements (business_id, product_id, branch_id, movement_type, quantity_change, reference_id) VALUES ($1, $2, $3, ''sale'', -$4, $5)'
-        USING COALESCE(NEW.business_id, v_biz_id), NEW.product_id, v_branch_id, NEW.quantity, NEW.sale_id;
-      END IF;
-    END IF;
-  END IF;
-  RETURN NEW;
-END; $$;
-
-DROP TRIGGER IF EXISTS trg_decrement_stock ON public.sale_items;
-CREATE TRIGGER trg_decrement_stock 
-AFTER INSERT ON public.sale_items
-FOR EACH ROW EXECUTE FUNCTION public.decrement_stock_on_sale();
-
--- 5. RELOAD POSTGREST SCHEMA
-NOTIFY pgrst, 'reload schema';
-
--- 6. VERIFICATION: DISPLAY QUANTITY & STOCK COLUMN TYPES
-SELECT table_name, column_name, data_type 
-FROM information_schema.columns 
-WHERE table_schema = 'public' 
-  AND (
-    column_name ILIKE '%quantity%' 
-    OR column_name ILIKE '%stock%' 
-    OR column_name ILIKE '%qty%'
-    OR column_name ILIKE '%change%'
+  FOR trg IN (
+    SELECT trigger_name 
+    FROM information_schema.triggers 
+    WHERE event_object_table = 'sale_items' 
+      AND trigger_schema = 'public'
   )
-ORDER BY table_name, column_name;
+  LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS %I ON public.sale_items;', trg.trigger_name);
+  END LOOP;
+END $$;
+
+-- 5. ATOMIC POS CHECKOUT FUNCTION (Completely bypasses PostgREST table prepared statements)
+CREATE OR REPLACE FUNCTION public.process_pos_checkout(
+  p_receipt_number TEXT,
+  p_branch_id UUID,
+  p_customer_id UUID,
+  p_subtotal NUMERIC,
+  p_discount NUMERIC,
+  p_tax NUMERIC,
+  p_total NUMERIC,
+  p_amount_paid NUMERIC,
+  p_payment_method TEXT,
+  p_status TEXT,
+  p_notes TEXT,
+  p_items JSONB,
+  p_invoice_status TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_user_id UUID := auth.uid();
+  v_biz_id UUID;
+  v_sale RECORD;
+  v_invoice RECORD;
+  v_item JSONB;
+  v_qty NUMERIC(12,3);
+  v_price NUMERIC(12,2);
+  v_line_total NUMERIC(12,2);
+  v_prod_id UUID;
+  v_prod_name TEXT;
+BEGIN
+  -- Resolve business_id
+  SELECT business_id INTO v_biz_id FROM public.profiles WHERE id = v_user_id;
+
+  -- 1. Insert into sales
+  INSERT INTO public.sales (
+    receipt_number, cashier_id, branch_id, customer_id,
+    subtotal, discount, tax, total, amount_paid,
+    payment_method, status, notes, business_id
+  ) VALUES (
+    p_receipt_number, v_user_id, p_branch_id, p_customer_id,
+    p_subtotal, p_discount, p_tax, p_total, p_amount_paid,
+    p_payment_method, p_status, p_notes, v_biz_id
+  )
+  RETURNING * INTO v_sale;
+
+  -- 2. Insert into sale_items and decrement product stock
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    v_prod_id := NULLIF(v_item->>'id', '')::UUID;
+    v_prod_name := COALESCE(v_item->>'name', 'Item');
+    v_qty := (v_item->>'qty')::NUMERIC(12,3);
+    v_price := (v_item->>'price')::NUMERIC(12,2);
+    v_line_total := ROUND(v_qty * v_price, 2);
+
+    INSERT INTO public.sale_items (
+      sale_id, product_id, product_name, quantity, unit_price, line_total, business_id
+    ) VALUES (
+      v_sale.id, v_prod_id, v_prod_name, v_qty, v_price, v_line_total, v_biz_id
+    );
+
+    IF v_prod_id IS NOT NULL THEN
+      UPDATE public.products 
+      SET stock_quantity = stock_quantity - v_qty 
+      WHERE id = v_prod_id;
+    END IF;
+  END LOOP;
+
+  -- 3. Insert into invoices
+  INSERT INTO public.invoices (
+    sale_id, customer_id, subtotal, discount, tax, total_amount,
+    amount_paid, balance, payment_method, payment_status, created_by, business_id
+  ) VALUES (
+    v_sale.id, p_customer_id, p_subtotal, p_discount, p_tax, p_total,
+    p_amount_paid, GREATEST(0, p_total - p_amount_paid), p_payment_method,
+    p_invoice_status, v_user_id, v_biz_id
+  )
+  RETURNING * INTO v_invoice;
+
+  -- 4. Insert into invoice_items
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    v_prod_id := NULLIF(v_item->>'id', '')::UUID;
+    v_qty := (v_item->>'qty')::NUMERIC(12,3);
+    v_price := (v_item->>'price')::NUMERIC(12,2);
+    v_line_total := ROUND(v_qty * v_price, 2);
+
+    INSERT INTO public.invoice_items (
+      invoice_id, product_id, quantity, unit_price, subtotal, business_id
+    ) VALUES (
+      v_invoice.id, v_prod_id, v_qty, v_price, v_line_total, v_biz_id
+    );
+  END LOOP;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'sale', row_to_json(v_sale),
+    'invoice', row_to_json(v_invoice)
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.process_pos_checkout TO authenticated, anon, service_role;
+
+-- 6. RELOAD SCHEMA CACHE
+NOTIFY pgrst, 'reload schema';
