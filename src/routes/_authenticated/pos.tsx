@@ -227,18 +227,24 @@ function POSPage() {
         })
         .select()
         .single();
-      if (error) throw error;
+      if (error) {
+        console.error("[Sales Insert Error]", error);
+        throw new Error(`[sales] ${error.message}${error.details ? ` - ${error.details}` : ""}`);
+      }
 
       const items = cart.map((i) => ({
         sale_id: sale.id,
         product_id: i.id,
         product_name: i.name,
-        quantity: i.qty,
-        unit_price: i.price,
-        line_total: i.price * i.qty,
+        quantity: Number(i.qty),
+        unit_price: Number(i.price),
+        line_total: Number(i.price * i.qty),
       }));
       const { error: itemErr } = await supabase.from("sale_items").insert(items);
-      if (itemErr) throw itemErr;
+      if (itemErr) {
+        console.error("[Sale Items Insert Error]", itemErr);
+        throw new Error(`[sale_items] ${itemErr.message}${itemErr.details ? ` - ${itemErr.details}` : ""}`);
+      }
 
       // Generate Invoice automatically after sale items are successfully inserted
       let paymentStatus: "Paid" | "Partial" | "Unpaid" = "Unpaid";
@@ -269,19 +275,25 @@ function POSPage() {
         .select()
         .single();
 
-      if (invoiceErr) throw invoiceErr;
+      if (invoiceErr) {
+        console.error("[Invoice Insert Error]", invoiceErr);
+        throw new Error(`[invoices] ${invoiceErr.message}${invoiceErr.details ? ` - ${invoiceErr.details}` : ""}`);
+      }
 
       const invoiceItems = cart.map((i) => ({
         invoice_id: invoice.id,
         product_id: i.id,
-        quantity: i.qty,
-        unit_price: i.price,
-        subtotal: i.price * i.qty,
+        quantity: Number(i.qty),
+        unit_price: Number(i.price),
+        subtotal: Number(i.price * i.qty),
         business_id: sale.business_id || undefined
       }));
 
       const { error: invoiceItemErr } = await supabase.from("invoice_items").insert(invoiceItems);
-      if (invoiceItemErr) throw invoiceItemErr;
+      if (invoiceItemErr) {
+        console.error("[Invoice Items Insert Error]", invoiceItemErr);
+        throw new Error(`[invoice_items] ${invoiceItemErr.message}${invoiceItemErr.details ? ` - ${invoiceItemErr.details}` : ""}`);
+      }
 
       const lowStockItems = cart.filter(item => {
         const newStock = item.stock_quantity - item.qty;
