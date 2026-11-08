@@ -298,6 +298,7 @@ function POSPage() {
         quantity: Number(i.qty),
         unit_price: Number(i.price),
         line_total: Number(i.price * i.qty),
+        business_id: sale.business_id || undefined,
       }));
       const { error: itemErr } = await supabase.from("sale_items").insert(items);
       if (itemErr) {
