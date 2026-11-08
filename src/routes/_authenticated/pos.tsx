@@ -218,56 +218,7 @@ function POSPage() {
         paymentStatus = "Unpaid";
       }
 
-      // 1. Try atomic RPC checkout first to completely bypass any PostgREST table prepared-statement cache
-      try {
-        const { data: rpcData, error: rpcErr } = await (supabase as any).rpc("process_pos_checkout", {
-          p_receipt_number: receiptNumber,
-          p_branch_id: branchId || null,
-          p_customer_id: customerId || null,
-          p_subtotal: subtotal,
-          p_discount: Number(discount || 0),
-          p_tax: taxAmount,
-          p_total: total,
-          p_amount_paid: finalAmountPaid,
-          p_payment_method: finalMethod,
-          p_status: status,
-          p_notes: notes,
-          p_items: cart.map(i => ({
-            id: i.id,
-            name: i.name,
-            qty: Number(i.qty),
-            price: Number(i.price)
-          })),
-          p_invoice_status: paymentStatus
-        });
-
-        if (rpcErr) {
-          console.error("[POS RPC Error]", rpcErr);
-        } else if (rpcData?.success) {
-          const sale = rpcData.sale;
-          const lowStockItems = cart.filter(item => {
-            const newStock = item.stock_quantity - item.qty;
-            return newStock <= (item.low_stock_threshold || 5);
-          });
-
-          if (lowStockItems.length > 0) {
-            toast.error(
-              `Low Stock Alert: ${lowStockItems.map(i => i.name).join(", ")} are now running low!`,
-              { duration: 10000 }
-            );
-          }
-
-          toast.success("Sale completed and Invoice generated");
-          setCompletedSale({ ...sale, items: cart });
-          cancelSale();
-          qc.invalidateQueries();
-          return;
-        }
-      } catch (e) {
-        console.warn("[POS RPC Fallback to direct tables]", e);
-      }
-
-      // 2. Fallback to direct table inserts
+      // 1. Direct table insert for sale
       const { data: sale, error } = await supabase
         .from("sales")
         .insert({
@@ -304,6 +255,18 @@ function POSPage() {
       if (itemErr) {
         console.error("[Sale Items Insert Error]", itemErr);
         throw new Error(`[sale_items] ${itemErr.message}${itemErr.details ? ` - ${itemErr.details}` : ""}`);
+      }
+
+      // Update product stock directly in JavaScript - zero trigger dependency
+      for (const item of cart) {
+        if (item.id) {
+          const currentStock = Number(item.stock_quantity || 0);
+          const newStock = Math.max(0, currentStock - Number(item.qty));
+          await supabase
+            .from("products")
+            .update({ stock_quantity: newStock })
+            .eq("id", item.id);
+        }
       }
 
       // Generate Invoice automatically after sale items are successfully inserted
