@@ -241,7 +241,9 @@ function POSPage() {
           p_invoice_status: paymentStatus
         });
 
-        if (!rpcErr && rpcData?.success) {
+        if (rpcErr) {
+          console.error("[POS RPC Error]", rpcErr);
+        } else if (rpcData?.success) {
           const sale = rpcData.sale;
           const lowStockItems = cart.filter(item => {
             const newStock = item.stock_quantity - item.qty;
