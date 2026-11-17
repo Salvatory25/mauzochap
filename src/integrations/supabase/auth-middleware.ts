@@ -4,20 +4,19 @@ import { getRequest } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
+const ACTIVE_SUPABASE_URL = "https://rcinghijelhlehfycjka.supabase.co";
+const ACTIVE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Bsr1nZOccww5f4gnn3N-Mg_Q8okmL-a";
+const RETIRED_REFS = ["tnyzhkecgxfmkteatnrx", "mnopesayeoklyymowmwc", "wtnfqqdfycvnwvdhmhpj"];
+
 export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
+    const rawUrl = process.env.SUPABASE_URL || "";
+    const rawKey = process.env.SUPABASE_PUBLISHABLE_KEY || "";
+    const isRetiredUrl = !rawUrl || RETIRED_REFS.some((ref) => rawUrl.includes(ref));
 
-    if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-      const missing = [
-        ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
-        ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
-      ];
-      const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Please configure Supabase.`;
-      console.error(`[Supabase] ${message}`);
-      throw new Error(message);
-    }
+    const SUPABASE_URL = isRetiredUrl ? ACTIVE_SUPABASE_URL : rawUrl;
+    const SUPABASE_PUBLISHABLE_KEY =
+      isRetiredUrl || !rawKey ? ACTIVE_SUPABASE_PUBLISHABLE_KEY : rawKey;
 
     const request = getRequest();
 
@@ -40,7 +39,7 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
       throw new Error("Unauthorized: No token provided");
     }
 
-    const supabase = createClient<Database>(SUPABASE_URL!, SUPABASE_PUBLISHABLE_KEY!, {
+    const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       global: {
         headers: {
           Authorization: `Bearer ${token}`,

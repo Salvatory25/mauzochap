@@ -77,10 +77,12 @@ function AuthPage() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  if (user) {
-    const redirectParam = params.get("redirect");
-    navigate({ to: (redirectParam || "/dashboard") as any, replace: true });
-  }
+  useEffect(() => {
+    if (user) {
+      const redirectParam = params.get("redirect");
+      navigate({ to: (redirectParam || "/dashboard") as any, replace: true });
+    }
+  }, [user, navigate]);
 
   // Handle Standard Email/Password Sign-In
   const handleSignIn = async (e: React.FormEvent) => {
