@@ -17,14 +17,19 @@ CREATE TABLE IF NOT EXISTS public.daily_sms_report_logs (
   order_count INTEGER NOT NULL DEFAULT 0,
   cash_total NUMERIC(15,2) NOT NULL DEFAULT 0,
   mobile_total NUMERIC(15,2) NOT NULL DEFAULT 0,
+  expenses_total NUMERIC(15,2) NOT NULL DEFAULT 0,
   net_profit NUMERIC(15,2) NOT NULL DEFAULT 0,
   low_stock_count INTEGER NOT NULL DEFAULT 0,
-  sms_body TEXT NOT NULL,
+  message_body TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'queued',
+  trigger_source TEXT NOT NULL DEFAULT 'pg_cron_2200',
   http_request_id BIGINT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (business_id, report_date)
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.daily_sms_report_logs ADD COLUMN IF NOT EXISTS http_request_id BIGINT;
+CREATE UNIQUE INDEX IF NOT EXISTS daily_sms_report_logs_biz_date_uidx
+  ON public.daily_sms_report_logs (business_id, report_date);
 
 ALTER TABLE public.daily_sms_report_logs ENABLE ROW LEVEL SECURITY;
 
@@ -104,7 +109,7 @@ DECLARE
   v_req_id BIGINT;
   v_dispatched_count INTEGER := 0;
   v_skipped_count INTEGER := 0;
-  v_api_token TEXT := '7|t3d18d70V5xR2rI6fF8wW1cM4bN9pQ0kL5zX2jH8abcdef12';
+  v_api_token TEXT := 'swl_live_SZvkG6VjaYRFKJlQHG6FCu8HJZDRCVVHYHWhqgf8VV6lhIeP';
 BEGIN
   -- Compute East Africa Time (UTC+3) current date & window
   v_eat_now := timezone('Africa/Dar_es_Salaam', now());
@@ -116,13 +121,13 @@ BEGIN
   FOR v_biz IN
     SELECT
       b.id,
-      b.name,
+      b.business_name AS name,
       COALESCE(
         NULLIF(trim(b.phone), ''),
         (SELECT NULLIF(trim(p.phone), '') FROM public.profiles p WHERE p.business_id = b.id AND p.phone IS NOT NULL AND trim(p.phone) <> '' ORDER BY p.created_at ASC LIMIT 1)
       ) AS raw_phone
     FROM public.businesses b
-    WHERE COALESCE(b.account_status, 'active') NOT IN ('suspended', 'rejected')
+    WHERE COALESCE(b.account_status::TEXT, 'approved') = 'approved'
       AND (_target_business_id IS NULL OR b.id = _target_business_id)
   LOOP
     v_phone := public.format_tz_phone_e164(v_biz.raw_phone);
@@ -132,10 +137,12 @@ BEGIN
       CONTINUE;
     END IF;
 
-    -- Skip if already dispatched today unless _force = TRUE
+    -- Only skip if the 22:00 cron job already sent today's report (manual tests do not block 22:00 cron)
     IF NOT _force AND EXISTS (
       SELECT 1 FROM public.daily_sms_report_logs l
-      WHERE l.business_id = v_biz.id AND l.report_date = v_report_date
+      WHERE l.business_id = v_biz.id
+        AND l.report_date = v_report_date
+        AND l.trigger_source = 'pg_cron_2200'
     ) THEN
       v_skipped_count := v_skipped_count + 1;
       CONTINUE;
@@ -143,26 +150,26 @@ BEGIN
 
     -- Aggregate today's non-cancelled sales in EAT
     SELECT
-      COALESCE(SUM(s.total_amount), 0),
+      COALESCE(SUM(s.total), 0),
       COUNT(s.id),
-      COALESCE(SUM(CASE WHEN s.payment_method = 'cash' THEN s.total_amount ELSE 0 END), 0),
-      COALESCE(SUM(CASE WHEN s.payment_method IN ('mobile_money', 'card', 'bank_transfer') THEN s.total_amount ELSE 0 END), 0)
+      COALESCE(SUM(CASE WHEN s.payment_method::TEXT = 'cash' THEN s.total ELSE 0 END), 0),
+      COALESCE(SUM(CASE WHEN s.payment_method::TEXT IN ('mobile_money', 'card', 'bank_transfer') THEN s.total ELSE 0 END), 0)
     INTO v_total_sales, v_order_count, v_cash_total, v_mobile_total
     FROM public.sales s
     WHERE s.business_id = v_biz.id
-      AND COALESCE(s.status, 'completed') <> 'cancelled'
+      AND COALESCE(s.status::TEXT, 'completed') <> 'cancelled'
       AND s.created_at >= v_day_start_utc
       AND s.created_at < v_day_end_utc;
 
     -- Aggregate today's Cost of Goods Sold (COGS)
     SELECT
-      COALESCE(SUM(si.quantity * COALESCE(NULLIF(si.buying_price, 0), pr.buying_price, 0)), 0)
+      COALESCE(SUM(si.quantity * COALESCE(pr.cost, 0)), 0)
     INTO v_cogs
     FROM public.sale_items si
     JOIN public.sales s ON s.id = si.sale_id
     LEFT JOIN public.products pr ON pr.id = si.product_id
     WHERE s.business_id = v_biz.id
-      AND COALESCE(s.status, 'completed') <> 'cancelled'
+      AND COALESCE(s.status::TEXT, 'completed') <> 'cancelled'
       AND s.created_at >= v_day_start_utc
       AND s.created_at < v_day_end_utc;
 
@@ -183,15 +190,16 @@ BEGIN
     INTO v_low_stock
     FROM public.products pr
     WHERE pr.business_id = v_biz.id
-      AND pr.stock_quantity <= COALESCE(pr.min_stock_level, 5);
+      AND COALESCE(pr.is_active, true) = true
+      AND pr.stock_quantity <= COALESCE(pr.low_stock_threshold, 5);
 
-    -- Build clean, clear Swahili SMS report
+    -- Build clean GSM-7 Swahili SMS report
     v_sms_body :=
       'MauzoChap Ripoti ya Siku Saa 22:00 - ' || v_date_label || ' (' || v_biz.name || '):' || E'\n' ||
-      '• Mauzo Yote: TZS ' || trim(to_char(v_total_sales, 'FM999,999,999,990')) || E'\n' ||
-      '• Faida Halisi: TZS ' || trim(to_char(v_net_profit, 'FM999,999,999,990')) || E'\n' ||
-      '• Miamala: ' || v_order_count || ' (Cash: ' || trim(to_char(v_cash_total, 'FM999,999,999,990')) || ', Mitandao: ' || trim(to_char(v_mobile_total, 'FM999,999,999,990')) || ')' ||
-      CASE WHEN v_low_stock > 0 THEN E'\n• Bidhaa Chini ya Stoo: ' || v_low_stock ELSE '' END || E'\n' ||
+      '- Mauzo Yote: TZS ' || trim(to_char(v_total_sales, 'FM999,999,999,990')) || E'\n' ||
+      '- Faida Halisi: TZS ' || trim(to_char(v_net_profit, 'FM999,999,999,990')) || E'\n' ||
+      '- Miamala: ' || v_order_count || ' (Cash: ' || trim(to_char(v_cash_total, 'FM999,999,999,990')) || ', Mitandao: ' || trim(to_char(v_mobile_total, 'FM999,999,999,990')) || ')' ||
+      CASE WHEN v_low_stock > 0 THEN E'\n- Bidhaa Chini ya Stoo: ' || v_low_stock ELSE '' END || E'\n' ||
       'Asante kwa kutumia MauzoChap POS.';
 
     -- Dispatch HTTP POST via pg_net to SwalaSMS Gateway
@@ -218,10 +226,12 @@ BEGIN
       order_count,
       cash_total,
       mobile_total,
+      expenses_total,
       net_profit,
       low_stock_count,
-      sms_body,
+      message_body,
       status,
+      trigger_source,
       http_request_id
     ) VALUES (
       v_biz.id,
@@ -232,10 +242,12 @@ BEGIN
       v_order_count,
       v_cash_total,
       v_mobile_total,
+      v_expenses,
       v_net_profit,
       v_low_stock,
       v_sms_body,
       'dispatched',
+      CASE WHEN _force THEN 'manual_or_test' ELSE 'pg_cron_2200' END,
       v_req_id
     )
     ON CONFLICT (business_id, report_date) DO UPDATE SET
@@ -244,10 +256,12 @@ BEGIN
       order_count = EXCLUDED.order_count,
       cash_total = EXCLUDED.cash_total,
       mobile_total = EXCLUDED.mobile_total,
+      expenses_total = EXCLUDED.expenses_total,
       net_profit = EXCLUDED.net_profit,
       low_stock_count = EXCLUDED.low_stock_count,
-      sms_body = EXCLUDED.sms_body,
+      message_body = EXCLUDED.message_body,
       status = 'dispatched',
+      trigger_source = EXCLUDED.trigger_source,
       http_request_id = EXCLUDED.http_request_id,
       created_at = now();
 
@@ -283,4 +297,3 @@ SELECT cron.schedule(
   '0 19 * * *',
   $cron$SELECT public.dispatch_nightly_2200_sms_reports(NULL, FALSE);$cron$
 );
-
