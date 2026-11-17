@@ -105,8 +105,8 @@ export const USER_GUIDE_SECTIONS: GuideSection[] = [
       ],
     },
     tip: {
-      sw: "Hakikisha namba ya simu unayoweka kwenye usajili na 'Mipangilio' ni sahihi ili upokee SMS ya ripoti ya mauzo kila siku saa 20:30 usiku!",
-      en: "Always keep your primary phone number accurate in Settings so you receive automated nightly 20:30 PM SMS business summaries!",
+      sw: "Hakikisha namba ya simu unayoweka kwenye usajili na 'Mipangilio' ni sahihi ili upokee SMS ya ripoti ya mauzo kila siku saa 22:00 usiku!",
+      en: "Always keep your primary phone number accurate in Settings so you receive automated nightly 22:00 PM SMS business summaries!",
     },
   },
   {
@@ -427,12 +427,12 @@ export const USER_GUIDE_SECTIONS: GuideSection[] = [
     appLink: "/reports",
     appLinkLabel: { sw: "Tazama Ripoti za Biashara", en: "View Business Reports" },
     title: {
-      sw: "Ripoti za Biashara & SMS ya Kila Siku Saa 20:30 Usiku",
-      en: "Real-Time Business Reports & Nightly 20:30 PM SMS Summary",
+      sw: "Ripoti za Biashara & SMS ya Kila Siku Saa 22:00 Usiku",
+      en: "Real-Time Business Reports & Nightly 22:00 PM SMS Summary",
     },
     summary: {
       sw: "Fuatilia mwenendo wa duka lako popote ulipo — kupitia chati za Dashibodi au ujumbe mfupi wa SMS kila usiku hata bila bando.",
-      en: "Stay in complete control from anywhere with live profit analytics and automated 20:30 PM SMS executive summaries.",
+      en: "Stay in complete control from anywhere with live profit analytics and automated 22:00 PM SMS executive summaries.",
     },
     steps: {
       sw: [
@@ -442,9 +442,9 @@ export const USER_GUIDE_SECTIONS: GuideSection[] = [
             "Chuja mauzo ya Leo, Wiki Hii, Mwezi Huu, au tarehe maalum. Angalia Jumla ya Mauzo, Faida Halisi, Bidhaa Zinazoongoza Kuuzwa, na mchanganuo wa Taslimu dhidi ya Pesa za Simu.",
         },
         {
-          heading: "Ripoti ya SMS Saa 20:30 Usiku (Bila Intaneti)",
+          heading: "Ripoti ya SMS Saa 22:00 Usiku (Bila Intaneti)",
           detail:
-            "Kila usiku saa 2:30 (20:30 PM), MauzoChap inatuma muhtasari wa mauzo ya siku, faida halisi, idadi ya miamala, madeni yaliyokusanywa, na bidhaa zinazoisha moja kwa moja kwenye simu yako kwa jina la 'MAUZOCHAP'.",
+            "Kila usiku saa 4:00 (22:00 PM), MauzoChap inatuma muhtasari wa mauzo ya siku, faida halisi, idadi ya miamala, madeni yaliyokusanywa, na bidhaa zinazoisha moja kwa moja kwenye simu yako kwa jina la 'MAUZOCHAP'.",
         },
         {
           heading: "Arifa za Kengele Ndani ya Mfumo (Notifications)",
@@ -459,9 +459,9 @@ export const USER_GUIDE_SECTIONS: GuideSection[] = [
             "Filter performance by Today, Last 7 Days, Monthly, or custom dates. Inspect Revenue, Net Profit, Top-Selling Products, and Cash vs. Mobile Money reconciliation.",
         },
         {
-          heading: "Automated 20:30 PM Nightly SMS Report (Zero Data Needed)",
+          heading: "Automated 22:00 PM Nightly SMS Report (Zero Data Needed)",
           detail:
-            "Every evening at 20:30 PM, Kilimanjaro & Serengeti owners automatically receive an SMS from 'MAUZOCHAP' summarizing total sales, net profit, transactions, debts collected, and low-stock counts.",
+            "Every night at 22:00 PM, MauzoChap owners automatically receive an SMS from 'MAUZOCHAP' summarizing total sales, net profit, transactions, debts collected, and low-stock counts.",
         },
         {
           heading: "In-App Bell Alerts",
@@ -549,14 +549,14 @@ const QUICK_START_STEPS = {
     { step: "2", title: "Ingiza Bidhaa & Stoo", desc: "Weka bei ya kununua, kuuza & idadi" },
     { step: "3", title: "Uza Kwenye POS", desc: "Skani au tafuta bidhaa kaunta" },
     { step: "4", title: "Toa Risiti", desc: "Tuma WhatsApp bure au printi 80mm" },
-    { step: "5", title: "Kagua Faida & SMS", desc: "Soma Dashibodi & SMS saa 20:30" },
+    { step: "5", title: "Kagua Faida & SMS", desc: "Soma Dashibodi & SMS saa 22:00" },
   ],
   en: [
     { step: "1", title: "Register & Activate", desc: "Create shop & verify subscription" },
     { step: "2", title: "Add Products & Stock", desc: "Set cost, selling price & stock" },
     { step: "3", title: "Sell on POS", desc: "Scan barcode or search items fast" },
     { step: "4", title: "Send Receipt", desc: "Share on WhatsApp or print 80mm" },
-    { step: "5", title: "Track Profit & SMS", desc: "Check Reports & 20:30 PM SMS" },
+    { step: "5", title: "Track Profit & SMS", desc: "Check Reports & 22:00 PM SMS" },
   ],
 };
 
@@ -643,7 +643,7 @@ export function UserGuideContent({ variant = "public" }: UserGuideContentProps) 
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
               {isSw
                 ? "Mwongozo huu umeandaliwa kwa lugha rahisi ili kukusaidia wewe na wafanyakazi wako kuuza haraka kaunta, kudhibiti stoo, kufuatilia madeni, na kusoma ripoti za faida bila usumbufu."
-                : "Everything you and your staff need to master counter sales, stock control, WhatsApp receipts, customer credit tracking, and automated 20:30 PM SMS reports."}
+                : "Everything you and your staff need to master counter sales, stock control, WhatsApp receipts, customer credit tracking, and automated 22:00 PM SMS reports."}
             </p>
           </div>
 

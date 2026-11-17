@@ -30,7 +30,7 @@ export const Route = createFileRoute("/pos-system-tanzania")({
     buildSeoHead({
       title: "Best POS System in Tanzania | Mfumo Bora wa Mauzo na POS — MauzoChap",
       description:
-        "The leading point of sale (POS) and inventory software in Tanzania. Fast barcode sales, credit book tracking, 80mm thermal receipt printing, and nightly 20:30 PM automated SMS sales reports.",
+        "The leading point of sale (POS) and inventory software in Tanzania. Fast barcode sales, credit book tracking, 80mm thermal receipt printing, and nightly 22:00 PM automated SMS sales reports.",
       path: "/pos-system-tanzania",
       keywords: [
         "POS system Tanzania",
@@ -52,7 +52,7 @@ export const Route = createFileRoute("/pos-system-tanzania")({
           {
             question: "Why is MauzoChap the best POS system in Tanzania?",
             answer:
-              "MauzoChap is purpose-built for Tanzanian trade: it supports local mobile money payments (M-Pesa, Tigo Pesa, Airtel Money), sends daily 20:30 PM SMS profit and sales summaries directly to the store owner's phone, tracks customer credit notebooks, and works on standard computers, tablets, and smartphones without expensive specialized hardware.",
+              "MauzoChap is purpose-built for Tanzanian trade: it supports local mobile money payments (M-Pesa, Tigo Pesa, Airtel Money), sends daily 22:00 PM SMS profit and sales summaries directly to the store owner's phone, tracks customer credit notebooks, and works on standard computers, tablets, and smartphones without expensive specialized hardware.",
           },
           {
             question: "Can I use my existing thermal receipt printer and barcode scanner?",
@@ -78,8 +78,8 @@ function PosSystemTanzaniaPage() {
 
   const benefits = [
     {
-      title: "Automated 20:30 PM SMS Summary",
-      titleSw: "Ripoti ya Mauzo Kila Siku Saa 2:30 Usiku kwa SMS",
+      title: "Automated 22:00 PM SMS Summary",
+      titleSw: "Ripoti ya Mauzo Kila Siku Saa 4:00 Usiku (22:00) kwa SMS",
       desc: "Receive total daily revenue, gross profit, cash in drawer, and outstanding customer credits on your phone, even if you are away from your shop.",
       descSw: "Pata muhtasari wa mauzo yote ya siku, faida iliyopatikana, pesa taslimu zilizopo, na madeni mapya moja kwa moja kwenye simu yako bila intaneti.",
       icon: Smartphone,
@@ -161,7 +161,7 @@ function PosSystemTanzaniaPage() {
               <p className="text-base sm:text-xl text-slate-600 font-normal leading-relaxed max-w-3xl mx-auto">
                 {lang === "sw"
                   ? "Rahisisha mauzo ya duka lako, dhibiti upotevu wa bidhaa stoo, rekodi madeni ya wateja bila karatasi, na pokea ripoti ya faida kwa SMS kila usiku popote ulipo."
-                  : "Empower your retail store, pharmacy, or wholesale shop with lightning-fast checkouts, accurate stock balances, customer credit notebooks, and automated 20:30 PM nightly SMS sales reports."}
+                  : "Empower your retail store, pharmacy, or wholesale shop with lightning-fast checkouts, accurate stock balances, customer credit notebooks, and automated 22:00 PM nightly SMS sales reports."}
               </p>
 
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -193,7 +193,7 @@ function PosSystemTanzaniaPage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>{lang === "sw" ? "Ripoti za SMS Saa 2:30 Usiku" : "Nightly 20:30 PM SMS Reports"}</span>
+                  <span>{lang === "sw" ? "Ripoti za SMS Saa 4:00 Usiku (22:00)" : "Nightly 22:00 PM SMS Reports"}</span>
                 </div>
               </div>
             </div>

@@ -98,7 +98,7 @@ function PrivacyPage() {
           </h2>
           <div className="text-xs sm:text-sm text-slate-600 leading-relaxed space-y-2">
             <p>• Kuwezesha uuzaji kaunta (POS checkout) na kutoa risiti za kidijitali za WhatsApp papo hapo.</p>
-            <p>• Kutuma ripoti ya usiku ya SMS saa 20:30 PM kwenye simu ya mmiliki wa biashara.</p>
+            <p>• Kutuma ripoti ya usiku ya SMS saa 22:00 PM kwenye simu ya mmiliki wa biashara.</p>
             <p>• Kutoa takwimu na ripoti za faida, mauzo, na tahadhari ya bidhaa zilizokaribia kuisha stoo.</p>
             <p>• Kuthibitisha vifurushi vya usajili na kutoa msaada wa kiufundi (WhatsApp support concierge).</p>
           </div>

@@ -587,7 +587,7 @@ function DemoPage() {
                 <div className="font-bold text-white flex items-center gap-1.5">
                   <Check className="w-3.5 h-3.5 text-emerald-400" /> Ripoti ya Usiku
                 </div>
-                <p className="text-[11px] text-slate-400">Kupokea ujumbe wa SMS saa 20:30 kila siku kwenye simu yako.</p>
+                <p className="text-[11px] text-slate-400">Kupokea ujumbe wa SMS saa 22:00 kila siku kwenye simu yako.</p>
               </div>
             </div>
 

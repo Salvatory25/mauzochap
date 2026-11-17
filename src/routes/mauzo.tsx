@@ -31,7 +31,7 @@ export const Route = createFileRoute("/mauzo")({
     buildSeoHead({
       title: "Mauzo — Mfumo Bora wa Mauzo Tanzania | MauzoChap POS",
       description:
-        "Mauzo ya duka lako kwa urahisi zaidi: Rekodi mauzo kwa sekunde 2, toa risiti za WhatsApp na thermal printer, fuatilia madeni na upate ripoti ya mauzo kila siku saa 2:30 usiku kwa SMS.",
+        "Mauzo ya duka lako kwa urahisi zaidi: Rekodi mauzo kwa sekunde 2, toa risiti za WhatsApp na thermal printer, fuatilia madeni na upate ripoti ya mauzo kila siku saa 4:00 usiku (22:00) kwa SMS.",
       path: "/mauzo",
       keywords: [
         "mauzo",
@@ -64,7 +64,7 @@ export const Route = createFileRoute("/mauzo")({
           {
             question: "Je, nawezaje kupata taarifa za mauzo nikiwa mbali na duka?",
             answer:
-              "MauzoChap inakutumia ujumbe mfupi wa SMS kila siku ifikapo saa 2:30 usiku ukiwa na jumla ya mauzo, faida halisi, madeni yaliyokusanywa na tahadhari za stoo bila kuhitaji bando la internet.",
+              "MauzoChap inakutumia ujumbe mfupi wa SMS kila siku ifikapo saa 4:00 usiku (22:00) ukiwa na jumla ya mauzo, faida halisi, madeni yaliyokusanywa na tahadhari za stoo bila kuhitaji bando la internet.",
           },
           {
             question: "Je, mfumo unarekodi mauzo ya mkopo (madeni)?",
@@ -97,7 +97,7 @@ function MauzoLandingPage() {
     {
       icon: BellRing,
       title: "Ripoti ya Mauzo kwa SMS kila Siku",
-      desc: "Kila siku saa 2:30 usiku, unapokea muhtasari kamili wa mauzo, faida, na miamala yote kwenye simu yako ya kawaida.",
+      desc: "Kila siku saa 4:00 usiku (22:00), unapokea muhtasari kamili wa mauzo, faida, na miamala yote kwenye simu yako ya kawaida.",
     },
     {
       icon: CreditCard,
@@ -286,7 +286,7 @@ function MauzoLandingPage() {
               <span>RIPOTI YA KILA SIKU</span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-black">
-              Taarifa Kamili ya Mauzo Kila Siku Saa 2:30 Usiku
+              Taarifa Kamili ya Mauzo Kila Siku Saa 4:00 Usiku (22:00)
             </h2>
             <p className="text-slate-400 text-base max-w-2xl mx-auto">
               Hata kama hauna intaneti au uko safarini, MauzoChap inatuma taarifa ya mauzo ya siku nzima, faida uliyopata, na miamala yote moja kwa moja kwenye namba yako ya simu.

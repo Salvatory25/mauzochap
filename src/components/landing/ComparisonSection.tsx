@@ -37,7 +37,7 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
         {
           category: "Mauzo ya siku",
           daftari: "Unapiga hesabu kurasa kwa kurasa jioni kwa kikokotoo",
-          mauzochap: "Yanaonekana kwenye kioo papo hapo kwa kila mauzo & SMS saa 20:30",
+          mauzochap: "Yanaonekana kwenye kioo papo hapo kwa kila mauzo & SMS saa 22:00",
         },
         {
           category: "Stoo iliyobaki",
@@ -74,7 +74,7 @@ export function ComparisonSection({ t, onOpenRegisterModal }: ComparisonSectionP
         {
           category: "Today's sales",
           daftari: "Added up page by page after closing with a pocket calculator",
-          mauzochap: "Live on screen with every single sale & nightly 20:30 PM SMS",
+          mauzochap: "Live on screen with every single sale & nightly 22:00 PM SMS",
         },
         {
           category: "Stock left",

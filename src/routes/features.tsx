@@ -19,7 +19,7 @@ export const Route = createFileRoute("/features")({
     buildSeoHead({
       title: "Vipengele vya Mfumo wa Mauzo na Stoo (POS Features) — MauzoChap Tanzania",
       description:
-        "Tazama vipengele vyote vya MauzoChap POS: Mauzo ya mtandaoni na bila intaneti (offline), ripoti ya SMS ya saa 2:30 usiku, daftari la madeni ya wateja, mashine za risiti, na barcode scanner.",
+        "Tazama vipengele vyote vya MauzoChap POS: Mauzo ya mtandaoni na bila intaneti (offline), ripoti ya SMS ya saa 4:00 usiku (22:00), daftari la madeni ya wateja, mashine za risiti, na barcode scanner.",
       path: "/features",
       keywords: [
         "vipengele vya POS",

@@ -254,7 +254,7 @@ function BlogPostPage() {
                   </h3>
                   <p className="text-white/90 text-sm leading-relaxed">
                     {lang === "sw"
-                      ? "Unganisha duka lako na MauzoChap POS. Pata ripoti ya mauzo kila siku saa 2:30 usiku kwa SMS na dhibiti stoo kwa urahisi."
+                      ? "Unganisha duka lako na MauzoChap POS. Pata ripoti ya mauzo kila siku saa 4:00 usiku (22:00) kwa SMS na dhibiti stoo kwa urahisi."
                       : "Experience effortless stock control, employee theft prevention, and nightly automated SMS sales summaries."}
                   </p>
                   <div className="pt-2 flex flex-wrap gap-3">

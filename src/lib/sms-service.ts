@@ -200,7 +200,7 @@ export async function notifySuperAdminNewOrder({
 }
 
 /**
- * Send Nightly 20:30 Sales Summary SMS to Business Owner
+ * Send Nightly 22:00 Sales Summary SMS to Business Owner
  */
 export async function sendDailyReportSMS({
   phone,
@@ -221,7 +221,7 @@ export async function sendDailyReportSMS({
   mobileTotal: number;
   lowStockCount?: number;
 }): Promise<SMSResponse> {
-  const body = `MauzoChap Ripoti ya Leo ${date} (${businessName}):\n• Jumla: TZS ${totalSales.toLocaleString()}\n• Risiti: ${orderCount}\n• Cash: TZS ${cashTotal.toLocaleString()}\n• Mitandao: TZS ${mobileTotal.toLocaleString()}${lowStockCount > 0 ? `\n• Bidhaa Chini ya Stoo: ${lowStockCount}` : ""}\nAsante kwa kutumia MauzoChap POS.`;
+  const body = `MauzoChap Ripoti ya Leo Saa 22:00 ${date} (${businessName}):\n• Jumla: TZS ${totalSales.toLocaleString()}\n• Risiti: ${orderCount}\n• Cash: TZS ${cashTotal.toLocaleString()}\n• Mitandao: TZS ${mobileTotal.toLocaleString()}${lowStockCount > 0 ? `\n• Bidhaa Chini ya Stoo: ${lowStockCount}` : ""}\nAsante kwa kutumia MauzoChap POS.`;
 
   return sendSMS({
     recipient: phone,

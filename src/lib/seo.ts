@@ -197,7 +197,7 @@ export function getSoftwareApplicationSchema() {
     },
     featureList: [
       "Offline & Online POS checkout",
-      "Nightly 20:30 PM automated SMS sales reports",
+      "Nightly 22:00 PM automated SMS sales reports",
       "Customer credit book & debt tracking with SMS reminders",
       "Thermal 80mm & 58mm Bluetooth/USB receipt printing",
       "Barcode scanning via camera or laser scanner",

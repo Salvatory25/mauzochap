@@ -124,9 +124,9 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
     {
       id: "reports",
       tabLabel: isSwahili
-        ? "Ripoti za Faida & SMS ya Saa 20:30"
+        ? "Ripoti za Faida & SMS ya Saa 22:00"
         : "Executive Analytics & Nightly SMS",
-      tabBadge: isSwahili ? "SAA 20:30 KILA SIKU" : "20:30 PM DAILY",
+      tabBadge: isSwahili ? "SAA 22:00 KILA SIKU" : "22:00 PM DAILY",
       tabSummary: isSwahili
         ? "Faida halisi, usimamizi wa kaunta & ripoti ya simu"
         : "True net profit margins, cashier shifts & SMS reports",
@@ -140,8 +140,8 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
         ? "Jua Faida Yako Halisi Kila Siku — Popote Ulipo"
         : "Know Your True Take-Home Profit Every Single Night",
       subheadline: isSwahili
-        ? "Angalia mauzo ghafi, gharama za manunuzi na faida halisi kutoka kwa wahudumu wote na matawi yote. Saa 20:30 usiku kila siku, ripoti inafika kwenye simu yako kwa njia ya SMS kiotomatiki."
-        : "Real-time gross revenue, purchase cost deductions, and net profit margins across all cashiers and branches. At 20:30 PM every night, an executive report arrives on your phone via SMS automatically.",
+        ? "Angalia mauzo ghafi, gharama za manunuzi na faida halisi kutoka kwa wahudumu wote na matawi yote. Saa 22:00 usiku kila siku, ripoti inafika kwenye simu yako kwa njia ya SMS kiotomatiki."
+        : "Real-time gross revenue, purchase cost deductions, and net profit margins across all cashiers and branches. At 22:00 PM every night, an executive report arrives on your phone via SMS automatically.",
       highlights: [
         {
           icon: TrendingUp,
@@ -163,15 +163,15 @@ export function FeaturesSection({ t, onOpenRegisterModal }: FeaturesSectionProps
         },
         {
           icon: BarChart3,
-          title: isSwahili ? "Ripoti ya SMS Saa 20:30 Usiku" : "Nightly 20:30 PM SMS Report",
+          title: isSwahili ? "Ripoti ya SMS Saa 22:00 Usiku" : "Nightly 22:00 PM SMS Report",
           desc: isSwahili
             ? "Muhtasari wa biashara unakufikia kwenye simu hata kama kompyuta ya duka imezimwa na huna bando."
             : "Executive business performance delivered to your phone even if your shop laptop is off.",
-          tag: isSwahili ? "SMS ya Saa 20:30" : "Nightly at 20:30",
+          tag: isSwahili ? "SMS ya Saa 22:00" : "Nightly at 22:00",
         },
       ],
       statusNote: isSwahili
-        ? "SMS ya Saa 20:30 Imethibitishwa • Faida ya Leo Imefungwa"
+        ? "SMS ya Saa 22:00 Imethibitishwa • Faida ya Leo Imefungwa"
         : "Nightly SMS Dispatched • Daily Profit Reconciled",
     },
   ];

@@ -28,7 +28,7 @@ export const Route = createFileRoute("/retail-pos-system")({
     buildSeoHead({
       title: "Retail POS Software Tanzania | Mfumo wa Mauzo kwa Maduka ya Rejareja — MauzoChap",
       description:
-        "Mfumo maalum wa mauzo na stoo (retail POS) kwa maduka ya rejareja nchini Tanzania. Fuatilia mauzo ya kila siku, daftari la mikopo ya wateja, risiti za printa, na ripoti ya SMS ya saa 2:30 usiku.",
+        "Mfumo maalum wa mauzo na stoo (retail POS) kwa maduka ya rejareja nchini Tanzania. Fuatilia mauzo ya kila siku, daftari la mikopo ya wateja, risiti za printa, na ripoti ya SMS ya saa 4:00 usiku (22:00).",
       path: "/retail-pos-system",
       keywords: [
         "retail POS software Tanzania",

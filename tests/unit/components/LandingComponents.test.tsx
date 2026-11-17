@@ -80,7 +80,7 @@ describe('Public Landing Components', () => {
           headline: 'Got Questions?',
           items: [
             { q: 'Does MauzoChap work on phones?', a: 'Yes, Android, iOS, and PC.' },
-            { q: 'How does nightly SMS work?', a: 'Sent automatically at 20:30 PM.' },
+            { q: 'How does nightly SMS work?', a: 'Sent automatically at 22:00 PM.' },
           ],
         },
       } as any;
@@ -88,15 +88,15 @@ describe('Public Landing Components', () => {
       render(<FAQSection t={faqTranslation} />);
 
       expect(screen.getByText('Yes, Android, iOS, and PC.')).toBeInTheDocument();
-      expect(screen.queryByText('Sent automatically at 20:30 PM.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Sent automatically at 22:00 PM.')).not.toBeInTheDocument();
 
       // Open second question
       fireEvent.click(screen.getByRole('button', { name: /How does nightly SMS work\?/i }));
-      expect(screen.getByText('Sent automatically at 20:30 PM.')).toBeInTheDocument();
+      expect(screen.getByText('Sent automatically at 22:00 PM.')).toBeInTheDocument();
 
       // Collapse second question
       fireEvent.click(screen.getByRole('button', { name: /How does nightly SMS work\?/i }));
-      expect(screen.queryByText('Sent automatically at 20:30 PM.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Sent automatically at 22:00 PM.')).not.toBeInTheDocument();
     });
   });
 

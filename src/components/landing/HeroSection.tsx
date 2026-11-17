@@ -155,7 +155,7 @@ export function HeroSection({ t }: HeroSectionProps) {
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-violet-600 shrink-0" />
-            <span>{isSwahili ? "SMS Saa 20:30 Usiku" : "Nightly 20:30 SMS"}</span>
+            <span>{isSwahili ? "SMS Saa 22:00 Usiku" : "Nightly 22:00 SMS"}</span>
           </span>
         </div>
 

@@ -7,7 +7,7 @@ export const Route = createFileRoute("/shops")({
     buildSeoHead({
       title: "Mfumo wa Mauzo kwa Maduka ya Rejareja (Shops & Maduka) — MauzoChap Tanzania",
       description:
-        "Mfumo rahisi na wa haraka wa mauzo na stoo kwa maduka ya rejareja na maduka ya mtaani Tanzania. Rekodi mauzo, madeni ya wateja (daftari la mikopo), na pokea ripoti ya SMS kila siku saa 2:30 usiku.",
+        "Mfumo rahisi na wa haraka wa mauzo na stoo kwa maduka ya rejareja na maduka ya mtaani Tanzania. Rekodi mauzo, madeni ya wateja (daftari la mikopo), na pokea ripoti ya SMS kila siku saa 4:00 usiku (22:00).",
       path: "/shops",
       keywords: [
         "mfumo wa mauzo kwa duka",

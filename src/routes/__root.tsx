@@ -95,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "MauzoChap: Simamia mauzo ya kila siku, stoo ya duka, risiti za WhatsApp na pata ripoti za mauzo kila siku saa 2:30 usiku.",
+          "MauzoChap: Simamia mauzo ya kila siku, stoo ya duka, risiti za WhatsApp na pata ripoti za mauzo kila siku saa 4:00 usiku (22:00).",
       },
       { property: "og:image", content: "https://www.mauzochap.co.tz/og-image.png" },
       // Twitter Cards

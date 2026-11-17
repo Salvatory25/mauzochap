@@ -85,7 +85,7 @@ export default function LandingPage() {
         {/* C. Core Capabilities Grid (6 Features) */}
         <FeaturesSection t={t} onOpenRegisterModal={() => setRegisterModalOpen(true)} />
 
-        {/* D. FEATURE SPOTLIGHT: Nightly 20:30 PM SMS Business Reports */}
+        {/* D. FEATURE SPOTLIGHT: Nightly 22:00 PM SMS Business Reports */}
         <DailySmsSection t={t} />
 
         {/* E. COMPARISON: Daftari la Karatasi vs MauzoChap POS */}

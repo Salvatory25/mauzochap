@@ -34,8 +34,8 @@ export function GettingStartedSection({ t, onOpenRegisterModal }: GettingStarted
       icon: ShoppingCart,
       title: isSwahili ? "Anza kuuza & pumzika" : "Start selling & relax",
       desc: isSwahili
-        ? "Uza kaunta au kwa simu ya mkononi, na angalia ripoti ya siku ikijisasisha live na kufika kwa SMS saa 20:30."
-        : "Sell at the counter or from your phone, and watch reports update live with SMS summary at 20:30 PM.",
+        ? "Uza kaunta au kwa simu ya mkononi, na angalia ripoti ya siku ikijisasisha live na kufika kwa SMS saa 22:00."
+        : "Sell at the counter or from your phone, and watch reports update live with SMS summary at 22:00 PM.",
     },
   ];
 

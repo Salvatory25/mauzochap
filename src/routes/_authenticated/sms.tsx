@@ -84,6 +84,7 @@ function SMSManagementPage() {
   // Daily report SMS state
   const [dailyPhone, setDailyPhone] = useState(business?.phone || "");
   const [sendingDaily, setSendingDaily] = useState(false);
+  const [sendingAllDaily, setSendingAllDaily] = useState(false);
 
   // Track which merchant IDs we already auto-backfilled in this session
   const autoSyncedIds = useRef<Set<string>>(new Set());
@@ -533,7 +534,7 @@ function SMSManagementPage() {
       });
 
       if (res.success) {
-        toast.success("Ripoti ya leo ya saa 20:30 imetumwa kikamilifu kwa SMS!");
+        toast.success("Ripoti ya leo ya saa 22:00 imetumwa kikamilifu kwa SMS!");
         refetchBalance();
         refetchHistory();
       } else {
@@ -543,6 +544,30 @@ function SMSManagementPage() {
       toast.error(err?.message || "Hitilafu ya kutuma ripoti");
     } finally {
       setSendingDaily(false);
+    }
+  };
+
+  // Dispatch Nightly 22:00 Reports to ALL active businesses immediately
+  const handleDispatchAllBusinessesDailyReport = async () => {
+    setSendingAllDaily(true);
+    try {
+      const { data, error } = await (supabase as any).rpc("dispatch_nightly_2200_sms_reports", {
+        _target_business_id: null,
+        _force: true,
+      });
+
+      if (error) throw error;
+
+      const sentCount = data?.sent_count ?? 0;
+      toast.success(
+        `Ripoti za biashara za saa 22:00 zimetumwa kikamilifu kwa wafanyabiashara ${sentCount} kupitia SMS!`,
+      );
+      refetchBalance();
+      refetchHistory();
+    } catch (err: any) {
+      toast.error(err?.message || "Imeshindwa kutuma ripoti kwa biashara zote");
+    } finally {
+      setSendingAllDaily(false);
     }
   };
 
@@ -639,7 +664,7 @@ function SMSManagementPage() {
           }`}
         >
           <Clock className="w-4 h-4" />
-          <span>Ripoti ya Saa 20:30 Usiku</span>
+          <span>Ripoti ya Saa 22:00 Usiku</span>
         </button>
 
         <button
@@ -1490,7 +1515,7 @@ function SMSManagementPage() {
       )}
 
       {/* ==================================================================== */}
-      {/* TAB 3: Daily 20:30 Sales Summary SMS                                 */}
+      {/* TAB 3: Daily 22:00 Sales Summary SMS                                 */}
       {/* ==================================================================== */}
       {activeTab === "daily" && (
         <div className="grid md:grid-cols-12 gap-6">
@@ -1498,13 +1523,13 @@ function SMSManagementPage() {
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-mono font-bold uppercase">
                 <Clock className="w-3.5 h-3.5" />
-                <span>Kipengele Maalum cha MauzoChap</span>
+                <span>Mfumo wa Kiotomatiki wa Saa 22:00 Usiku</span>
               </div>
               <h3 className="font-bold text-lg text-foreground">
-                Ripoti ya Mauzo ya Kila Siku Saa 20:30 Usiku
+                Ripoti ya Mauzo ya Kila Siku Saa 22:00 Usiku
               </h3>
               <p className="text-xs text-muted-foreground">
-                Kila siku jioni, mmiliki wa duka anapokea ujumbe mfupi wa SMS wenye muhtasari mzima wa hesabu ya siku: mauzo yote, fedha taslimu, mitandao na idadi ya risiti.
+                Kila usiku saa 4:00 kamili (22:00 PM EAT), mfumo wa MauzoChap unatuma kiotomatiki ripoti kamili ya biashara kwa kila mmiliki wa duka kupitia SMS ya kawaida: jumla ya mauzo, faida halisi, fedha taslimu, mitandao, matumizi na hali ya stoo.
               </p>
             </div>
 
@@ -1544,41 +1569,61 @@ function SMSManagementPage() {
             </div>
 
             <div className="space-y-3 pt-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">
-                  Namba ya Simu ya Kupokea Ripoti (Mmiliki)
-                </Label>
-                <Input
-                  type="tel"
-                  placeholder="Mfano: 07XXXXXXXX au 06XXXXXXXX"
-                  value={dailyPhone}
-                  onChange={(e) => setDailyPhone(e.target.value)}
-                  className="font-mono text-sm max-w-sm"
-                />
-              </div>
-
               <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <strong>Muda uliopangwa: Kila Siku Saa 20:30 Usiku (8:30 PM)</strong>
+                  <strong>Muda uliopangwa: Kila Siku Saa 22:00 Usiku (Saa 4:00 Usiku / 10:00 PM EAT)</strong>
                   <p className="mt-0.5 text-muted-foreground">
-                    Mfumo unachakata taarifa za hesabu na kutuma moja kwa moja kwenye namba hii bila kuchelewa.
+                    Server ya MauzoChap inakokotoa hesabu za kila duka na kutuma SMS ya kawaida moja kwa moja kwa kila mfanyabiashara anayetumia mfumo kila siku saa 22:00 usiku bila kuhitaji kufungua mfumo.
                   </p>
                 </div>
               </div>
 
-              <div className="pt-2 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  Je, unataka kujaribu kutuma ripoti ya leo sasa hivi?
-                </span>
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-bold text-foreground">
+                    Tuma Ripoti za Leo kwa Wafanyabiashara Wote ({stats.merchantsWithPhone})
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Inakokotoa mauzo na faida ya kila duka na kutuma ripoti kwa wamiliki wote sasa hivi.
+                  </div>
+                </div>
                 <Button
-                  onClick={handleSendDailyReport}
-                  disabled={sendingDaily}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  onClick={handleDispatchAllBusinessesDailyReport}
+                  disabled={sendingAllDaily}
+                  className="bg-primary hover:opacity-95 text-primary-foreground font-bold shrink-0 cursor-pointer"
                 >
-                  <TrendingUp className="w-4 h-4 mr-1.5" />
-                  <span>{sendingDaily ? "Inatuma Ripoti..." : "Tuma Ripoti ya Leo Sasa"}</span>
+                  <Send className="w-4 h-4 mr-1.5" />
+                  <span>
+                    {sendingAllDaily
+                      ? "Inatuma kwa Biashara Zote..."
+                      : "Tuma kwa Biashara Zote Sasa"}
+                  </span>
                 </Button>
+              </div>
+
+              <div className="space-y-1.5 pt-2 border-t border-border">
+                <Label className="text-xs font-bold">
+                  Namba ya Simu ya Jaribio (Mmiliki Mmoja)
+                </Label>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <Input
+                    type="tel"
+                    placeholder="Mfano: 07XXXXXXXX au 06XXXXXXXX"
+                    value={dailyPhone}
+                    onChange={(e) => setDailyPhone(e.target.value)}
+                    className="font-mono text-sm max-w-sm"
+                  />
+                  <Button
+                    onClick={handleSendDailyReport}
+                    disabled={sendingDaily}
+                    variant="outline"
+                    className="border-emerald-600/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 font-bold cursor-pointer"
+                  >
+                    <TrendingUp className="w-4 h-4 mr-1.5" />
+                    <span>{sendingDaily ? "Inatuma Ripoti..." : "Tuma Ripoti kwenye Namba Hii"}</span>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -1587,7 +1632,7 @@ function SMSManagementPage() {
             <div className="bg-slate-950 text-white rounded-3xl p-6 shadow-xl space-y-4 border border-slate-800">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <span className="font-bold text-xs text-slate-300">
-                  Mfano wa Ripoti ya SMS Saa 20:30
+                  Mfano wa Ripoti ya SMS Saa 22:00
                 </span>
                 <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">
                   {SENDER_ID}
@@ -1595,16 +1640,14 @@ function SMSManagementPage() {
               </div>
 
               <div className="bg-slate-900 rounded-2xl p-4 text-xs font-mono border border-slate-800 space-y-2 leading-relaxed">
-                <div className="text-[10px] text-slate-500">20:30 PM • SMS</div>
+                <div className="text-[10px] text-slate-500">22:00 PM • SMS</div>
                 <div className="text-emerald-400 font-bold">
                   MauzoChap Ripoti ya Leo {new Date().toLocaleDateString("en-GB")} (
-                  {business?.business_name || "Silivia Cosmetics"}):
+                  {business?.business_name || "Silivia Cosmetics"} - Saa 22:00):
                 </div>
                 <div className="text-slate-200 space-y-1">
-                  <div>• Jumla: TZS {(todayMetrics?.totalSales || 0).toLocaleString()}</div>
-                  <div>• Risiti: {todayMetrics?.orderCount || 0}</div>
-                  <div>• Cash: TZS {(todayMetrics?.cashTotal || 0).toLocaleString()}</div>
-                  <div>• Mitandao: TZS {(todayMetrics?.mobileTotal || 0).toLocaleString()}</div>
+                  <div>• Mauzo: TZS {(todayMetrics?.totalSales || 0).toLocaleString()} (Risiti: {todayMetrics?.orderCount || 0})</div>
+                  <div>• Cash: TZS {(todayMetrics?.cashTotal || 0).toLocaleString()} | Mitandao: TZS {(todayMetrics?.mobileTotal || 0).toLocaleString()}</div>
                   {Number(todayMetrics?.lowStockCount || 0) > 0 && (
                     <div className="text-amber-300">
                       • Bidhaa Chini ya Stoo: {todayMetrics?.lowStockCount}

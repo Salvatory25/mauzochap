@@ -61,7 +61,7 @@ Ukiwa safarini au ukiwa na shughuli nyingine nje ya duka, huwezi kujua kilichoen
 Mfumo wa kidigitali kama **MauzoChap POS** unabadilisha kabisa jinsi unavyoendesha biashara yako:
 
 1. **Kila Mauzo Yanakata Stoo Moja kwa Moja:** Hakuna mfanyakazi anayeweza kuuza bidhaa bila mfumo kurekodi.
-2. **Ripoti ya SMS Kila Siku Saa 2:30 Usiku:** Hata kama uko nyumbani au safarini, simu yako inapokea ujumbe mfupi wenye:
+2. **Ripoti ya SMS Kila Siku Saa 4:00 Usiku (22:00):** Hata kama uko nyumbani au safarini, simu yako inapokea ujumbe mfupi wenye:
    - Jumla ya mauzo ya siku.
    - Faida iliyopatikana.
    - Pesa taslimu zilizopo.
@@ -197,7 +197,7 @@ Ukiwa na **MauzoChap**:
 1. Unapoingiza bidhaa, unaweka bei ya kununulia (Cost) na bei ya kuuzia (Price).
 2. Kila mteja anaponunua, mfumo unahesabu faida ghafi papo hapo kwa kila kipengele.
 3. Sehemu ya **Expenses (Matumizi)** inakuruhusu kurekodi matumizi yoyote madogo madogo ya siku.
-4. Kila siku saa 2:30 usiku, unapokea ujumbe mfupi wa SMS kwenye simu yako unaokuambia hasa faida uliyotengeneza baada ya kutoa gharama zote.
+4. Kila siku saa 4:00 usiku (22:00), unapokea ujumbe mfupi wa SMS kwenye simu yako unaokuambia hasa faida uliyotengeneza baada ya kutoa gharama zote.
     `,
   },
   {
@@ -242,7 +242,7 @@ Internet blackouts and slow mobile network connectivity can bring retail stores 
 
 Most Tanzanian shop owners cannot stay inside their store from 7:00 AM to 10:00 PM every day. You may run multiple businesses or have formal employment elsewhere.
 - Look for a system that sends you proactive reports rather than forcing you to log in to complex dashboards.
-- MauzoChap automatically delivers an automated **SMS summary directly to your mobile phone every night at 20:30 PM**, detailing total sales, gross profit, cash in hand, and new debts recorded.
+- MauzoChap automatically delivers an automated **SMS summary directly to your mobile phone every night at 22:00 PM**, detailing total sales, gross profit, cash in hand, and new debts recorded.
 
 ---
 

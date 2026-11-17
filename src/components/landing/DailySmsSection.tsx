@@ -96,13 +96,13 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
               {/* Floating Top Notification Badge */}
               <div className="absolute -top-2.5 right-2 sm:right-8 z-10 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md border border-blue-200 text-black shadow-xl text-[10px] sm:text-[11px] font-mono font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-top-2">
                 <CheckCheck className="w-3 h-3 text-emerald-600" />
-                <span className="text-black font-extrabold">Delivered 20:30 PM</span>
+                <span className="text-black font-extrabold">Delivered 22:00 PM</span>
               </div>
 
               {/* Phone Image */}
               <img
                 src="/images/iphone-sms-transparent.png"
-                alt="MauzoChap Nightly 20:30 PM SMS Report on iPhone (Transparent, No Background)"
+                alt="MauzoChap Nightly 22:00 PM SMS Report on iPhone (Transparent, No Background)"
                 className="w-full h-auto object-contain filter drop-shadow-[0_20px_40px_rgba(1,24,76,0.6)] transform group-hover:scale-[1.015] group-hover:-translate-y-1 transition-all duration-500"
                 loading="lazy"
                 width={900}
@@ -126,7 +126,7 @@ export function DailySmsSection({ t }: DailySmsSectionProps) {
             <div className="space-y-3 sm:space-y-4">
               <div className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-blue-400/30 bg-blue-950/60 text-blue-300 text-[10px] sm:text-xs font-mono font-bold tracking-wider uppercase">
                 <span>
-                  {isSwahili ? "KILA JIONI SAA 20:30 USIKU" : "EVERY EVENING AT 20:30 PM"}
+                  {isSwahili ? "KILA USIKU SAA 22:00" : "EVERY NIGHT AT 22:00 PM"}
                 </span>
               </div>
 

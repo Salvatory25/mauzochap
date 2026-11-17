@@ -28,7 +28,7 @@ describe('UserGuideContent (Customer How-To-Use Guide)', () => {
       screen.getByText('Usajili wa Akaunti & Kuanzisha Kifurushi'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Ripoti za Biashara & SMS ya Kila Siku Saa 20:30 Usiku'),
+      screen.getByText('Ripoti za Biashara & SMS ya Kila Siku Saa 22:00 Usiku'),
     ).toBeInTheDocument();
 
     // Switch to English via button
@@ -47,10 +47,10 @@ describe('UserGuideContent (Customer How-To-Use Guide)', () => {
     render(<UserGuideContent variant="public" />);
 
     const searchInput = screen.getByRole('textbox', { name: /Search user guide/i });
-    fireEvent.change(searchInput, { target: { value: '20:30 PM' } });
+    fireEvent.change(searchInput, { target: { value: '22:00 PM' } });
 
     expect(
-      screen.getByText('Real-Time Business Reports & Nightly 20:30 PM SMS Summary'),
+      screen.getByText('Real-Time Business Reports & Nightly 22:00 PM SMS Summary'),
     ).toBeInTheDocument();
     expect(
       screen.queryByText('Tracking Daily Shop Expenses & Supplier Purchases'),
