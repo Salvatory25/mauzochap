@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION public.prevent_super_admin_deletion()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, auth
 AS $$
 BEGIN
   IF TG_TABLE_SCHEMA = 'auth' AND TG_TABLE_NAME = 'users' THEN
@@ -18,7 +18,10 @@ BEGIN
       RAISE EXCEPTION 'SECURITY LOCK: Master Super Admin account (salvatoryfilbert2@gmail.com) cannot be deleted.';
     END IF;
   ELSIF TG_TABLE_SCHEMA = 'public' AND TG_TABLE_NAME = 'profiles' THEN
-    IF lower(OLD.email) = 'salvatoryfilbert2@gmail.com' THEN
+    IF EXISTS (
+      SELECT 1 FROM auth.users u
+      WHERE u.id = OLD.id AND lower(u.email) = 'salvatoryfilbert2@gmail.com'
+    ) THEN
       RAISE EXCEPTION 'SECURITY LOCK: Master Super Admin profile cannot be deleted.';
     END IF;
   ELSIF TG_TABLE_SCHEMA = 'public' AND TG_TABLE_NAME = 'user_roles' THEN
