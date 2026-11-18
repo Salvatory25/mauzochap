@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Pencil, Search, UserCog, Copy, Check, Eye, EyeOff, UserPlus, Link2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { sendStaffWelcomeSMS } from "@/lib/sms-service";
 
@@ -46,9 +45,9 @@ type Profile = {
 function UsersPage() {
   const t = useT();
   const qc = useQueryClient();
-  const { roles, user, isAdmin, business } = useAuth();
+  const { roles, user, isAdmin, isSuperAdmin, business } = useAuth();
   const currentPackage = (business?.package as string) || "kilimanjaro";
-  const userLimit = currentPackage === "starter" ? 1 : currentPackage === "kilimanjaro" ? 9 : 9999;
+  const userLimit = currentPackage === "starter" ? 2 : currentPackage === "kilimanjaro" ? 10 : 9999;
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"invite" | "edit-role" | null>(null);
@@ -111,7 +110,7 @@ function UsersPage() {
     );
   }
 
-  const canAddMoreUsers = usersList.length < userLimit;
+  const canAddMoreUsers = isSuperAdmin || usersList.length < userLimit;
 
   const filtered = usersList.filter(
     (u) =>
@@ -126,6 +125,7 @@ function UsersPage() {
     if (!confirm("Remove this user from your business? They will lose all access.")) return;
     const { error } = await supabase.from("user_roles").delete().eq("user_id", id);
     if (error) return toast.error(error.message);
+    await supabase.from("profiles").update({ business_id: null, branch_id: null }).eq("id", id);
     toast.success("User removed successfully");
     qc.invalidateQueries({ queryKey: ["users-list"] });
   };
@@ -401,82 +401,22 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
     setSaving(true);
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      // Create a temporary client with persistSession: false to avoid signing the admin out
-      const tempClient = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        {
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-          }
-        }
-      );
 
-      // 1. Create or register auth user with temporary client
-      let targetUserId: string | null = null;
-      const { data: signUpData, error: signUpError } = await tempClient.auth.signUp({
-        email: normalizedEmail,
-        password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-            phone: phone.trim(),
-            business_id: business.id,
-            branch_id: branchId || undefined,
-            role: role
-          }
-        }
-      });
-
-      if (signUpError) {
-        if (!signUpError.message?.toLowerCase().includes("already registered")) {
-          throw signUpError;
-        }
-      } else if (signUpData?.user?.id) {
-        targetUserId = signUpData.user.id;
-      }
-
-      // 2. Authoritative server-side profile and role link via SECURITY DEFINER function
-      const { error: rpcError } = await supabase.rpc("admin_add_staff_member", {
+      // Authoritative server-side staff creation (creates confirmed auth user, links profile, branch & role atomically)
+      const { error: rpcError } = await (supabase.rpc as any)("admin_create_staff_account", {
         _email: normalizedEmail,
+        _password: password,
         _full_name: fullName.trim(),
         _phone: phone.trim(),
         _role: role,
         _branch_id: branchId || null,
-        _user_id: targetUserId,
       });
 
       if (rpcError) {
-        console.warn("admin_add_staff_member RPC notice:", rpcError);
-        // Fallback: direct profile & role upsert
-        if (targetUserId) {
-          await supabase.from("profiles").upsert({
-            id: targetUserId,
-            full_name: fullName.trim(),
-            phone: phone?.trim() || null,
-            business_id: business.id,
-            branch_id: branchId || null,
-            business_name: business.business_name,
-          });
-
-          await supabase.from("user_roles").upsert({
-            user_id: targetUserId,
-            role: role as any,
-          });
-        } else {
-          throw new Error(rpcError.message || "Failed to link user to business");
-        }
+        throw new Error(rpcError.message || "Failed to create staff account");
       }
 
-      // Auto-heal / sync immediately to guarantee appearance in list
-      try {
-        await (supabase.rpc as any)("sync_business_staff", { _business_id: business.id });
-      } catch {
-        // Safe fallback
-      }
-
-      // 3. Send staff welcome SMS so employee gets notified immediately on phone
+      // Send staff welcome SMS so employee gets notified immediately on phone
       if (phone) {
         sendStaffWelcomeSMS({
           phone: phone.trim(),

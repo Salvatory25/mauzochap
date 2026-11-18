@@ -29,7 +29,7 @@ type Branch = {
 };
 
 function LocationsPage() {
-  const { business, isAdmin, branchId, switchBranch } = useAuth();
+  const { business, isAdmin, isSuperAdmin, branchId, switchBranch } = useAuth();
   const qc = useQueryClient();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newLocationName, setNewLocationName] = useState("");
@@ -67,7 +67,7 @@ function LocationsPage() {
 
   const currentPackage = business?.package || "kilimanjaro";
   const limit = PACKAGE_LIMITS[currentPackage] || 1;
-  const canAddMore = locations.length < limit;
+  const canAddMore = isSuperAdmin || locations.length < limit;
 
   const handleAddLocation = async (e: React.FormEvent) => {
     e.preventDefault();

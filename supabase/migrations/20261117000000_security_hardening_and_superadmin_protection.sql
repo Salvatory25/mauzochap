@@ -131,3 +131,4 @@ GRANT EXECUTE ON FUNCTION public.admin_delete_staff_member(UUID) TO authenticate
 
 REVOKE ALL ON FUNCTION public.ensure_merchant_business(TEXT, TEXT, TEXT) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.ensure_merchant_business(TEXT, TEXT, TEXT) TO authenticated, service_role;
+
