@@ -1,4 +1,4 @@
-name: MauzoChap Nightly Encrypted Backup (Google Drive)
+name: MauzoChap Nightly Backup (Google Drive)
 
 on:
   schedule:
@@ -20,8 +20,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  encrypted-database-backup:
-    name: Dump, Encrypt, Verify & Upload to Google Drive
+  database-backup:
+    name: Dump, Verify & Upload to Google Drive
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -43,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           MISSING=()
-          for VAR in SUPABASE_DB_URL BACKUP_ENCRYPTION_PASSPHRASE GDRIVE_CLIENT_ID GDRIVE_CLIENT_SECRET GDRIVE_REFRESH_TOKEN GDRIVE_FOLDER_ID; do
+          for VAR in SUPABASE_DB_URL GDRIVE_CLIENT_ID GDRIVE_CLIENT_SECRET GDRIVE_REFRESH_TOKEN GDRIVE_FOLDER_ID; do
             if [ -z "${!VAR:-}" ]; then
               MISSING+=("$VAR")
             fi
@@ -53,11 +53,15 @@ jobs:
             echo "Configure them at Settings -> Secrets and variables -> Actions before running this workflow."
             exit 1
           fi
-          if [ ${#BACKUP_ENCRYPTION_PASSPHRASE} -lt 16 ]; then
-            echo "::error::BACKUP_ENCRYPTION_PASSPHRASE must be at least 16 characters long."
+          if [ -n "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ] && [ ${#BACKUP_ENCRYPTION_PASSPHRASE} -lt 16 ]; then
+            echo "::error::BACKUP_ENCRYPTION_PASSPHRASE is set but shorter than 16 characters."
             exit 1
           fi
-          echo "All 6 required GitHub Actions Secrets are present."
+          if [ -n "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
+            echo "All required secrets are present. Client-side AES-256 GPG encryption: ENABLED."
+          else
+            echo "All 5 required secrets are present. Client-side encryption: DISABLED (add BACKUP_ENCRYPTION_PASSPHRASE anytime to enable)."
+          fi
 
       - name: Install PostgreSQL 17 client tools & GPG
         run: |
@@ -73,7 +77,6 @@ jobs:
           sudo apt-get install -y -qq postgresql-client-17
           pg_dump --version
           pg_restore --version
-          gpg --version | head -n 2
           node --version
 
       - name: Compute Tanzania backup timestamps & prepare secure temp directory
@@ -149,8 +152,8 @@ jobs:
           echo "public_tables=${PUBLIC_TABLES}" >> "$GITHUB_OUTPUT"
           echo "auth_tables=${AUTH_TABLES}" >> "$GITHUB_OUTPUT"
 
-      - name: Encrypt backup (AES-256) & verify decryption round-trip (Stage 2)
-        id: encrypt
+      - name: Prepare backup artifacts & optional AES-256 encryption (Stage 2)
+        id: package
         env:
           BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
         run: |
@@ -159,74 +162,84 @@ jobs:
           PREFIX="${{ steps.meta.outputs.file_prefix }}"
           DUMP_FILE="${{ steps.dump.outputs.dump_file }}"
           ORIG_SHA256="${{ steps.dump.outputs.dump_sha256 }}"
-          ENC_FILE="${WORK_DIR}/${PREFIX}.dump.gpg"
           SHA_FILE="${WORK_DIR}/${PREFIX}.sha256"
           MANIFEST_FILE="${WORK_DIR}/${PREFIX}.manifest.json"
-          PASS_FILE="${WORK_DIR}/.passphrase"
 
-          umask 077
-          printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" > "$PASS_FILE"
+          if [ -n "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
+            UPLOAD_FILE="${WORK_DIR}/${PREFIX}.dump.gpg"
+            PASS_FILE="${WORK_DIR}/.passphrase"
+            umask 077
+            printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" > "$PASS_FILE"
 
-          # AES-256 symmetric encryption with SHA-512 S2K and GPG MDC integrity protection
-          gpg \
-            --batch \
-            --yes \
-            --pinentry-mode loopback \
-            --passphrase-file "$PASS_FILE" \
-            --symmetric \
-            --cipher-algo AES256 \
-            --digest-algo SHA512 \
-            --s2k-mode 3 \
-            --s2k-digest-algo SHA512 \
-            --s2k-count 65011712 \
-            --compress-algo none \
-            --output "$ENC_FILE" \
-            "$DUMP_FILE"
+            gpg \
+              --batch \
+              --yes \
+              --pinentry-mode loopback \
+              --passphrase-file "$PASS_FILE" \
+              --symmetric \
+              --cipher-algo AES256 \
+              --digest-algo SHA512 \
+              --s2k-mode 3 \
+              --s2k-digest-algo SHA512 \
+              --s2k-count 65011712 \
+              --compress-algo none \
+              --output "$UPLOAD_FILE" \
+              "$DUMP_FILE"
 
-          if [ ! -s "$ENC_FILE" ]; then
-            echo "::error::GPG encryption produced an empty file."
-            exit 1
+            if [ ! -s "$UPLOAD_FILE" ]; then
+              echo "::error::GPG encryption produced an empty file."
+              exit 1
+            fi
+
+            DECRYPTED_SHA256=$(gpg \
+              --batch \
+              --yes \
+              --pinentry-mode loopback \
+              --passphrase-file "$PASS_FILE" \
+              --decrypt \
+              "$UPLOAD_FILE" | sha256sum | awk '{print $1}')
+
+            rm -f "$PASS_FILE"
+
+            if [ "$DECRYPTED_SHA256" != "$ORIG_SHA256" ]; then
+              echo "::error::Stage 2 verification failed: decrypted SHA-256 does not match original pg_dump SHA-256!"
+              exit 1
+            fi
+
+            rm -f "$DUMP_FILE"
+            ARCHIVE_FORMAT="pg_dump custom (compressed) + GPG AES256-SHA512-MDC"
+            IS_ENCRYPTED="true"
+            echo "Stage 2 verified: AES-256 encryption + round-trip decryption SHA-256 match."
+          else
+            UPLOAD_FILE="$DUMP_FILE"
+            ARCHIVE_FORMAT="pg_dump custom (compressed, unencrypted)"
+            IS_ENCRYPTED="false"
+            echo "Stage 2: Client-side encryption disabled (BACKUP_ENCRYPTION_PASSPHRASE not set); uploading verified compressed .dump archive."
           fi
 
-          # Round-trip decryption verification: confirm encrypted archive decrypts to exact original SHA-256
-          DECRYPTED_SHA256=$(gpg \
-            --batch \
-            --yes \
-            --pinentry-mode loopback \
-            --passphrase-file "$PASS_FILE" \
-            --decrypt \
-            "$ENC_FILE" | sha256sum | awk '{print $1}')
-
-          rm -f "$PASS_FILE"
-
-          if [ "$DECRYPTED_SHA256" != "$ORIG_SHA256" ]; then
-            echo "::error::Stage 2 verification failed: decrypted SHA-256 does not match original pg_dump SHA-256!"
-            exit 1
-          fi
-
-          # Delete plaintext dump immediately after round-trip verification succeeds
-          rm -f "$DUMP_FILE"
-
-          ENC_SIZE=$(stat -c%s "$ENC_FILE")
-          ENC_SHA256=$(sha256sum "$ENC_FILE" | awk '{print $1}')
-          printf '%s  %s\n' "$ENC_SHA256" "$(basename "$ENC_FILE")" > "$SHA_FILE"
+          UPLOAD_SIZE=$(stat -c%s "$UPLOAD_FILE")
+          UPLOAD_SHA256=$(sha256sum "$UPLOAD_FILE" | awk '{print $1}')
+          printf '%s  %s\n' "$UPLOAD_SHA256" "$(basename "$UPLOAD_FILE")" > "$SHA_FILE"
 
           export M_BACKUP_DATE_EAT="${{ steps.meta.outputs.backup_date_eat }}"
           export M_TIMESTAMP_EAT="${{ steps.meta.outputs.timestamp_eat }}"
           export M_TIMESTAMP_UTC="${{ steps.meta.outputs.timestamp_utc }}"
           export M_TRIGGER="${{ github.event_name }}"
           export M_RUN_ID="${{ github.run_id }}"
+          export M_ARCHIVE_FORMAT="$ARCHIVE_FORMAT"
+          export M_IS_ENCRYPTED="$IS_ENCRYPTED"
           export M_TOC_ENTRIES="${{ steps.dump.outputs.toc_entries }}"
           export M_PUBLIC_TABLES="${{ steps.dump.outputs.public_tables }}"
           export M_AUTH_TABLES="${{ steps.dump.outputs.auth_tables }}"
           export M_DUMP_SIZE="${{ steps.dump.outputs.dump_size }}"
           export M_DUMP_SHA256="${{ steps.dump.outputs.dump_sha256 }}"
-          export M_ENC_FILE="$ENC_FILE"
-          export M_ENC_SIZE="$ENC_SIZE"
-          export M_ENC_SHA256="$ENC_SHA256"
+          export M_UPLOAD_FILE="$UPLOAD_FILE"
+          export M_UPLOAD_SIZE="$UPLOAD_SIZE"
+          export M_UPLOAD_SHA256="$UPLOAD_SHA256"
 
           node - <<'JS' > "$MANIFEST_FILE"
           const path = require("node:path");
+          const isEncrypted = process.env.M_IS_ENCRYPTED === "true";
           const manifest = {
             project: "MauzoChap",
             supabase_project_ref: "rcinghijelhlehfycjka",
@@ -236,25 +249,26 @@ jobs:
             trigger: process.env.M_TRIGGER,
             workflow_run_id: process.env.M_RUN_ID,
             schemas: ["public", "auth", "storage"],
-            archive_format: "pg_dump custom (compressed) + GPG AES256-SHA512-MDC",
+            archive_format: process.env.M_ARCHIVE_FORMAT,
+            client_side_encrypted: isEncrypted,
             toc_entries: Number(process.env.M_TOC_ENTRIES),
             public_tables: Number(process.env.M_PUBLIC_TABLES),
             auth_tables: Number(process.env.M_AUTH_TABLES),
-            unencrypted_size_bytes: Number(process.env.M_DUMP_SIZE),
-            unencrypted_sha256: process.env.M_DUMP_SHA256,
-            encrypted_filename: path.basename(process.env.M_ENC_FILE),
-            encrypted_size_bytes: Number(process.env.M_ENC_SIZE),
-            encrypted_sha256: process.env.M_ENC_SHA256,
-            round_trip_decryption_verified: true,
+            dump_size_bytes: Number(process.env.M_DUMP_SIZE),
+            dump_sha256: process.env.M_DUMP_SHA256,
+            uploaded_filename: path.basename(process.env.M_UPLOAD_FILE),
+            uploaded_size_bytes: Number(process.env.M_UPLOAD_SIZE),
+            uploaded_sha256: process.env.M_UPLOAD_SHA256,
+            round_trip_decryption_verified: isEncrypted,
           };
           console.log(JSON.stringify(manifest, null, 2));
           JS
 
-          echo "Stage 2 verified: AES-256 encryption + full decryption round-trip SHA-256 match (${ENC_SIZE} bytes)."
-          echo "enc_file=${ENC_FILE}" >> "$GITHUB_OUTPUT"
+          echo "backup_file=${UPLOAD_FILE}" >> "$GITHUB_OUTPUT"
           echo "sha_file=${SHA_FILE}" >> "$GITHUB_OUTPUT"
           echo "manifest_file=${MANIFEST_FILE}" >> "$GITHUB_OUTPUT"
-          echo "enc_size=${ENC_SIZE}" >> "$GITHUB_OUTPUT"
+          echo "backup_size=${UPLOAD_SIZE}" >> "$GITHUB_OUTPUT"
+          echo "is_encrypted=${IS_ENCRYPTED}" >> "$GITHUB_OUTPUT"
 
       - name: Upload to Google Drive, verify remote MD5/size & apply 30-day retention (Stages 3 & 4)
         env:
@@ -271,9 +285,9 @@ jobs:
 
           node scripts/gdrive-backup-sync.mjs \
             --backup-date "${{ steps.meta.outputs.backup_date_eat }}" \
-            --encrypted-file "${{ steps.encrypt.outputs.enc_file }}" \
-            --checksum-file "${{ steps.encrypt.outputs.sha_file }}" \
-            --manifest-file "${{ steps.encrypt.outputs.manifest_file }}" \
+            --backup-file "${{ steps.package.outputs.backup_file }}" \
+            --checksum-file "${{ steps.package.outputs.sha_file }}" \
+            --manifest-file "${{ steps.package.outputs.manifest_file }}" \
             --retention-days 30 \
             --result-json "${{ steps.meta.outputs.work_dir }}/result.json" \
             "${EXTRA_ARGS[@]}"
@@ -282,13 +296,15 @@ jobs:
         if: success()
         run: |
           set -euo pipefail
-          node - "${{ steps.meta.outputs.work_dir }}/result.json" >> "$GITHUB_STEP_SUMMARY" <<'JS'
+          node - "${{ steps.meta.outputs.work_dir }}/result.json" "${{ steps.package.outputs.is_encrypted }}" >> "$GITHUB_STEP_SUMMARY" <<'JS'
           const fs = require("node:fs");
           const data = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+          const isEncrypted = process.argv[3] === "true";
           const trashed = data.trashed_expired_folders.join(", ") || "None";
-          console.log("### MauzoChap Encrypted Backup Summary");
+          console.log("### MauzoChap Backup Summary");
           console.log(`- **Status:** \`${data.status}\``);
           console.log(`- **Backup Date (EAT):** \`${data.backup_date_eat}\``);
+          console.log(`- **Client-Side Encryption:** \`${isEncrypted ? "AES-256 GPG (enabled)" : "Disabled (add BACKUP_ENCRYPTION_PASSPHRASE to enable)"}\``);
           console.log(`- **Destination:** \`${data.root_folder_name}/${data.date_folder_name}/\``);
           console.log(`- **Retention Policy:** \`${data.retention_days} days\` (skipped: \`${data.retention_skipped}\`)`);
           console.log(`- **Valid Backup Folders Seen:** \`${data.valid_backup_folders_seen}\``);

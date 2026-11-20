@@ -472,7 +472,7 @@ export function selectExpiredBackupFolders(
 function parseCliArgs(argv) {
   const args = {
     backupDate: "",
-    encryptedFile: "",
+    backupFile: "",
     checksumFile: "",
     manifestFile: "",
     retentionDays: DEFAULT_RETENTION_DAYS,
@@ -486,8 +486,8 @@ function parseCliArgs(argv) {
       args.skipRetention = true;
     } else if (flag === "--backup-date") {
       args.backupDate = argv[++i] || "";
-    } else if (flag === "--encrypted-file") {
-      args.encryptedFile = argv[++i] || "";
+    } else if (flag === "--backup-file" || flag === "--encrypted-file") {
+      args.backupFile = argv[++i] || "";
     } else if (flag === "--checksum-file") {
       args.checksumFile = argv[++i] || "";
     } else if (flag === "--manifest-file") {
@@ -508,7 +508,7 @@ function parseCliArgs(argv) {
     throw new BackupSyncError(`Invalid --retention-days '${args.retentionDays}'`);
   }
   for (const [label, filePath] of [
-    ["--encrypted-file", args.encryptedFile],
+    ["--backup-file", args.backupFile],
     ["--checksum-file", args.checksumFile],
     ["--manifest-file", args.manifestFile],
   ]) {
@@ -538,8 +538,12 @@ export async function main(argv) {
 
   const dateFolderId = await drive.getOrCreateDateFolder(rootFolderId, folderName);
 
+  const backupMimeType = args.backupFile.endsWith(".gpg")
+    ? "application/pgp-encrypted"
+    : "application/octet-stream";
+
   const artifacts = [
-    { filePath: args.encryptedFile, mimeType: "application/pgp-encrypted" },
+    { filePath: args.backupFile, mimeType: backupMimeType },
     { filePath: args.checksumFile, mimeType: "text/plain" },
     { filePath: args.manifestFile, mimeType: "application/json" },
   ];
@@ -635,3 +639,4 @@ if (isDirectEntry) {
       process.exit(1);
     });
 }
+
