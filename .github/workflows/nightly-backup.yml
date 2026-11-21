@@ -63,20 +63,12 @@ jobs:
             echo "All 5 required secrets are present. Client-side encryption: DISABLED (add BACKUP_ENCRYPTION_PASSPHRASE anytime to enable)."
           fi
 
-      - name: Install PostgreSQL 17 client tools & GPG
+      - name: Pull official PostgreSQL 17 client image (Docker)
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ca-certificates curl gnupg lsb-release
-          sudo install -d /usr/share/postgresql-common/pgdg
-          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
-            https://www.postgresql.org/media/keys/ACCC4CF8.asc
-          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
-            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
-          pg_dump --version
-          pg_restore --version
+          docker pull --quiet postgres:17-alpine
+          docker run --rm postgres:17-alpine pg_dump --version
+          docker run --rm postgres:17-alpine pg_restore --version
           node --version
 
       - name: Compute Tanzania backup timestamps & prepare secure temp directory
@@ -109,25 +101,43 @@ jobs:
           DUMP_FILE="${WORK_DIR}/${PREFIX}.dump"
           TOC_FILE="${WORK_DIR}/${PREFIX}.toc"
 
-          # Strictly read-only logical backup of public, auth, and storage schemas
-          pg_dump \
-            --dbname="$SUPABASE_DB_URL" \
-            --format=custom \
-            --compress=6 \
-            --no-owner \
-            --no-privileges \
-            --schema=public \
-            --schema=auth \
-            --schema=storage \
-            --file="$DUMP_FILE"
+          # Normalize URI safely (auto-encodes reserved password chars like @, #, !, % without logging credentials)
+          SAFE_DB_URL=$(node --input-type=module -e '
+            import { normalizePostgresUri } from "./scripts/gdrive-backup-sync.mjs";
+            process.stdout.write(normalizePostgresUri(process.env.SUPABASE_DB_URL || ""));
+          ')
+
+          # Strictly read-only logical backup of public, auth, and storage schemas using official PostgreSQL 17 client
+          docker run --rm \
+            --network host \
+            --user "$(id -u):$(id -g)" \
+            -e HOME=/tmp \
+            -e PGSSLMODE=require \
+            -e SUPABASE_DB_URL="$SAFE_DB_URL" \
+            -e DUMP_NAME="${PREFIX}.dump" \
+            -e TOC_NAME="${PREFIX}.toc" \
+            -v "${WORK_DIR}:/backup" \
+            postgres:17-alpine \
+            sh -ec '
+              pg_dump \
+                --dbname="$SUPABASE_DB_URL" \
+                --format=custom \
+                --compress=6 \
+                --no-owner \
+                --no-privileges \
+                --schema=public \
+                --schema=auth \
+                --schema=storage \
+                --file="/backup/${DUMP_NAME}"
+              pg_restore --list "/backup/${DUMP_NAME}" > "/backup/${TOC_NAME}"
+            '
+
+          unset SAFE_DB_URL
 
           if [ ! -s "$DUMP_FILE" ]; then
             echo "::error::pg_dump produced an empty backup file."
             exit 1
           fi
-
-          # Verify custom archive TOC is valid and readable via pg_restore --list (read-only)
-          pg_restore --list "$DUMP_FILE" > "$TOC_FILE"
 
           TOC_LINES=$(wc -l < "$TOC_FILE")
           PUBLIC_TABLES=$(grep -cE " TABLE public " "$TOC_FILE" || true)

@@ -76,6 +76,50 @@ export function parseStrictIsoDate(dateStr) {
   return utcDate.getTime();
 }
 
+/**
+ * Safely normalize a PostgreSQL connection URI so passwords containing unencoded
+ * reserved characters (@, #, !, ?, /, %) work reliably with pg_dump/libpq without
+ * double-encoding already percent-encoded passwords.
+ */
+export function normalizePostgresUri(rawUri) {
+  const trimmed = String(rawUri || "").trim();
+  const schemeMatch = /^(postgres(?:ql)?:\/\/)(.+)$/i.exec(trimmed);
+  if (!schemeMatch) return trimmed;
+
+  const scheme = schemeMatch[1];
+  const rest = schemeMatch[2];
+
+  // Split on the LAST '@' so passwords containing unencoded '@', '?', '/', '#', '!', '%' are parsed cleanly
+  const lastAt = rest.lastIndexOf("@");
+  if (lastAt === -1) return trimmed;
+
+  const userInfo = rest.slice(0, lastAt);
+  const hostAndPathAndQuery = rest.slice(lastAt + 1);
+  const colonIdx = userInfo.indexOf(":");
+  if (colonIdx === -1) return trimmed;
+
+  const user = userInfo.slice(0, colonIdx);
+  const rawPass = userInfo.slice(colonIdx + 1);
+
+  // Decode once if already cleanly percent-encoded, then re-encode safely for URI userinfo
+  let decodedPass = rawPass;
+  try {
+    const candidate = decodeURIComponent(rawPass);
+    if (encodeURIComponent(candidate) === rawPass) {
+      decodedPass = candidate;
+    }
+  } catch {
+    // Raw password contained a literal '%' (not percent-encoded); encode it as-is
+  }
+
+  const encodedPass = encodeURIComponent(decodedPass);
+  const normalized = `${scheme}${user}:${encodedPass}@${hostAndPathAndQuery}`;
+  if (!/[?&]sslmode=/i.test(normalized)) {
+    return `${normalized}${normalized.includes("?") ? "&" : "?"}sslmode=require`;
+  }
+  return normalized;
+}
+
 export async function computeHashes(filePath) {
   return new Promise((resolve, reject) => {
     const md5 = crypto.createHash("md5");
