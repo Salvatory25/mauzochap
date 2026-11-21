@@ -572,8 +572,8 @@ function parseCliArgs(argv) {
     backupFile: "",
     checksumFile: "",
     manifestFile: "",
-    retentionDays: DEFAULT_RETENTION_DAYS,
-    skipRetention: false,
+    retentionDays: 0,
+    skipRetention: true,
     resultJson: "",
   };
 
@@ -581,6 +581,8 @@ function parseCliArgs(argv) {
     const flag = argv[i];
     if (flag === "--skip-retention") {
       args.skipRetention = true;
+    } else if (flag === "--enable-retention") {
+      args.skipRetention = false;
     } else if (flag === "--backup-date") {
       args.backupDate = argv[++i] || "";
     } else if (flag === "--backup-file" || flag === "--encrypted-file") {
@@ -601,7 +603,7 @@ function parseCliArgs(argv) {
   if (!args.backupDate || parseStrictIsoDate(args.backupDate) === null) {
     throw new BackupSyncError(`Invalid or missing --backup-date '${args.backupDate}': expected YYYY-MM-DD`);
   }
-  if (!Number.isInteger(args.retentionDays) || args.retentionDays < 1) {
+  if (!Number.isInteger(args.retentionDays) || args.retentionDays < 0) {
     throw new BackupSyncError(`Invalid --retention-days '${args.retentionDays}'`);
   }
   for (const [label, filePath] of [

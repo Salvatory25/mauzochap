@@ -5,12 +5,6 @@ on:
     # 21:00 UTC every day = 00:00 (midnight) Africa/Dar_es_Salaam (UTC+3)
     - cron: "0 21 * * *"
   workflow_dispatch:
-    inputs:
-      skip_retention:
-        description: "Skip 30-day retention cleanup for this manual run"
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -284,7 +278,7 @@ jobs:
           echo "backup_size=${UPLOAD_SIZE}" >> "$GITHUB_OUTPUT"
           echo "is_encrypted=${IS_ENCRYPTED}" >> "$GITHUB_OUTPUT"
 
-      - name: Upload to Google Drive, verify remote MD5/size & apply 30-day retention (Stages 3 & 4)
+      - name: Upload to Google Drive & verify remote MD5/size (Stages 3 & 4 — Keep All Backups)
         env:
           GDRIVE_CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
@@ -292,19 +286,13 @@ jobs:
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
           set -euo pipefail
-          EXTRA_ARGS=()
-          if [ "${{ inputs.skip_retention }}" = "true" ]; then
-            EXTRA_ARGS+=(--skip-retention)
-          fi
-
           node scripts/gdrive-backup-sync.mjs \
             --backup-date "${{ steps.meta.outputs.backup_date_eat }}" \
             --backup-file "${{ steps.package.outputs.backup_file }}" \
             --checksum-file "${{ steps.package.outputs.sha_file }}" \
             --manifest-file "${{ steps.package.outputs.manifest_file }}" \
-            --retention-days 30 \
-            --result-json "${{ steps.meta.outputs.work_dir }}/result.json" \
-            "${EXTRA_ARGS[@]}"
+            --skip-retention \
+            --result-json "${{ steps.meta.outputs.work_dir }}/result.json"
 
       - name: Publish audit summary to GitHub Actions
         if: success()
@@ -314,15 +302,12 @@ jobs:
           const fs = require("node:fs");
           const data = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
           const isEncrypted = process.argv[3] === "true";
-          const trashed = data.trashed_expired_folders.join(", ") || "None";
           console.log("### MauzoChap Backup Summary");
           console.log(`- **Status:** \`${data.status}\``);
           console.log(`- **Backup Date (EAT):** \`${data.backup_date_eat}\``);
           console.log(`- **Client-Side Encryption:** \`${isEncrypted ? "AES-256 GPG (enabled)" : "Disabled (add BACKUP_ENCRYPTION_PASSPHRASE to enable)"}\``);
           console.log(`- **Destination:** \`${data.root_folder_name}/${data.date_folder_name}/\``);
-          console.log(`- **Retention Policy:** \`${data.retention_days} days\` (skipped: \`${data.retention_skipped}\`)`);
-          console.log(`- **Valid Backup Folders Seen:** \`${data.valid_backup_folders_seen}\``);
-          console.log(`- **Expired Folders Moved to Trash:** \`${trashed}\``);
+          console.log(`- **Retention Policy:** \`Keep All Backups (no automatic deletion/trashing)\``);
           console.log("");
           console.log("| File | Size (bytes) | Verified (MD5 + Size) |");
           console.log("| --- | ---: | :---: |");
