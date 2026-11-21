@@ -112,6 +112,11 @@ export function normalizePostgresUri(rawUri) {
     // Raw password contained a literal '%' (not percent-encoded); encode it as-is
   }
 
+  // If the user pasted their password inside the template's [YOUR-PASSWORD] brackets (e.g. [MyPass]), strip outer [ ]
+  if (decodedPass.length > 2 && decodedPass.startsWith("[") && decodedPass.endsWith("]")) {
+    decodedPass = decodedPass.slice(1, -1);
+  }
+
   const encodedPass = encodeURIComponent(decodedPass);
   const normalized = `${scheme}${user}:${encodedPass}@${hostAndPathAndQuery}`;
   if (!/[?&]sslmode=/i.test(normalized)) {

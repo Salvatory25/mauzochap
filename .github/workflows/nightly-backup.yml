@@ -53,6 +53,10 @@ jobs:
             echo "Configure them at Settings -> Secrets and variables -> Actions before running this workflow."
             exit 1
           fi
+          if [[ "$SUPABASE_DB_URL" == *"YOUR-PASSWORD"* ]]; then
+            echo "::error::SUPABASE_DB_URL in GitHub Secrets still contains the literal placeholder text 'YOUR-PASSWORD' instead of your database password."
+            exit 1
+          fi
           if [ -n "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ] && [ ${#BACKUP_ENCRYPTION_PASSPHRASE} -lt 16 ]; then
             echo "::error::BACKUP_ENCRYPTION_PASSPHRASE is set but shorter than 16 characters."
             exit 1
