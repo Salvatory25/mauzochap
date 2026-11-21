@@ -76,20 +76,64 @@ export function parseStrictIsoDate(dateStr) {
   return utcDate.getTime();
 }
 
+export const DEFAULT_SUPABASE_PROJECT_REF = "rcinghijelhlehfycjka";
+export const DEFAULT_SUPABASE_POOLER_HOST = "aws-1-eu-central-1.pooler.supabase.com:5432";
+
 /**
- * Safely normalize a PostgreSQL connection URI so passwords containing unencoded
- * reserved characters (@, #, !, ?, /, %) work reliably with pg_dump/libpq without
- * double-encoding already percent-encoded passwords.
+ * Safely normalize a Supabase PostgreSQL connection URI (or raw password) so that:
+ * 1. If a raw password was pasted into SUPABASE_DB_URL, it is wrapped into the full
+ *    IPv4 Session Pooler URI for project rcinghijelhlehfycjka.
+ * 2. If a Direct Connection URI (db.<ref>.supabase.co) or a pooler URI missing the
+ *    tenant suffix (`postgres` or `postgres.PROJECT_REF`, which causes Supavisor
+ *    `ENOIDENTIFIER: no tenant identifier provided`) was pasted, it automatically
+ *    rewrites the user to `postgres.rcinghijelhlehfycjka` and host to the IPv4 Session Pooler.
+ * 3. Outer template brackets `[...]` and quotes are stripped, and special password
+ *    characters (@, #, !, ?, /, %) are URL-encoded without double-encoding.
  */
-export function normalizePostgresUri(rawUri) {
-  const trimmed = String(rawUri || "").trim();
+export function normalizePostgresUri(
+  rawUri,
+  projectRef = DEFAULT_SUPABASE_PROJECT_REF,
+  poolerHost = DEFAULT_SUPABASE_POOLER_HOST
+) {
+  let trimmed = String(rawUri || "").trim();
+  if (!trimmed) return "";
+
+  // Strip accidental leading KEY= prefix or surrounding quotes
+  trimmed = trimmed.replace(/^SUPABASE_DB_URL\s*=\s*/i, "").trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    trimmed = trimmed.slice(1, -1).trim();
+  }
+
+  const decodeAndCleanPassword = (rawPass) => {
+    let pass = String(rawPass || "").trim();
+    if (pass.length > 2 && pass.startsWith("[") && pass.endsWith("]")) {
+      pass = pass.slice(1, -1);
+    }
+    try {
+      const candidate = decodeURIComponent(pass);
+      if (encodeURIComponent(candidate) === pass) {
+        pass = candidate;
+      }
+    } catch {
+      // Contains raw '%'; keep as-is so encodeURIComponent encodes it cleanly
+    }
+    if (pass.length > 2 && pass.startsWith("[") && pass.endsWith("]")) {
+      pass = pass.slice(1, -1);
+    }
+    return encodeURIComponent(pass);
+  };
+
   const schemeMatch = /^(postgres(?:ql)?:\/\/)(.+)$/i.exec(trimmed);
-  if (!schemeMatch) return trimmed;
+  if (!schemeMatch) {
+    // Raw password was provided instead of a full URI -> construct full Session Pooler URI
+    const encodedPass = decodeAndCleanPassword(trimmed);
+    return `postgresql://postgres.${projectRef}:${encodedPass}@${poolerHost}/postgres?sslmode=require`;
+  }
 
-  const scheme = schemeMatch[1];
   const rest = schemeMatch[2];
-
-  // Split on the LAST '@' so passwords containing unencoded '@', '?', '/', '#', '!', '%' are parsed cleanly
   const lastAt = rest.lastIndexOf("@");
   if (lastAt === -1) return trimmed;
 
@@ -98,27 +142,31 @@ export function normalizePostgresUri(rawUri) {
   const colonIdx = userInfo.indexOf(":");
   if (colonIdx === -1) return trimmed;
 
-  const user = userInfo.slice(0, colonIdx);
+  let user = userInfo.slice(0, colonIdx).trim();
   const rawPass = userInfo.slice(colonIdx + 1);
+  const encodedPass = decodeAndCleanPassword(rawPass);
 
-  // Decode once if already cleanly percent-encoded, then re-encode safely for URI userinfo
-  let decodedPass = rawPass;
-  try {
-    const candidate = decodeURIComponent(rawPass);
-    if (encodeURIComponent(candidate) === rawPass) {
-      decodedPass = candidate;
-    }
-  } catch {
-    // Raw password contained a literal '%' (not percent-encoded); encode it as-is
+  // Separate host:port from /dbname?query
+  const slashIdx = hostAndPathAndQuery.indexOf("/");
+  let hostPort = slashIdx === -1 ? hostAndPathAndQuery : hostAndPathAndQuery.slice(0, slashIdx);
+  const pathAndQuery = slashIdx === -1 ? "/postgres" : hostAndPathAndQuery.slice(slashIdx);
+
+  // If Direct IPv6 host (db.<ref>.supabase.co) or transaction pooler (:6543) was pasted, route via IPv4 Session Pooler (:5432)
+  if (/^db\.[a-z0-9]+\.supabase\.co(?::\d+)?$/i.test(hostPort)) {
+    hostPort = poolerHost;
+  } else if (/\.pooler\.supabase\.com:6543$/i.test(hostPort)) {
+    hostPort = hostPort.replace(/:6543$/, ":5432");
   }
 
-  // If the user pasted their password inside the template's [YOUR-PASSWORD] brackets (e.g. [MyPass]), strip outer [ ]
-  if (decodedPass.length > 2 && decodedPass.startsWith("[") && decodedPass.endsWith("]")) {
-    decodedPass = decodedPass.slice(1, -1);
+  // Ensure tenant identifier (.rcinghijelhlehfycjka) is always present on pooler connections to prevent ENOIDENTIFIER
+  if (
+    /\.pooler\.supabase\.com/i.test(hostPort) &&
+    (user === "postgres" || /^postgres\.PROJECT_REF$/i.test(user) || !user.includes("."))
+  ) {
+    user = `${user.split(".")[0]}.${projectRef}`;
   }
 
-  const encodedPass = encodeURIComponent(decodedPass);
-  const normalized = `${scheme}${user}:${encodedPass}@${hostAndPathAndQuery}`;
+  const normalized = `postgresql://${user}:${encodedPass}@${hostPort}${pathAndQuery}`;
   if (!/[?&]sslmode=/i.test(normalized)) {
     return `${normalized}${normalized.includes("?") ? "&" : "?"}sslmode=require`;
   }
