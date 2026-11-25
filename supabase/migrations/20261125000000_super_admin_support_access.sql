@@ -46,6 +46,9 @@ CREATE INDEX IF NOT EXISTS idx_support_sessions_admin_started
 
 ALTER TABLE public.super_admin_support_sessions ENABLE ROW LEVEL SECURITY;
 
+REVOKE ALL ON public.super_admin_support_sessions FROM PUBLIC, anon;
+GRANT SELECT ON public.super_admin_support_sessions TO authenticated, service_role;
+
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -90,6 +93,9 @@ CREATE INDEX IF NOT EXISTS idx_support_audit_logs_admin_created
   ON public.super_admin_support_audit_logs (super_admin_id, created_at DESC);
 
 ALTER TABLE public.super_admin_support_audit_logs ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON public.super_admin_support_audit_logs FROM PUBLIC, anon;
+GRANT SELECT ON public.super_admin_support_audit_logs TO authenticated, service_role;
 
 DO $$
 BEGIN
@@ -392,6 +398,14 @@ BEGIN
   END IF;
 
   -- User Roles: during Support Mode, bind Super Admin strictly to target business staff roles & never allow super_admin/owner assignment
+  IF EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'user_roles' AND policyname = 'users see own roles') THEN
+    ALTER POLICY "users see own roles" ON public.user_roles
+      USING (
+        (auth.uid() = user_id)
+        OR (public.is_super_admin(auth.uid()) AND public.active_support_business_id() IS NULL)
+      );
+  END IF;
+
   IF EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'user_roles' AND policyname = 'admins see all roles') THEN
     ALTER POLICY "admins see all roles" ON public.user_roles
       USING (
@@ -1119,6 +1133,12 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.active_support_session_id() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.active_support_session_id() TO authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.active_support_business_id() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.active_support_business_id() TO authenticated, service_role;
+
 REVOKE ALL ON FUNCTION public.start_super_admin_support_session(UUID, TEXT, INTEGER) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.start_super_admin_support_session(UUID, TEXT, INTEGER) TO authenticated, service_role;
 
@@ -1286,3 +1306,8 @@ BEGIN
     );
   END LOOP;
 END $$;
+
+REVOKE ALL ON FUNCTION public.prevent_support_audit_log_tampering() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.audit_support_session_mutation() FROM PUBLIC, anon, authenticated;
+
+NOTIFY pgrst, 'reload schema';
