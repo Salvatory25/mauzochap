@@ -1,14 +1,38 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShieldAlert, Building2, CreditCard, Activity, CheckCircle2, XCircle, Clock, MessageSquare, ArrowRight } from "lucide-react";
+import {
+  ShieldAlert,
+  ShieldCheck,
+  Building2,
+  CreditCard,
+  Activity,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  MessageSquare,
+  ArrowRight,
+  ExternalLink,
+  FileSearch,
+} from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { sendEmail } from "@/lib/email";
 import { enrichMerchantsWithPhones } from "@/lib/merchant-phone-sync";
+import { SupportActivityLogsTab } from "@/components/super-admin/SupportActivityLogsTab";
 
 export const Route = createFileRoute("/_authenticated/super-admin")({
   component: SuperAdminDashboard,
@@ -17,10 +41,17 @@ export const Route = createFileRoute("/_authenticated/super-admin")({
 type Business = Database["public"]["Tables"]["businesses"]["Row"];
 type Payment = Database["public"]["Tables"]["payments"]["Row"];
 
-function SuperAdminDashboard() {
-  const { isSuperAdmin } = useAuth();
+export function SuperAdminDashboard() {
+  const { user, isSuperAdmin, isSupportMode = false, supportSession = null, startSupportSession } = useAuth();
+  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"businesses" | "payments">("businesses");
+  const [activeTab, setActiveTab] = useState<"businesses" | "payments" | "support-logs">("businesses");
+
+  // Support session confirmation dialog state
+  const [supportTargetBiz, setSupportTargetBiz] = useState<any | null>(null);
+  const [supportReason, setSupportReason] = useState("");
+  const [supportDuration, setSupportDuration] = useState<number>(60);
+  const [startingSupport, setStartingSupport] = useState(false);
 
   const [bPage, setBPage] = useState(1);
   const [pPage, setPPage] = useState(1);
@@ -70,7 +101,7 @@ function SuperAdminDashboard() {
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["super-admin-profiles-phones"],
-    enabled: isSuperAdmin,
+    enabled: isSuperAdmin && !isSupportMode,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
@@ -88,9 +119,9 @@ function SuperAdminDashboard() {
 
   const autoSyncedIds = useRef<Set<string>>(new Set());
 
-  // Automatically backfill recovered phone numbers into businesses table in Supabase
+  // Automatically backfill recovered phone numbers into businesses table in Supabase (only outside active support session)
   useEffect(() => {
-    if (!isSuperAdmin || businesses.length === 0) return;
+    if (!isSuperAdmin || isSupportMode || businesses.length === 0) return;
 
     const recoverable = businesses.filter(
       (b) =>
@@ -109,11 +140,34 @@ function SuperAdminDashboard() {
     ).then(() => {
       qc.invalidateQueries({ queryKey: ["super-admin-businesses"] });
     });
-  }, [isSuperAdmin, businesses, rawBusinesses, qc]);
+  }, [isSuperAdmin, isSupportMode, businesses, rawBusinesses, qc]);
 
   if (!isSuperAdmin) {
     return <div className="p-8 text-center text-muted-foreground">Unauthorized. Super Admin access required.</div>;
   }
+
+  const openSupportModal = (biz: any) => {
+    setSupportTargetBiz(biz);
+    setSupportReason("");
+    setSupportDuration(60);
+  };
+
+  const handleConfirmSupportAccess = async () => {
+    if (!supportTargetBiz || !startSupportSession) return;
+    setStartingSupport(true);
+    try {
+      await qc.cancelQueries();
+      qc.clear();
+      await startSupportSession(supportTargetBiz.id, supportReason, supportDuration);
+      toast.success(`Support Mode active for ${supportTargetBiz.business_name}`);
+      setSupportTargetBiz(null);
+      navigate({ to: "/dashboard" });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to start support session");
+    } finally {
+      setStartingSupport(false);
+    }
+  };
 
   const handleUpdateBusinessStatus = async (id: string, status: string) => {
     try {
@@ -251,7 +305,7 @@ function SuperAdminDashboard() {
           <ShieldAlert className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-primary shrink-0" />
           <span>Super Admin Dashboard</span>
         </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage tenants, subscriptions, and verify payments.</p>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage tenants, subscriptions, verify payments, and provide secure customer support.</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2.5 sm:gap-4">
@@ -291,6 +345,13 @@ function SuperAdminDashboard() {
           >
             Payments & Verifications ({payments.length})
           </button>
+          <button
+            onClick={() => setActiveTab("support-logs")}
+            className={`px-3.5 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap cursor-pointer inline-flex items-center gap-1.5 ${activeTab === "support-logs" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            <FileSearch className="h-3.5 w-3.5" />
+            Support Activity Logs
+          </button>
         </div>
 
         <Link
@@ -317,6 +378,7 @@ function SuperAdminDashboard() {
                 const daysLeft = b.expiry_date ? Math.ceil((new Date(b.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : null;
                 const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 5;
                 const isExpired = daysLeft !== null && daysLeft <= 0;
+                const isActiveTarget = supportSession?.target_business_id === b.id;
 
                 return (
                   <div key={b.id} className="rounded-xl border border-border bg-card p-3.5 shadow-sm space-y-3">
@@ -360,25 +422,40 @@ function SuperAdminDashboard() {
                       </div>
                     )}
 
-                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border">
-                      {b.account_status !== "approved" && latestP && (
-                        <Button
-                          size="sm"
-                          className="flex-1 bg-primary text-primary-foreground font-bold h-8 text-xs"
-                          onClick={() => handleApprovePayment(latestP.id, b.id, b.package || "kilimanjaro", b.email, b.business_name)}
-                        >
-                          Verify & Activate
-                        </Button>
-                      )}
-                      {b.account_status !== "approved" && !latestP && (
-                        <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleUpdateBusinessStatus(b.id, "approved")}>Approve</Button>
-                      )}
-                      {b.account_status !== "suspended" && (
-                        <Button size="sm" variant="outline" className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={() => handleUpdateBusinessStatus(b.id, "suspended")}>Suspend</Button>
-                      )}
-                      <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(b.id, b.business_name)}>
-                        Delete
+                    <div className="pt-2 border-t border-border space-y-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={isActiveTarget ? "default" : "secondary"}
+                        className="w-full h-8 text-xs font-bold"
+                        onClick={() =>
+                          isActiveTarget ? navigate({ to: "/dashboard" }) : openSupportModal(b)
+                        }
+                      >
+                        <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                        {isActiveTarget ? "Resume Active Support Session" : "Access Business Dashboard"}
                       </Button>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        {b.account_status !== "approved" && latestP && (
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-primary text-primary-foreground font-bold h-8 text-xs"
+                            onClick={() => handleApprovePayment(latestP.id, b.id, b.package || "kilimanjaro", b.email, b.business_name)}
+                          >
+                            Verify & Activate
+                          </Button>
+                        )}
+                        {b.account_status !== "approved" && !latestP && (
+                          <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => handleUpdateBusinessStatus(b.id, "approved")}>Approve</Button>
+                        )}
+                        {b.account_status !== "suspended" && (
+                          <Button size="sm" variant="outline" className="h-8 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={() => handleUpdateBusinessStatus(b.id, "suspended")}>Suspend</Button>
+                        )}
+                        <Button size="sm" variant="outline" className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(b.id, b.business_name)}>
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -407,6 +484,7 @@ function SuperAdminDashboard() {
                   const daysLeft = expiry ? Math.ceil((expiry.getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : null;
                   const isExpiringSoon = daysLeft !== null && daysLeft > 0 && daysLeft <= 5;
                   const isExpired = daysLeft !== null && daysLeft <= 0;
+                  const isActiveTarget = supportSession?.target_business_id === b.id;
 
                   return (
                     <tr key={b.id} className="hover:bg-muted/30 transition-colors">
@@ -468,6 +546,18 @@ function SuperAdminDashboard() {
 
                       <td className="px-3.5 py-3 text-right">
                         <div className="inline-flex items-center justify-end gap-1 flex-wrap">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={isActiveTarget ? "default" : "secondary"}
+                            className="h-7 text-xs px-2.5 font-semibold cursor-pointer"
+                            onClick={() =>
+                              isActiveTarget ? navigate({ to: "/dashboard" }) : openSupportModal(b)
+                            }
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            {isActiveTarget ? "Resume Dashboard" : "Access Business Dashboard"}
+                          </Button>
                           {b.account_status !== "approved" && latestP && (
                             <Button
                               size="sm"
@@ -621,6 +711,122 @@ function SuperAdminDashboard() {
           )}
         </>
       )}
+
+      {activeTab === "support-logs" && (
+        <SupportActivityLogsTab businesses={businesses} />
+      )}
+
+      {/* Confirmation Dialog: Access Customer Business Dashboard */}
+      <Dialog
+        open={!!supportTargetBiz}
+        onOpenChange={(open) => {
+          if (!open && !startingSupport) setSupportTargetBiz(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg" data-testid="support-access-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              <span>Start Secure Support Session</span>
+            </DialogTitle>
+            <DialogDescription>
+              Access and operate this customer&apos;s existing MauzoChap dashboard directly under your own Super Admin identity without interrupting their session.
+            </DialogDescription>
+          </DialogHeader>
+
+          {supportTargetBiz && (
+            <div className="space-y-4 py-2 text-sm">
+              <div className="rounded-xl border border-border bg-muted/40 p-3.5 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-bold text-base text-foreground">
+                      {supportTargetBiz.business_name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Owner: {supportTargetBiz.owner_name || "—"}
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                    {supportTargetBiz.package || "kilimanjaro"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-xs">
+                  <div>
+                    <span className="text-muted-foreground block text-[10px] uppercase">Business ID</span>
+                    <code className="font-mono text-[11px] break-all">{supportTargetBiz.id}</code>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-[10px] uppercase">Contact</span>
+                    <span className="block truncate">{supportTargetBiz.email || "—"}</span>
+                    <span className="block text-muted-foreground">{supportTargetBiz.phone || "—"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="support-duration">Session Expiration</Label>
+                  <select
+                    id="support-duration"
+                    value={supportDuration}
+                    onChange={(e) => setSupportDuration(Number(e.target.value))}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value={30}>30 minutes</option>
+                    <option value={60}>60 minutes (Default)</option>
+                    <option value={120}>2 hours</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label>Authenticated Administrator</Label>
+                  <Input
+                    value={user?.email || "Super Admin"}
+                    disabled
+                    className="h-9 bg-muted/50 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="support-reason">Support Note / Reason (Optional)</Label>
+                <Input
+                  id="support-reason"
+                  placeholder="e.g. Assisting customer with stock import or receipt setup"
+                  value={supportReason}
+                  onChange={(e) => setSupportReason(e.target.value)}
+                />
+              </div>
+
+              <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">Silent &amp; Audited Support Mode:</strong> No popup or notification is sent to the customer, their login session remains untouched, and every action performed is attributed to{" "}
+                <strong className="text-foreground">{user?.email}</strong> in the immutable audit log.
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={startingSupport}
+              onClick={() => setSupportTargetBiz(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={startingSupport}
+              onClick={handleConfirmSupportAccess}
+              className="font-bold"
+            >
+              <ExternalLink className="h-4 w-4 mr-1.5" />
+              {startingSupport ? "Starting Session..." : "Confirm & Open Dashboard"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

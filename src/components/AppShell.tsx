@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   LayoutDashboard,
   Boxes,
@@ -28,6 +28,7 @@ import {
   MessageSquare,
   BookOpen,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import {
   Sheet,
@@ -43,10 +44,29 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
+import { recordSupportAuditEventRpc } from "@/lib/support-session";
+import { SupportSessionBanner } from "@/components/SupportSessionBanner";
 import { useLang, useT } from "@/lib/i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+
+const SUPPORT_AUDITED_MODULES: Record<string, string> = {
+  "/dashboard": "dashboard",
+  "/pos": "pos",
+  "/products": "products",
+  "/inventory": "inventory",
+  "/sales": "sales",
+  "/invoices": "invoices",
+  "/customers": "customers",
+  "/suppliers": "suppliers",
+  "/expenses": "expenses",
+  "/reports": "reports",
+  "/users": "users",
+  "/locations": "locations",
+  "/tools": "tools",
+  "/settings": "settings",
+};
 
 function Blocker({ title, message, icon: Icon, action }: { title: string, message: string, icon: any, action?: React.ReactNode }) {
   const queryClient = useQueryClient();
@@ -274,11 +294,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const t = useT();
   const [lang, setLang] = useLang();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const lastAuditedKeyRef = useRef<string | null>(null);
 
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, roles, business, isSuperAdmin, isAdmin, isManager, loading, availableBranches, branchId, switchBranch } = useAuth();
+  const {
+    user,
+    roles,
+    business,
+    isSuperAdmin,
+    isSupportMode = false,
+    supportSession = null,
+    isAdmin,
+    isManager,
+    loading,
+    availableBranches,
+    branchId,
+    switchBranch,
+  } = useAuth();
 
   // SaaS Logic Bypass: Super admins and staff members added by business owners NEVER get blocked
   const isStaffMember = 
@@ -297,10 +331,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Redirect staff members away from billing setup directly to POS
   useEffect(() => {
-    if (!loading && isStaffMember && location.pathname === "/setup-billing") {
+    if (!loading && isStaffMember && !isSuperAdmin && location.pathname === "/setup-billing") {
       navigate({ to: "/pos" as any, replace: true });
     }
-  }, [loading, isStaffMember, location.pathname, navigate]);
+  }, [loading, isStaffMember, isSuperAdmin, location.pathname, navigate]);
+
+  // Internal audit trail for sensitive module views during active Super Admin Support Mode
+  useEffect(() => {
+    if (loading || !isSuperAdmin || !isSupportMode || !supportSession?.session_id) {
+      return;
+    }
+
+    const matchedPrefix = Object.keys(SUPPORT_AUDITED_MODULES).find((prefix) =>
+      location.pathname.startsWith(prefix),
+    );
+    if (!matchedPrefix) return;
+
+    const moduleName = SUPPORT_AUDITED_MODULES[matchedPrefix];
+    const dedupeKey = `${supportSession.session_id}:${location.pathname}`;
+    if (lastAuditedKeyRef.current === dedupeKey) return;
+
+    lastAuditedKeyRef.current = dedupeKey;
+    void recordSupportAuditEventRpc(
+      supportSession.session_id,
+      "view_module",
+      moduleName,
+      null,
+      { path: location.pathname },
+    );
+  }, [loading, isSuperAdmin, isSupportMode, supportSession?.session_id, location.pathname]);
 
   if (loading) {
     return (
@@ -369,12 +428,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const nav = isSuperAdmin ? [
-    { to: "/super-admin", icon: ShieldAlert, label: "Super Admin" },
-    { to: "/sms", icon: MessageSquare, label: "SMS & Ujumbe" },
-    { to: "/help", icon: BookOpen, label: t("guide") },
-    { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
-  ] : [
+  const onSuperAdminConsoleRoute =
+    location.pathname.startsWith("/super-admin") || location.pathname.startsWith("/sms");
+
+  const showCustomerSupportNav = isSuperAdmin && isSupportMode && !onSuperAdminConsoleRoute;
+
+  const merchantNav = [
+    ...(showCustomerSupportNav
+      ? [{ to: "/super-admin", icon: ArrowLeft, label: "Return to Super Admin" }]
+      : []),
     { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
     { to: "/pos", icon: ShoppingCart, label: t("pos") },
     { to: "/products", icon: Boxes, label: t("products") },
@@ -396,6 +458,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { to: "/settings", icon: Settings, label: t("settings") },
   ];
 
+  const nav = isSuperAdmin && !showCustomerSupportNav
+    ? [
+        { to: "/super-admin", icon: ShieldAlert, label: "Super Admin" },
+        { to: "/sms", icon: MessageSquare, label: "SMS & Ujumbe" },
+        { to: "/help", icon: BookOpen, label: t("guide") },
+        {
+          to: "/dashboard",
+          icon: LayoutDashboard,
+          label: isSupportMode ? "Active Support Dashboard" : t("dashboard"),
+        },
+      ]
+    : merchantNav;
+
   const handleSignOut = async () => {
     await queryClient.cancelQueries();
     queryClient.clear();
@@ -410,7 +485,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <img src="/images/logo-white.png" alt="MauzoChap" className="w-9 h-9 object-contain" />
           <span className="font-bold text-xl leading-tight tracking-tight text-sidebar-foreground">MauzoChap</span>
         </Link>
-        {business && !isSuperAdmin && (
+        {business && (!isSuperAdmin || isSupportMode) && (
           <div className="mt-2">
             {isAdmin && availableBranches && availableBranches.length > 0 ? (
               <DropdownMenu>
@@ -477,7 +552,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="border-t border-sidebar-border p-4 space-y-3 bg-sidebar/50 shrink-0">
         <div className="flex items-center justify-between">
           <div className="text-xs text-sidebar-foreground/80 truncate font-medium max-w-[170px]">{user?.email}</div>
-          {business && !isSuperAdmin && <NotificationCenter />}
+          {business && (!isSuperAdmin || isSupportMode) && <NotificationCenter />}
         </div>
         <div className="flex flex-wrap gap-1">
           {roles.map((r) => (
@@ -510,18 +585,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background w-full">
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-sm fixed inset-y-0 left-0 h-screen z-30">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-sm fixed inset-y-0 left-0 h-screen z-30 no-print print:hidden">
         {sidebarContent}
       </aside>
 
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 inset-x-0 z-40 h-16 flex items-center justify-between bg-sidebar text-sidebar-foreground px-3 sm:px-4 border-b border-sidebar-border shadow-sm">
+      <div className="lg:hidden fixed top-0 inset-x-0 z-40 h-16 flex items-center justify-between bg-sidebar text-sidebar-foreground px-3 sm:px-4 border-b border-sidebar-border shadow-sm no-print print:hidden">
         <Link to="/dashboard" className="flex items-center gap-2 h-full py-2">
           <img src="/images/logo-white.png" alt="MauzoChap" className="w-8 h-8 object-contain" />
           <span className="font-bold text-base sm:text-lg leading-tight tracking-tight text-sidebar-foreground">MauzoChap</span>
         </Link>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {business && !isSuperAdmin && <NotificationCenter />}
+          {business && (!isSuperAdmin || isSupportMode) && <NotificationCenter />}
           <button
             onClick={() => setLang(lang === "en" ? "sw" : "en")}
             className="text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-sidebar-accent px-2.5 py-1.5 rounded-md"
@@ -544,6 +619,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <main className="flex-1 min-w-0 w-full lg:pl-64 pt-16 lg:pt-0 bg-muted/20 overflow-x-hidden">
+        {isSuperAdmin && isSupportMode && supportSession && <SupportSessionBanner />}
         <div className="px-3 py-4 sm:px-6 sm:py-6 lg:p-8 max-w-7xl mx-auto pb-10 sm:pb-8 w-full min-w-0">
           {!isSuperAdmin && business?.expiry_date && (() => {
             const days = Math.ceil((new Date(business.expiry_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
@@ -570,8 +646,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
         {/* Mobile bottom nav */}
-        <nav className={`lg:hidden fixed bottom-0 inset-x-0 grid ${isSuperAdmin ? "grid-cols-3" : "grid-cols-5"} gap-1 border-t border-border bg-card/95 backdrop-blur-md px-1.5 py-1 z-40 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)]`}>
-          {isSuperAdmin ? (
+        <nav className={`lg:hidden fixed bottom-0 inset-x-0 grid ${isSuperAdmin && !showCustomerSupportNav ? "grid-cols-3" : "grid-cols-5"} gap-1 border-t border-border bg-card/95 backdrop-blur-md px-1.5 py-1 z-40 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_12px_rgba(0,0,0,0.06)] no-print print:hidden`}>
+          {isSuperAdmin && !showCustomerSupportNav ? (
             <>
               <Link
                 to="/super-admin"

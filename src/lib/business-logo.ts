@@ -13,8 +13,7 @@ export function getStoredBusinessLogo(businessId?: string | null): string | null
   if (typeof window === "undefined") return null;
   try {
     if (businessId) {
-      const byId = localStorage.getItem(`${LOGO_STORAGE_PREFIX}${businessId}`);
-      if (byId) return byId;
+      return localStorage.getItem(`${LOGO_STORAGE_PREFIX}${businessId}`);
     }
     return localStorage.getItem(LOGO_DEFAULT_KEY);
   } catch {
@@ -36,8 +35,9 @@ export async function saveBusinessLogo(
   try {
     if (businessId) {
       localStorage.setItem(`${LOGO_STORAGE_PREFIX}${businessId}`, dataUrl);
+    } else {
+      localStorage.setItem(LOGO_DEFAULT_KEY, dataUrl);
     }
-    localStorage.setItem(LOGO_DEFAULT_KEY, dataUrl);
 
     // Notify all active React components to re-render logo in real-time
     window.dispatchEvent(
@@ -68,8 +68,9 @@ export async function removeBusinessLogo(businessId?: string | null): Promise<vo
   try {
     if (businessId) {
       localStorage.removeItem(`${LOGO_STORAGE_PREFIX}${businessId}`);
+    } else {
+      localStorage.removeItem(LOGO_DEFAULT_KEY);
     }
-    localStorage.removeItem(LOGO_DEFAULT_KEY);
 
     window.dispatchEvent(
       new CustomEvent(LOGO_UPDATED_EVENT, { detail: { businessId, logoUrl: null, logo: null } }),

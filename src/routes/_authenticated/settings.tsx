@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
+import { updateSupportBusinessSettingsRpc } from "@/lib/support-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +15,16 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
-function SettingsPage() {
+export function SettingsPage() {
   const t = useT();
-  const { user, business, isAdmin } = useAuth();
+  const {
+    user,
+    business,
+    isAdmin,
+    isSupportMode = false,
+    supportSession = null,
+    refreshSupportSession,
+  } = useAuth();
   
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -24,6 +32,13 @@ function SettingsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (isSupportMode && business) {
+      setFullName(business.owner_name || "");
+      setBusinessName(business.business_name || "");
+      setPhone(business.phone || "");
+      return;
+    }
+
     async function loadProfile() {
       if (!user?.id) return;
       const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
@@ -34,13 +49,25 @@ function SettingsPage() {
       }
     }
     loadProfile();
-  }, [user]);
+  }, [user, isSupportMode, business]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id) return;
     setSaving(true);
     try {
+      // Safeguard: during Support Mode, update ONLY the target customer business & owner profile via server-verified RPC
+      if (isSupportMode && supportSession?.session_id) {
+        await updateSupportBusinessSettingsRpc(supportSession.session_id, {
+          businessName,
+          ownerName: fullName,
+          phone,
+        });
+        await refreshSupportSession?.();
+        toast.success("Customer business settings saved successfully");
+        return;
+      }
+
       const payload: any = {
         full_name: fullName,
         phone,
@@ -68,6 +95,8 @@ function SettingsPage() {
     }
   };
 
+  const displayedEmail = isSupportMode ? business?.email || "" : user?.email || "";
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3 border-b border-border pb-4">
@@ -85,7 +114,7 @@ function SettingsPage() {
         <form onSubmit={handleSave} className="space-y-4">
           <div>
             <Label>Email</Label>
-            <Input value={user?.email || ""} disabled className="mt-1 bg-muted/50" />
+            <Input value={displayedEmail} disabled className="mt-1 bg-muted/50" />
             <p className="text-xs text-muted-foreground mt-1">Email cannot be changed here.</p>
           </div>
           

@@ -45,7 +45,7 @@ type Profile = {
 function UsersPage() {
   const t = useT();
   const qc = useQueryClient();
-  const { roles, user, isAdmin, isSuperAdmin, business } = useAuth();
+  const { roles, user, isAdmin, isSuperAdmin, isSupportMode = false, business } = useAuth();
   const currentPackage = (business?.package as string) || "kilimanjaro";
   const userLimit = currentPackage === "starter" ? 2 : currentPackage === "kilimanjaro" ? 10 : 9999;
   const [search, setSearch] = useState("");
@@ -75,7 +75,7 @@ function UsersPage() {
       }
 
       let query = supabase.from("profiles").select("*, branches(name)");
-      if (!roles.includes("super_admin") && business?.id) {
+      if (business?.id && (!roles.includes("super_admin") || isSupportMode)) {
         query = query.eq("business_id", business.id);
       }
       const { data: profiles, error: pErr } = await query;
@@ -110,7 +110,7 @@ function UsersPage() {
     );
   }
 
-  const canAddMoreUsers = isSuperAdmin || usersList.length < userLimit;
+  const canAddMoreUsers = (isSuperAdmin && !isSupportMode) || usersList.length < userLimit;
 
   const filtered = usersList.filter(
     (u) =>

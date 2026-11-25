@@ -48,7 +48,7 @@ function JaggedEdge({ position }: { position: "top" | "bottom" }) {
 export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void }) {
   const t = useT();
   const [format, setFormat] = useState<"thermal" | "a4">("thermal");
-  const { business, branchId: userBranchId } = useAuth();
+  const { user, business, branchId: userBranchId, isSupportMode = false } = useAuth();
   const { logo } = useBusinessLogo(sale.business_id || business?.id);
   const [businessName, setBusinessName] = useState<string>("Silivia Cosmetics");
   const [locationName, setLocationName] = useState<string>("Tanzania");
@@ -57,9 +57,18 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
     async function loadReceiptHeader() {
       let resolvedBizName = "";
 
-      // 1. Fetch business name from profiles first (where the user updates it in Settings)
+      // In Support Mode, never pull Super Admin's HQ profile name onto a customer's receipt
       const targetCashierId = sale.cashier_id;
-      if (targetCashierId) {
+      const skipCashierProfileLookup =
+        isSupportMode && (!targetCashierId || targetCashierId === user?.id);
+
+      if (isSupportMode && business?.business_name) {
+        resolvedBizName = business.business_name;
+        setBusinessName(business.business_name);
+      }
+
+      // 1. Fetch business name from profiles first (for standard merchant/staff sessions)
+      if (targetCashierId && !skipCashierProfileLookup) {
         try {
           const { data: profileData } = await supabase
             .from("profiles")
@@ -116,7 +125,7 @@ export function Receipt({ sale, onClose }: { sale: SaleData; onClose: () => void
       setBusinessName(business.business_name);
     }
     loadReceiptHeader();
-  }, [sale.branch_id, sale.cashier_id, userBranchId, business]);
+  }, [sale.branch_id, sale.cashier_id, userBranchId, business, isSupportMode, user?.id]);
 
   const handlePrint = () => {
     const originalTitle = document.title;
