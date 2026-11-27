@@ -250,6 +250,118 @@ export async function sendOtpSMS({
 }
 
 /**
+ * Send SMS to merchant confirming their payment reference was received and is awaiting verification
+ */
+export async function sendPaymentSubmittedSMS({
+  phone,
+  ownerName,
+  businessName,
+  packageName,
+  amount,
+  paymentRef,
+}: {
+  phone: string;
+  ownerName?: string | null;
+  businessName: string;
+  packageName: string;
+  amount: number;
+  paymentRef: string;
+}): Promise<SMSResponse> {
+  const greeting = ownerName ? `Habari ${ownerName}, ` : "Habari, ";
+  const body = `${greeting}tumepokea kumbukumbu ya malipo yako (${paymentRef}) ya TZS ${Number(amount).toLocaleString()} kwa kifurushi cha ${packageName.toUpperCase()} (${businessName}). Tunahakiki muamala wako na duka litawashwa punde!`;
+
+  return sendSMS({
+    recipient: phone,
+    body,
+    senderId: SENDER_ID,
+  });
+}
+
+/**
+ * Send SMS to merchant confirming payment verification & subscription activation
+ */
+export async function sendPaymentApprovedSMS({
+  phone,
+  ownerName,
+  businessName,
+  packageName,
+  amount,
+  paymentRef,
+  expiryDate,
+}: {
+  phone: string;
+  ownerName?: string | null;
+  businessName: string;
+  packageName: string;
+  amount: number;
+  paymentRef: string;
+  expiryDate: string;
+}): Promise<SMSResponse> {
+  const greeting = ownerName ? `Habari ${ownerName}, ` : "Habari, ";
+  const body = `${greeting}malipo ya TZS ${Number(amount).toLocaleString()} (Ref: ${paymentRef}) yamefanikiwa! Kifurushi cha ${packageName.toUpperCase()} kwa ${businessName} kimewashwa hadi ${expiryDate}. Asante kwa kutumia MauzoChap POS!`;
+
+  return sendSMS({
+    recipient: phone,
+    body,
+    senderId: SENDER_ID,
+  });
+}
+
+/**
+ * Send SMS to merchant if payment reference could not be verified
+ */
+export async function sendPaymentRejectedSMS({
+  phone,
+  ownerName,
+  businessName,
+  reason,
+}: {
+  phone: string;
+  ownerName?: string | null;
+  businessName: string;
+  reason: string;
+}): Promise<SMSResponse> {
+  const greeting = ownerName ? `Habari ${ownerName}, ` : "Habari, ";
+  const body = `${greeting}uhakiki wa malipo ya ${businessName} haujafanikiwa (${reason}). Ingia https://www.mauzochap.co.tz/setup-billing kuweka kumbukumbu sahihi au piga +255627274168.`;
+
+  return sendSMS({
+    recipient: phone,
+    body,
+    senderId: SENDER_ID,
+  });
+}
+
+/**
+ * Send Subscription Expiry / Out-of-Subscription Reminder SMS to merchant
+ */
+export async function sendSubscriptionReminderSMS({
+  phone,
+  ownerName,
+  businessName,
+  packageName,
+  daysRemaining,
+}: {
+  phone: string;
+  ownerName?: string | null;
+  businessName: string;
+  packageName?: string | null;
+  daysRemaining: number;
+}): Promise<SMSResponse> {
+  const greeting = ownerName ? `Habari ${ownerName}, ` : "Habari, ";
+  const pkg = (packageName || "Kilimanjaro").toUpperCase();
+  const body =
+    daysRemaining <= 0
+      ? `${greeting}kifurushi chako cha ${pkg} kwa duka la ${businessName} kimekwisha muda wake. Lipia sasa kupitia https://www.mauzochap.co.tz/setup-billing ili uendelee kutumia MauzoChap POS bila usumbufu.`
+      : `${greeting}zimebaki siku ${daysRemaining} kifurushi chako cha ${pkg} (${businessName}) kumalizika. Lipia mapema kupitia https://www.mauzochap.co.tz/setup-billing ili huduma yako isikatike.`;
+
+  return sendSMS({
+    recipient: phone,
+    body,
+    senderId: SENDER_ID,
+  });
+}
+
+/**
  * Check remaining SMS balance from SwalaSMS
  */
 export async function getSMSBalance(): Promise<{

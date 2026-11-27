@@ -28,9 +28,19 @@ import {
   ArrowRight,
   ExternalLink,
   FileSearch,
+  BellRing,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
-import { sendEmail } from "@/lib/email";
+import {
+  sendPaymentApprovedEmail,
+  sendPaymentRejectedEmail,
+  sendSubscriptionReminderEmail,
+} from "@/lib/email";
+import {
+  sendPaymentApprovedSMS,
+  sendPaymentRejectedSMS,
+  sendSubscriptionReminderSMS,
+} from "@/lib/sms-service";
 import { enrichMerchantsWithPhones } from "@/lib/merchant-phone-sync";
 import { SupportActivityLogsTab } from "@/components/super-admin/SupportActivityLogsTab";
 
@@ -194,16 +204,37 @@ export function SuperAdminDashboard() {
     }
   };
 
-  const handleApprovePayment = async (paymentId: string, businessId: string, pkg: string, clientEmail: string, businessName: string) => {
+  const handleApprovePayment = async (
+    paymentId: string,
+    businessId: string,
+    pkg: string,
+    clientEmail: string,
+    businessName: string,
+    amount?: number,
+    paymentRef?: string,
+  ) => {
     try {
+      // Resolve payment & merchant info so both SMS and Branded Email carry full details
+      const matchedPayment = payments.find((p) => p.id === paymentId);
+      const matchedBiz = businesses.find((b) => b.id === businessId);
+      const effectiveAmount =
+        amount ??
+        Number(matchedPayment?.amount || (pkg === "starter" ? 12500 : pkg === "serengeti" ? 20500 : 15500));
+      const effectiveRef =
+        paymentRef || matchedPayment?.payment_reference || `MC-${paymentId.slice(0, 8).toUpperCase()}`;
+      const ownerName = matchedBiz?.owner_name || businessName;
+      const clientPhone = matchedBiz?.phone || "";
+      const targetEmail = clientEmail || matchedBiz?.email || "";
+
       // 1. Mark payment as paid
       const { error: pErr } = await supabase.from("payments").update({ verification_status: "paid" }).eq("id", paymentId);
       if (pErr) throw pErr;
 
-      // 2. Calculate expiry date (30 days for Kilimanjaro and Serengeti monthly plans)
+      // 2. Calculate expiry date (30 days for monthly plans)
       const days = 30;
       const expiry = new Date();
       expiry.setDate(expiry.getDate() + days);
+      const expiryFormatted = expiry.toLocaleDateString("en-GB");
 
       // 3. Update business package, status to approved, set expiry and clear rejection reason
       const { error: bErr } = await supabase.from("businesses").update({
@@ -219,18 +250,36 @@ export function SuperAdminDashboard() {
       await supabase.from("notifications" as any).insert({
         business_id: businessId,
         title: "Subscription Activated",
-        message: `Your subscription to ${pkg.toUpperCase()} has been successfully activated. Expiry Date: ${expiry.toLocaleDateString()}`,
+        message: `Your subscription to ${pkg.toUpperCase()} has been successfully activated. Expiry Date: ${expiryFormatted}`,
         type: "subscription"
       });
 
-      // 5. Send email notification to client
-      sendEmail({
-        to: clientEmail || "client@mauzochap.com",
-        subject: "MauzoChap POS Subscription Activated!",
-        body: `Dear Client,\n\nWe have successfully verified your payment reference. Your subscription to the ${pkg.toUpperCase()} plan is now active!\n\nSubscription Details:\n- Business Name: ${businessName}\n- Validity Period: 30 Days\n- Expiry Date: ${expiry.toLocaleDateString()}\n\nYou can now access all business features according to your plan.\n\nThank you for choosing MauzoChap POS!\n\nBest regards,\nMauzoChap Team`
-      });
+      // 5. Send BOTH SwalaSMS + Branded MauzoChap "Malipo Yamefanikiwa" Card Email
+      if (clientPhone) {
+        sendPaymentApprovedSMS({
+          phone: clientPhone,
+          ownerName,
+          businessName,
+          packageName: pkg,
+          amount: effectiveAmount,
+          paymentRef: effectiveRef,
+          expiryDate: expiryFormatted,
+        }).catch((e) => console.warn("Approve SMS notice:", e));
+      }
 
-      toast.success("Payment verified and subscription activated!");
+      if (targetEmail) {
+        sendPaymentApprovedEmail({
+          to: targetEmail,
+          ownerName,
+          businessName,
+          packageName: pkg,
+          amount: effectiveAmount,
+          paymentRef: effectiveRef,
+          expiryDate: expiryFormatted,
+        }).catch((e) => console.warn("Approve Email notice:", e));
+      }
+
+      toast.success("Payment verified! SMS & Branded MauzoChap Email dispatched.");
       qc.invalidateQueries({ queryKey: ["super-admin-payments"] });
       qc.invalidateQueries({ queryKey: ["super-admin-businesses"] });
     } catch (err: any) {
@@ -246,6 +295,12 @@ export function SuperAdminDashboard() {
     if (reason === null) return; // User cancelled
 
     try {
+      const matchedPayment = payments.find((p) => p.id === paymentId);
+      const matchedBiz = businesses.find((b) => b.id === businessId);
+      const ownerName = matchedBiz?.owner_name || businessName;
+      const clientPhone = matchedBiz?.phone || "";
+      const targetEmail = clientEmail || matchedBiz?.email || "";
+
       // 1. Mark payment as rejected
       const { error: pErr } = await supabase.from("payments").update({
         verification_status: "rejected" as any,
@@ -268,18 +323,70 @@ export function SuperAdminDashboard() {
         type: "payment"
       });
 
-      // 4. Send email notification to client
-      sendEmail({
-        to: clientEmail || "client@mauzochap.com",
-        subject: "MauzoChap POS Payment Verification Rejected",
-        body: `Dear Client,\n\nWe were unable to verify your payment reference for the subscription. Below are the details:\n\n- Business Name: ${businessName}\n- Rejection Reason: ${reason}\n\nPlease log back in to MauzoChap POS, go to the Billing section, and resubmit your payment with the correct reference number.\n\nIf you believe this is an error, please contact support.\n\nBest regards,\nMauzoChap Team`
-      });
+      // 4. Send BOTH SwalaSMS + Branded MauzoChap Rejection Email
+      if (clientPhone) {
+        sendPaymentRejectedSMS({
+          phone: clientPhone,
+          ownerName,
+          businessName,
+          reason,
+        }).catch((e) => console.warn("Reject SMS notice:", e));
+      }
 
-      toast.success("Payment rejected and client notified.");
+      if (targetEmail) {
+        sendPaymentRejectedEmail({
+          to: targetEmail,
+          ownerName,
+          businessName,
+          packageName: matchedBiz?.package || undefined,
+          paymentRef: matchedPayment?.payment_reference || undefined,
+          reason,
+        }).catch((e) => console.warn("Reject Email notice:", e));
+      }
+
+      toast.success("Payment rejected and client notified via SMS & Email.");
       qc.invalidateQueries({ queryKey: ["super-admin-payments"] });
       qc.invalidateQueries({ queryKey: ["super-admin-businesses"] });
     } catch (err: any) {
       toast.error(err.message);
+    }
+  };
+
+  const handleSendSubscriptionReminder = async (biz: any, daysLeft: number | null) => {
+    const effectiveDays = daysLeft ?? 0;
+    const expiryStr = biz.expiry_date
+      ? new Date(biz.expiry_date).toLocaleDateString("en-GB")
+      : "Imekwisha";
+
+    try {
+      const tasks: Promise<any>[] = [];
+      if (biz.phone) {
+        tasks.push(
+          sendSubscriptionReminderSMS({
+            phone: biz.phone,
+            ownerName: biz.owner_name,
+            businessName: biz.business_name,
+            packageName: biz.package,
+            daysRemaining: effectiveDays,
+          }),
+        );
+      }
+      if (biz.email) {
+        tasks.push(
+          sendSubscriptionReminderEmail({
+            to: biz.email,
+            ownerName: biz.owner_name,
+            businessName: biz.business_name,
+            packageName: biz.package,
+            expiryDate: expiryStr,
+            daysRemaining: effectiveDays,
+          }),
+        );
+      }
+      await Promise.allSettled(tasks);
+      toast.success(`Kumbusho la malipo (SMS & Email) limetumwa kwa ${biz.business_name}!`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send reminder");
     }
   };
 
@@ -437,6 +544,18 @@ export function SuperAdminDashboard() {
                       </Button>
 
                       <div className="flex flex-wrap gap-1.5">
+                        {(isExpired || isExpiringSoon) && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs text-primary border-primary/40 hover:bg-primary/10"
+                            onClick={() => handleSendSubscriptionReminder(b, daysLeft)}
+                          >
+                            <BellRing className="h-3.5 w-3.5 mr-1" />
+                            Remind
+                          </Button>
+                        )}
                         {b.account_status !== "approved" && latestP && (
                           <Button
                             size="sm"
@@ -558,6 +677,19 @@ export function SuperAdminDashboard() {
                             <ExternalLink className="h-3 w-3 mr-1" />
                             {isActiveTarget ? "Resume Dashboard" : "Access Business Dashboard"}
                           </Button>
+                          {(isExpired || isExpiringSoon) && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs px-2 text-primary border-primary/40 hover:bg-primary/10 cursor-pointer"
+                              onClick={() => handleSendSubscriptionReminder(b, daysLeft)}
+                              title="Send SMS + Branded Email renewal reminder"
+                            >
+                              <BellRing className="h-3 w-3 mr-1" />
+                              Remind
+                            </Button>
+                          )}
                           {b.account_status !== "approved" && latestP && (
                             <Button
                               size="sm"

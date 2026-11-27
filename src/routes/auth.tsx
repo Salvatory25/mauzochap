@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MultiStepRegister } from "@/components/MultiStepRegister";
 import { sendOtpSMS } from "@/lib/sms-service";
-import { Eye, EyeOff, Smartphone, ShieldCheck, ArrowLeft, KeyRound } from "lucide-react";
+import { sendOtpEmail } from "@/lib/email";
+import { Eye, EyeOff, Smartphone, Mail, ShieldCheck, ArrowLeft, KeyRound } from "lucide-react";
 
 import { buildSeoHead } from "@/lib/seo";
 
@@ -129,26 +130,41 @@ function AuthPage() {
 
       setOtpSentTo({ phone: data.phone, email: data.email });
 
-      // Dispatch SMS immediately via MauzoChap sender ID
+      // Dispatch 6-digit OTP via BOTH MauzoChap SMS and MauzoChap Branded Email
+      const dispatchPromises: Promise<unknown>[] = [];
+
       if (data.phone && data.otp_code) {
-        try {
-          await sendOtpSMS({
+        dispatchPromises.push(
+          sendOtpSMS({
             phone: data.phone,
             code: data.otp_code,
-          });
-          toast.success(`Nambari ya siri (OTP) imetumwa kwa SMS kwenye ${data.phone}!`);
-        } catch (smsErr) {
-          console.warn("SMS dispatch notice:", smsErr);
-          toast.info(`Nambari ya OTP imeundwa. Kama SMS imechelewa tafadhali subiri sekunde chache.`);
-        }
+          }).catch((smsErr) => console.warn("SMS dispatch notice:", smsErr)),
+        );
       }
 
-      // Also trigger Supabase magic email link if an email was resolved
-      if (data.email) {
-        supabase.auth.resetPasswordForEmail(data.email, {
-          redirectTo: window.location.origin + "/update-password",
-        }).catch(() => {});
+      if (data.email && data.otp_code) {
+        dispatchPromises.push(
+          sendOtpEmail({
+            to: data.email,
+            code: data.otp_code,
+          }).catch((mailErr) => console.warn("Email OTP dispatch notice:", mailErr)),
+        );
       }
+
+      await Promise.allSettled(dispatchPromises);
+
+      const channels = [
+        data.phone ? `SMS (${data.phone})` : null,
+        data.email ? `Email (${data.email})` : null,
+      ]
+        .filter(Boolean)
+        .join(" na ");
+
+      toast.success(
+        channels
+          ? `Nambari ya siri (OTP) imetumwa kupitia ${channels}!`
+          : "Nambari ya OTP imeundwa kikamilifu!",
+      );
 
       setMode("verify-otp");
       setResendCooldown(60);
@@ -287,12 +303,26 @@ function AuthPage() {
               </div>
             </div>
 
-            {/* Phone notification pill */}
+            {/* Phone & Email notification pill */}
             <div className="mt-4 p-3 bg-muted/50 border border-border rounded-xl flex items-start gap-2.5 text-xs">
               <Smartphone className="h-4 w-4 text-primary shrink-0 mt-0.5" />
               <div className="text-muted-foreground">
-                Tumetuma nambari ya siri ya tarakimu 6 (OTP) kwa SMS kwenda namba{" "}
-                <strong className="text-foreground font-bold">{otpSentTo.phone || resetIdentifier}</strong>.
+                Tumetuma nambari ya siri ya tarakimu 6 (OTP) kwa{" "}
+                {otpSentTo.phone && (
+                  <>
+                    SMS (<strong className="text-foreground font-bold">{otpSentTo.phone}</strong>)
+                  </>
+                )}
+                {otpSentTo.phone && otpSentTo.email && " na "}
+                {otpSentTo.email && (
+                  <>
+                    Email (<strong className="text-foreground font-bold">{otpSentTo.email}</strong>)
+                  </>
+                )}
+                {!otpSentTo.phone && !otpSentTo.email && (
+                  <strong className="text-foreground font-bold">{resetIdentifier}</strong>
+                )}{" "}
+                kutoka <strong>MauzoChap</strong>.
               </div>
             </div>
 
@@ -412,9 +442,9 @@ function AuthPage() {
                   autoFocus
                   required
                 />
-                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1">
-                  <Smartphone className="h-3 w-3 text-primary shrink-0" />
-                  Utapewa nambari ya siri ya uhakiki (OTP) moja kwa moja kwa SMS kutoka kwa <strong>MauzoChap</strong>.
+                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+                  Utapokea nambari ya siri (OTP) papo hapo kwa <strong>SMS na Barua Pepe (Email)</strong> kutoka <strong>MauzoChap</strong>.
                 </p>
               </div>
 

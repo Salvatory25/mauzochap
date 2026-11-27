@@ -1,21 +1,467 @@
-// Mock Email Service for MauzoChap
-import { toast } from "sonner";
+/**
+ * MauzoChap Branded Transactional Email Service
+ * Dispatches real HTML card emails from "MauzoChap <mauzochap@gmail.com>"
+ * via the `mauzochap-email` Supabase Edge Function.
+ */
+import { supabase } from "@/integrations/supabase/client";
+
+export const SUPERADMIN_EMAIL = "salvatoryfilbert2@gmail.com";
+export const MAUZOCHAP_APP_URL = "https://www.mauzochap.co.tz";
+
+export interface EmailSummaryRow {
+  label: string;
+  value: string;
+}
 
 export interface EmailOptions {
   to: string;
   subject: string;
-  body: string;
+  body?: string;
+  heading?: string;
+  greetingName?: string;
+  highlightText?: string;
+  tone?: "success" | "warning" | "danger" | "info";
+  rows?: EmailSummaryRow[];
+  ctaLabel?: string;
+  ctaUrl?: string;
+  purpose?: string;
+  otpCode?: string;
 }
 
-export function sendEmail({ to, subject, body }: EmailOptions) {
-  // Format console log elegantly
-  console.log(
-    `%c[EMAIL SENT] to: ${to}\nSubject: ${subject}\n\n${body}`,
-    "background: #1e293b; color: #38bdf8; font-weight: bold; padding: 4px; border-radius: 4px;"
-  );
-  
-  // Show notification toast in the app indicating an email was dispatched
-  toast.info(`Mock email sent to ${to}: ${subject}`, {
-    duration: 5000,
+export interface EmailResponse {
+  success: boolean;
+  messageId?: string;
+  error?: string;
+  code?: string;
+}
+
+function escapeHtml(input: string): string {
+  return String(input || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Generates the branded MauzoChap dark-card HTML template (matching SwalaSMS receipt style)
+ */
+export function buildMauzoChapCardHtml(options: EmailOptions): string {
+  const toneColors = {
+    success: { title: "#5eead4", border: "#34d399", boxBg: "#192726" },
+    warning: { title: "#fcd34d", border: "#f59e0b", boxBg: "#272115" },
+    danger: { title: "#fca5a5", border: "#ef4444", boxBg: "#2a181b" },
+    info: { title: "#5eead4", border: "#14b8a6", boxBg: "#17252a" },
+  };
+  const palette = toneColors[options.tone || "success"];
+  const heading = escapeHtml(options.heading || options.subject);
+  const greeting = options.greetingName
+    ? `Habari ${escapeHtml(options.greetingName)},`
+    : "Habari,";
+  const highlight = escapeHtml(options.highlightText || options.body || "").replace(/\n/g, "<br/>");
+  const rows = options.rows || [];
+
+  const rowsHtml = rows
+    .map(
+      (r) =>
+        `<tr><td style="padding:12px 8px 12px 0;border-bottom:1px solid #262d3a;color:#94a3b8;font-size:14px;">${escapeHtml(r.label)}</td><td style="padding:12px 0 12px 8px;border-bottom:1px solid #262d3a;color:#f8fafc;font-size:15px;font-weight:700;text-align:right;">${escapeHtml(r.value)}</td></tr>`,
+    )
+    .join("");
+
+  return `<div style="background:#0b0e14;padding:20px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"><div style="max-width:520px;margin:0 auto;background:#141820;border:1px solid #262d3a;border-radius:16px;padding:28px 24px;"><div style="text-align:center;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#94a3b8;">MAUZOCHAP POS</div><h1 style="margin:6px 0 24px;text-align:center;color:${palette.title};font-size:24px;font-weight:800;">${heading}</h1><p style="margin:0 0 16px;color:#f8fafc;font-size:16px;font-weight:600;">${greeting}</p><div style="background:${palette.boxBg};border-left:4px solid ${palette.border};border-radius:8px;padding:16px 18px;color:#f1f5f9;font-size:15px;line-height:1.6;">${highlight}</div>${rowsHtml ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;border-collapse:collapse;">${rowsHtml}</table>` : ""}</div></div>`;
+}
+
+/**
+ * Send a branded MauzoChap email through the Supabase Edge Function `mauzochap-email`
+ */
+export async function sendEmail(options: EmailOptions): Promise<EmailResponse> {
+  if (!options?.to || !options.to.includes("@")) {
+    return { success: false, error: "Barua pepe si sahihi (Invalid email address)" };
+  }
+
+  try {
+    const fnInvoker = (supabase as any)?.functions?.invoke;
+    if (typeof fnInvoker !== "function") {
+      return { success: false, error: "Supabase functions client unavailable" };
+    }
+
+    const { data, error } = await (supabase as any).functions.invoke("mauzochap-email", {
+      body: options,
+    });
+
+    if (error) {
+      console.warn("MauzoChap email dispatch warning:", error);
+      return { success: false, error: error.message || "Failed to send email" };
+    }
+
+    if (data && data.success === false) {
+      return {
+        success: false,
+        error: data.error || "Email dispatch rejected",
+        code: data.code,
+      };
+    }
+
+    return {
+      success: true,
+      messageId: data?.messageId,
+    };
+  } catch (err: any) {
+    console.warn("MauzoChap email error:", err);
+    return {
+      success: false,
+      error: err?.message || "Imeshindwa kutuma barua pepe",
+    };
+  }
+}
+
+/**
+ * 1. Merchant Welcome Registration Email
+ */
+export async function sendWelcomeEmail({
+  to,
+  ownerName,
+  businessName,
+  phone,
+  region,
+  packageName = "Kilimanjaro",
+}: {
+  to: string;
+  ownerName: string;
+  businessName: string;
+  phone?: string;
+  region?: string;
+  packageName?: string;
+}): Promise<EmailResponse> {
+  return sendEmail({
+    to,
+    purpose: "welcome_registration",
+    subject: `Karibu MauzoChap POS - ${businessName}`,
+    heading: "Karibu MauzoChap POS",
+    greetingName: ownerName,
+    tone: "success",
+    highlightText: `Habari ${ownerName}, hongera! Duka lako la ${businessName} limesajiliwa kikamilifu kwenye mfumo wa MauzoChap POS. Sasa unaweza kuuza, kukata risiti, kufuatilia stoo na kuona faida yako papo hapo.`,
+    rows: [
+      { label: "Jina la Duka", value: businessName },
+      { label: "Mmiliki", value: ownerName },
+      { label: "Barua Pepe", value: to },
+      ...(phone ? [{ label: "Simu", value: phone }] : []),
+      ...(region ? [{ label: "Mkoa", value: region }] : []),
+      { label: "Kifurushi", value: packageName.toUpperCase() },
+    ],
+    ctaLabel: "Ingia Kwenye Duka Lako",
+    ctaUrl: `${MAUZOCHAP_APP_URL}/setup-billing`,
+  });
+}
+
+/**
+ * Notify Super Admin by Email when a new business registers
+ */
+export async function notifySuperAdminNewRegistrationEmail({
+  businessName,
+  ownerName,
+  email,
+  phone,
+  region,
+  packageName = "Kilimanjaro",
+}: {
+  businessName: string;
+  ownerName: string;
+  email: string;
+  phone?: string;
+  region?: string;
+  packageName?: string;
+}): Promise<EmailResponse> {
+  return sendEmail({
+    to: SUPERADMIN_EMAIL,
+    purpose: "welcome_registration",
+    subject: `Usajili Mpya wa Duka - ${businessName}`,
+    heading: "Usajili Mpya wa Duka",
+    greetingName: "Super Admin",
+    tone: "info",
+    highlightText: `Duka jipya la ${businessName} limesajiliwa kwenye MauzoChap POS na ${ownerName}.`,
+    rows: [
+      { label: "Duka", value: businessName },
+      { label: "Mmiliki", value: ownerName },
+      { label: "Email", value: email },
+      { label: "Simu", value: phone || "—" },
+      { label: "Mkoa", value: region || "Tanzania" },
+      { label: "Kifurushi", value: packageName.toUpperCase() },
+    ],
+    ctaLabel: "Fungua Super Admin",
+    ctaUrl: `${MAUZOCHAP_APP_URL}/super-admin`,
+  });
+}
+
+/**
+ * 2. Staff Welcome / Invite Email
+ */
+export async function sendStaffWelcomeEmail({
+  to,
+  fullName,
+  businessName,
+  role,
+  phone,
+}: {
+  to: string;
+  fullName: string;
+  businessName: string;
+  role: string;
+  phone?: string;
+}): Promise<EmailResponse> {
+  const roleLabel =
+    role === "admin"
+      ? "Msimamizi (Admin)"
+      : role === "manager"
+        ? "Meneja (Manager)"
+        : "Muuzaji (Cashier)";
+
+  return sendEmail({
+    to,
+    purpose: "staff_welcome",
+    subject: `Umeongezwa Kwenye ${businessName} - MauzoChap POS`,
+    heading: "Akaunti ya Mfanyakazi",
+    greetingName: fullName,
+    tone: "info",
+    highlightText: `Habari ${fullName}, umewekwa rasmi kama ${roleLabel} katika duka la ${businessName} kwenye mfumo wa MauzoChap POS. Tumia barua pepe yako kuingia na kuanza kazi.`,
+    rows: [
+      { label: "Duka", value: businessName },
+      { label: "Jukumu (Role)", value: roleLabel },
+      { label: "Email ya Kuingia", value: to },
+      ...(phone ? [{ label: "Simu", value: phone }] : []),
+    ],
+    ctaLabel: "Ingia MauzoChap POS",
+    ctaUrl: `${MAUZOCHAP_APP_URL}/auth`,
+  });
+}
+
+/**
+ * 3. 6-Digit Password Reset OTP Email (replaces plain Supabase password reset email)
+ */
+export async function sendOtpEmail({
+  to,
+  recipientName,
+  code,
+}: {
+  to: string;
+  recipientName?: string;
+  code: string;
+}): Promise<EmailResponse> {
+  return sendEmail({
+    to,
+    purpose: "otp_reset",
+    otpCode: code,
+    subject: `Nambari ya Siri (OTP): ${code} - MauzoChap POS`,
+    heading: "Nambari ya Siri (OTP)",
+    greetingName: recipientName || undefined,
+    tone: "info",
+    highlightText: `Nambari yako ya siri ya kubadilisha nenosiri la akaunti yako ya MauzoChap POS ni ${code}. Usitoe namba hii kwa mtu yeyote. Inatumika ndani ya dakika 10.`,
+    rows: [
+      { label: "Nambari ya OTP", value: code },
+      { label: "Akaunti", value: to },
+      { label: "Muda wa Kutumika", value: "Dakika 10" },
+    ],
+  });
+}
+
+/**
+ * 4. Subscription Payment Reference Submitted (Merchant Confirmation + Admin Alert)
+ */
+export async function sendPaymentSubmittedEmail({
+  to,
+  ownerName,
+  businessName,
+  packageName,
+  amount,
+  paymentRef,
+}: {
+  to: string;
+  ownerName?: string | null;
+  businessName: string;
+  packageName: string;
+  amount: number;
+  paymentRef: string;
+}): Promise<EmailResponse> {
+  return sendEmail({
+    to,
+    subject: `Malipo Yamepokelewa - ${packageName.toUpperCase()} (${paymentRef})`,
+    heading: "Malipo Yamepokelewa",
+    greetingName: ownerName || businessName,
+    tone: "warning",
+    highlightText: `Habari ${ownerName || businessName}, tumepokea kumbukumbu ya malipo yako ya TZS ${Number(amount).toLocaleString()} kwa kifurushi cha ${packageName.toUpperCase()}. Timu yetu inahakiki muamala wako na kifurushi chako kitawashwa punde tu!`,
+    rows: [
+      { label: "Kumbukumbu", value: paymentRef },
+      { label: "Kiasi kilichotumwa", value: `TZS ${Number(amount).toLocaleString()}` },
+      { label: "Kifurushi", value: packageName.toUpperCase() },
+      { label: "Duka", value: businessName },
+      { label: "Hali", value: "Inasubiri Uhakiki" },
+    ],
+    ctaLabel: "Angalia Hali ya Malipo",
+    ctaUrl: `${MAUZOCHAP_APP_URL}/setup-billing`,
+  });
+}
+
+export async function notifySuperAdminNewOrderEmail({
+  businessName,
+  ownerName,
+  email,
+  phone,
+  packageName,
+  amount,
+  paymentRef,
+}: {
+  businessName: string;
+  ownerName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  packageName: string;
+  amount: number;
+  paymentRef: string;
+}): Promise<EmailResponse> {
+  return sendEmail({
+    to: SUPERADMIN_EMAIL,
+    subject: `Uhakiki wa Malipo: ${businessName} - TZS ${Number(amount).toLocaleString()}`,
+    heading: "Malipo Mapya Yanasubiri Uhakiki",
+    greetingName: "Salvatory",
+    tone: "warning",
+    highlightText: `Duka la ${businessName} limewasilisha malipo ya TZS ${Number(amount).toLocaleString()} kwa kifurushi cha ${packageName.toUpperCase()}. Tafadhali hakiki kumbukumbu ya muamala na uwashe kifurushi.`,
+    rows: [
+      { label: "Kumbukumbu", value: paymentRef },
+      { label: "Kiasi", value: `TZS ${Number(amount).toLocaleString()}` },
+      { label: "Kifurushi", value: packageName.toUpperCase() },
+      { label: "Duka", value: businessName },
+      { label: "Mmiliki", value: ownerName || "—" },
+      { label: "Simu / Email", value: [phone, email].filter(Boolean).join(" • ") || "—" },
+    ],
+    ctaLabel: "Thibitisha Kwenye Super Admin",
+    ctaUrl: `${MAUZOCHAP_APP_URL}/super-admin`,
+  });
+}
+
+/**
+ * 5. Subscription Payment Approved & Activated (Exact SwalaSMS receipt style!)
+ */
+export async function sendPaymentApprovedEmail({
+  to,
+  ownerName,
+  businessName,
+  packageName,
+  amount,
+  paymentRef,
+  expiryDate,
+}: {
+  to: string;
+  ownerName?: string | null;
+  businessName: string;
+  packageName: string;
+  amount: number;
+  paymentRef: string;
+  expiryDate: string;
+}): Promise<EmailResponse> {
+  const pkgUpper = packageName.toUpperCase();
+  const displayName = ownerName || businessName;
+  const amountStr = `TZS ${Number(amount).toLocaleString()}`;
+
+  return sendEmail({
+    to,
+    subject: `Malipo yamefanikiwa - Kifurushi cha ${pkgUpper}`,
+    heading: "Malipo Yamefanikiwa",
+    greetingName: displayName,
+    tone: "success",
+    highlightText: `Habari ${displayName}, malipo ya ${amountStr} yamefanikiwa, umepata kifurushi cha ${pkgUpper} (Siku 30) kwa duka la ${businessName}. Tarehe mpya ya kuisha: ${expiryDate}. Asante!`,
+    rows: [
+      { label: "Kumbukumbu", value: paymentRef },
+      { label: "Kiasi kilicholipwa", value: amountStr },
+      { label: "Kifurushi", value: `${pkgUpper} (Siku 30)` },
+      { label: "Duka", value: businessName },
+      { label: "Tarehe ya Kuisha", value: expiryDate },
+    ],
+    ctaLabel: "Fungua Duka Lako Sasa",
+    ctaUrl: `${MAUZOCHAP_APP_URL}/dashboard`,
+  });
+}
+
+/**
+ * 6. Subscription Payment Rejected
+ */
+export async function sendPaymentRejectedEmail({
+  to,
+  ownerName,
+  businessName,
+  packageName,
+  paymentRef,
+  reason,
+}: {
+  to: string;
+  ownerName?: string | null;
+  businessName: string;
+  packageName?: string;
+  paymentRef?: string;
+  reason: string;
+}): Promise<EmailResponse> {
+  const displayName = ownerName || businessName;
+  return sendEmail({
+    to,
+    subject: `Taarifa ya Uhakiki wa Malipo - ${businessName}`,
+    heading: "Uhakiki wa Malipo",
+    greetingName: displayName,
+    tone: "danger",
+    highlightText: `Habari ${displayName}, hatukuweza kuthibitisha kumbukumbu ya malipo uliyotuma kwa duka la ${businessName}. Sababu: ${reason}. Tafadhali hakiki namba sahihi ya muamala na uitume tena.`,
+    rows: [
+      ...(paymentRef ? [{ label: "Kumbukumbu", value: paymentRef }] : []),
+      ...(packageName ? [{ label: "Kifurushi", value: packageName.toUpperCase() }] : []),
+      { label: "Duka", value: businessName },
+      { label: "Sababu", value: reason },
+    ],
+    ctaLabel: "Wasilisha Kumbukumbu Sahihi",
+    ctaUrl: `${MAUZOCHAP_APP_URL}/setup-billing`,
+  });
+}
+
+/**
+ * 7. Subscription Expiry / Out-of-Subscription Reminder Email
+ */
+export async function sendSubscriptionReminderEmail({
+  to,
+  ownerName,
+  businessName,
+  packageName,
+  expiryDate,
+  daysRemaining,
+}: {
+  to: string;
+  ownerName?: string | null;
+  businessName: string;
+  packageName?: string | null;
+  expiryDate?: string | null;
+  daysRemaining: number;
+}): Promise<EmailResponse> {
+  const displayName = ownerName || businessName;
+  const pkgUpper = (packageName || "Kilimanjaro").toUpperCase();
+  const isExpired = daysRemaining <= 0;
+
+  return sendEmail({
+    to,
+    subject: isExpired
+      ? `Kifurushi Kimekwisha - ${businessName} (MauzoChap POS)`
+      : `Kumbusho la Kifurushi: Siku ${daysRemaining} Zimebaki - ${businessName}`,
+    heading: isExpired ? "Kifurushi Kimekwisha" : "Kumbusho la Kifurushi",
+    greetingName: displayName,
+    tone: isExpired ? "danger" : "warning",
+    highlightText: isExpired
+      ? `Habari ${displayName}, muda wa kifurushi chako cha ${pkgUpper} kwa duka la ${businessName} umemalizika. Lipia kifurushi chako sasa ili uendelee kuuza, kukata risiti na kusimamia stoo yako bila kikwazo.`
+      : `Habari ${displayName}, zimebaki siku ${daysRemaining} pekee kabla ya kifurushi chako cha ${pkgUpper} kwa duka la ${businessName} kumalizika. Lipia mapema ili huduma ya duka lako isikatike.`,
+    rows: [
+      { label: "Duka", value: businessName },
+      { label: "Kifurushi", value: pkgUpper },
+      { label: "Tarehe ya Kuisha", value: expiryDate || "Imekwisha" },
+      {
+        label: "Hali ya Akaunti",
+        value: isExpired ? "Kimekwisha Muda (Renew Now)" : `Siku ${daysRemaining} Zimebaki`,
+      },
+    ],
+    ctaLabel: "Lipia Kifurushi Sasa",
+    ctaUrl: `${MAUZOCHAP_APP_URL}/setup-billing`,
   });
 }

@@ -18,6 +18,7 @@ import { Pencil, Search, UserCog, Copy, Check, Eye, EyeOff, UserPlus, Link2, Shi
 import { toast } from "sonner";
 import { z } from "zod";
 import { sendStaffWelcomeSMS } from "@/lib/sms-service";
+import { sendStaffWelcomeEmail } from "@/lib/email";
 
 const inviteSchema = z.object({
   fullName: z.string().min(1, "Full Name is required"),
@@ -416,7 +417,7 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
         throw new Error(rpcError.message || "Failed to create staff account");
       }
 
-      // Send staff welcome SMS so employee gets notified immediately on phone
+      // Send staff welcome SMS + Branded MauzoChap Email so employee gets notified immediately
       if (phone) {
         sendStaffWelcomeSMS({
           phone: phone.trim(),
@@ -425,6 +426,16 @@ function InviteUserDialog({ onClose }: { onClose: () => void }) {
           role,
           email: normalizedEmail,
         }).catch((e) => console.warn("Staff SMS notice:", e));
+      }
+
+      if (normalizedEmail) {
+        sendStaffWelcomeEmail({
+          to: normalizedEmail,
+          fullName: fullName.trim(),
+          businessName: business.business_name,
+          role,
+          phone: phone.trim() || undefined,
+        }).catch((e) => console.warn("Staff email notice:", e));
       }
 
       toast.success(`Akaunti ya ${fullName} imeundwa na kuunganishwa kikamilifu! Anaweza kuingia moja kwa moja bila kizuizi.`);

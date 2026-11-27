@@ -1,20 +1,29 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { toast } from 'sonner';
-import { sendEmail } from '@/lib/email';
+import {
+  sendEmail,
+  sendPaymentApprovedEmail,
+  sendOtpEmail,
+  sendSubscriptionReminderEmail,
+  buildMauzoChapCardHtml,
+} from '@/lib/email';
 import { reportAppError } from '@/lib/app-error-reporting';
 import { consumeLastCapturedError } from '@/lib/error-capture';
 import { renderErrorPage } from '@/lib/error-page';
 
-vi.mock('sonner', () => ({
-  toast: {
-    info: vi.fn(),
+const mockInvoke = vi.fn();
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    functions: {
+      invoke: (fn: string, opts: any) => mockInvoke(fn, opts),
+    },
   },
 }));
 
 describe('email & error handling utilities', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    consumeLastCapturedError(); // Clear any residual state
+    consumeLastCapturedError();
   });
 
   afterEach(() => {
@@ -23,21 +32,93 @@ describe('email & error handling utilities', () => {
     vi.restoreAllMocks();
   });
 
-  describe('sendEmail', () => {
-    it('logs formatted email output and triggers sonner info toast', () => {
-      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-      sendEmail({
-        to: 'owner@duka.co.tz',
-        subject: 'Invoice #104',
-        body: 'Thank you for your business.',
+  describe('MauzoChap branded email service', () => {
+    it('dispatches branded card payload to mauzochap-email Edge Function', async () => {
+      mockInvoke.mockResolvedValueOnce({
+        data: { success: true, messageId: '<msg-1@mauzochap>' },
+        error: null,
       });
 
-      expect(logSpy).toHaveBeenCalledTimes(1);
-      expect(logSpy.mock.calls[0][0]).toContain('owner@duka.co.tz');
-      expect(toast.info).toHaveBeenCalledWith(
-        'Mock email sent to owner@duka.co.tz: Invoice #104',
-        { duration: 5000 },
+      const res = await sendPaymentApprovedEmail({
+        to: 'owner@duka.co.tz',
+        ownerName: 'Salvatory',
+        businessName: 'Salvatory Mart',
+        packageName: 'kilimanjaro',
+        amount: 15500,
+        paymentRef: '20261127-MRREBD',
+        expiryDate: '27/12/2026',
+      });
+
+      expect(res.success).toBe(true);
+      expect(mockInvoke).toHaveBeenCalledWith(
+        'mauzochap-email',
+        expect.objectContaining({
+          body: expect.objectContaining({
+            to: 'owner@duka.co.tz',
+            heading: 'Malipo Yamefanikiwa',
+            greetingName: 'Salvatory',
+            rows: expect.arrayContaining([
+              { label: 'Kumbukumbu', value: '20261127-MRREBD' },
+              { label: 'Kiasi kilicholipwa', value: 'TZS 15,500' },
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('renders dark card HTML with greeting, callout box, and summary rows', () => {
+      const html = buildMauzoChapCardHtml({
+        to: 'owner@duka.co.tz',
+        subject: 'Malipo yamefanikiwa - Kifurushi cha KILIMANJARO',
+        heading: 'Malipo Yamefanikiwa',
+        greetingName: 'Salvatory',
+        highlightText: 'Habari Salvatory, malipo ya TZS 15,500 yamefanikiwa!',
+        rows: [
+          { label: 'Kumbukumbu', value: '20261127-MRREBD' },
+          { label: 'Kiasi kilicholipwa', value: 'TZS 15,500' },
+        ],
+      });
+
+      expect(html).toContain('MAUZOCHAP POS');
+      expect(html).toContain('Malipo Yamefanikiwa');
+      expect(html).toContain('Habari Salvatory,');
+      expect(html).toContain('20261127-MRREBD');
+      expect(html).toContain('TZS 15,500');
+    });
+
+    it('supports OTP and out-of-subscription reminder templates and rejects invalid addresses', async () => {
+      mockInvoke.mockResolvedValue({ data: { success: true }, error: null });
+
+      const invalid = await sendEmail({ to: 'not-an-email', subject: 'Test' });
+      expect(invalid.success).toBe(false);
+
+      await sendOtpEmail({ to: 'user@duka.co.tz', code: '482910' });
+      expect(mockInvoke).toHaveBeenCalledWith(
+        'mauzochap-email',
+        expect.objectContaining({
+          body: expect.objectContaining({
+            purpose: 'otp_reset',
+            otpCode: '482910',
+          }),
+        }),
+      );
+
+      await sendSubscriptionReminderEmail({
+        to: 'user@duka.co.tz',
+        ownerName: 'Juma',
+        businessName: 'Juma Hardware',
+        packageName: 'starter',
+        expiryDate: '25/11/2026',
+        daysRemaining: 0,
+      });
+      expect(mockInvoke).toHaveBeenLastCalledWith(
+        'mauzochap-email',
+        expect.objectContaining({
+          body: expect.objectContaining({
+            heading: 'Kifurushi Kimekwisha',
+            tone: 'danger',
+          }),
+        }),
       );
     });
   });
@@ -108,4 +189,3 @@ describe('email & error handling utilities', () => {
     });
   });
 });
-

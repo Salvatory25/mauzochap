@@ -25,6 +25,11 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sendWelcomeSMS, sendStaffWelcomeSMS, notifySuperAdminNewRegistration } from "@/lib/sms-service";
+import {
+  sendWelcomeEmail,
+  sendStaffWelcomeEmail,
+  notifySuperAdminNewRegistrationEmail,
+} from "@/lib/email";
 import { rememberMerchantPhone } from "@/lib/merchant-phone-sync";
 
 interface MultiStepRegisterProps {
@@ -319,9 +324,9 @@ export function MultiStepRegister({
               .then();
           }
 
-          // Send appropriate welcome SMS via SwalaSMS
-          if (phone) {
-            if (inviteId) {
+          // Send appropriate welcome SMS + Branded MauzoChap Email
+          if (inviteId) {
+            if (phone) {
               sendStaffWelcomeSMS({
                 phone,
                 fullName,
@@ -329,21 +334,48 @@ export function MultiStepRegister({
                 role: inviteRole,
                 email,
               }).catch((e) => console.warn("Staff welcome SMS notice:", e));
-            } else {
-              // 1. Send merchant welcome SMS
+            }
+            if (email) {
+              sendStaffWelcomeEmail({
+                to: email,
+                fullName,
+                businessName: inviteBusinessName || businessName,
+                role: inviteRole,
+                phone,
+              }).catch((e) => console.warn("Staff welcome email notice:", e));
+            }
+          } else {
+            if (phone) {
               sendWelcomeSMS({
                 phone,
                 ownerName: fullName,
                 businessName,
               }).catch((e) => console.warn("Welcome SMS notice:", e));
 
-              // 2. Notify Superadmin immediately via SMS
               notifySuperAdminNewRegistration({
                 businessName,
                 ownerName: fullName,
                 phone,
                 region,
               }).catch((e) => console.warn("Superadmin notification SMS notice:", e));
+            }
+
+            if (email) {
+              sendWelcomeEmail({
+                to: email,
+                ownerName: fullName,
+                businessName,
+                phone,
+                region,
+              }).catch((e) => console.warn("Welcome email notice:", e));
+
+              notifySuperAdminNewRegistrationEmail({
+                businessName,
+                ownerName: fullName,
+                email,
+                phone,
+                region,
+              }).catch((e) => console.warn("Superadmin notification email notice:", e));
             }
           }
         } catch (e) {

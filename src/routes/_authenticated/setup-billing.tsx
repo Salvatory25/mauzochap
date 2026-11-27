@@ -8,8 +8,14 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CreditCard, CheckCircle2, Package, ArrowRight, Clock, RefreshCw, AlertCircle, Sparkles } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { sendEmail } from "@/lib/email";
-import { notifySuperAdminNewOrder } from "@/lib/sms-service";
+import {
+  sendPaymentSubmittedEmail,
+  notifySuperAdminNewOrderEmail,
+} from "@/lib/email";
+import {
+  notifySuperAdminNewOrder,
+  sendPaymentSubmittedSMS,
+} from "@/lib/sms-service";
 
 export const Route = createFileRoute("/_authenticated/setup-billing")({
   component: SetupBilling,
@@ -161,7 +167,7 @@ function SetupBilling() {
         
       if (pErr) throw pErr;
 
-      // 3. Notify Super Admin via SMS immediately
+      // 3. Notify Super Admin via SMS + Branded Email immediately
       notifySuperAdminNewOrder({
         businessName: business.business_name,
         ownerName: business.owner_name || undefined,
@@ -171,13 +177,38 @@ function SetupBilling() {
         paymentRef: cleanRef,
       }).catch((e) => console.warn("Superadmin order SMS notice:", e));
 
-      // 4. Send email notification to the administrator
-      const submissionDate = new Date();
-      sendEmail({
-        to: "admin@mauzochap.com",
-        subject: "New MauzoChap Subscription Payment Requires Verification",
-        body: `Hello Admin,\n\nA new subscription payment reference has been submitted and requires verification.\n\nCustomer details:\n- Business Name: ${business.business_name}\n- Owner Name: ${business.owner_name || "N/A"}\n- Email: ${business.email || "N/A"}\n- Phone: ${business.phone || "N/A"}\n\nPayment details:\n- Selected Plan: ${selectedInfo.name}\n- Amount: ${selectedInfo.price.toLocaleString()} TZS\n- Transaction Reference: ${cleanRef}\n- Submission Time: ${submissionDate.toLocaleString()}\n- Current Status: Pending Verification\n\nPlease log in to the Super Admin panel to verify this payment.\n\nBest,\nMauzoChap System`
-      });
+      notifySuperAdminNewOrderEmail({
+        businessName: business.business_name,
+        ownerName: business.owner_name,
+        email: business.email,
+        phone: business.phone,
+        packageName: selectedInfo.name,
+        amount: selectedInfo.price,
+        paymentRef: cleanRef,
+      }).catch((e) => console.warn("Superadmin order email notice:", e));
+
+      // 4. Send confirmation SMS + Branded MauzoChap Card Email to the merchant
+      if (business.phone) {
+        sendPaymentSubmittedSMS({
+          phone: business.phone,
+          ownerName: business.owner_name,
+          businessName: business.business_name,
+          packageName: selectedInfo.name,
+          amount: selectedInfo.price,
+          paymentRef: cleanRef,
+        }).catch((e) => console.warn("Merchant payment submitted SMS notice:", e));
+      }
+
+      if (business.email) {
+        sendPaymentSubmittedEmail({
+          to: business.email,
+          ownerName: business.owner_name,
+          businessName: business.business_name,
+          packageName: selectedInfo.name,
+          amount: selectedInfo.price,
+          paymentRef: cleanRef,
+        }).catch((e) => console.warn("Merchant payment submitted email notice:", e));
+      }
 
       // 5. Send in-app notification (we insert into the database table public.notifications)
       await supabase.from("notifications" as any).insert({
