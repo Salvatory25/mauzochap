@@ -42,47 +42,35 @@ function escapeHtml(input: string): string {
 
 /**
  * MauzoChap Dark-Blue Branded Card Email Template
- * - Deep Navy / Royal Blue brand header (#0f172a -> #1e3a8a)
+ * - Solid dark-blue header (#162d6e / #1e3a8a) with Gmail Dark-Mode-proof pure white text
+ *   (no linear-gradient tricking Gmail's dark-mode inverter into darkening white text!)
  * - Instagram-style 1-tap selectable OTP box + Copy & Auto-Fill CTA button
- * - Clean HTML-to-text ratio & adaptive dark/light support to stay out of Spam
  */
 export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
   const toneColors = {
     success: {
-      accent: "#1e3a8a",
       boxBg: "#eff6ff",
       boxBorder: "#1e3a8a",
       boxText: "#0f172a",
       ctaBg: "#1e3a8a",
-      ctaText: "#ffffff",
-      badgeText: "#93c5fd",
     },
     info: {
-      accent: "#1e3a8a",
       boxBg: "#eff6ff",
       boxBorder: "#2563eb",
       boxText: "#0f172a",
       ctaBg: "#1e3a8a",
-      ctaText: "#ffffff",
-      badgeText: "#93c5fd",
     },
     warning: {
-      accent: "#1e3a8a",
       boxBg: "#fffbeb",
       boxBorder: "#d97706",
       boxText: "#78350f",
       ctaBg: "#1e3a8a",
-      ctaText: "#ffffff",
-      badgeText: "#fcd34d",
     },
     danger: {
-      accent: "#1e3a8a",
       boxBg: "#fef2f2",
       boxBorder: "#dc2626",
       boxText: "#7f1d1d",
       ctaBg: "#1e3a8a",
-      ctaText: "#ffffff",
-      badgeText: "#fca5a5",
     },
   };
 
@@ -98,7 +86,6 @@ export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
   const rows = Array.isArray(payload.rows) ? payload.rows : [];
   const activeCode = (payload.otpCode || payload.copyCode || "").trim();
 
-  // Instagram-style 1-tap selectable code card
   const codeCardHtml = activeCode
     ? `<div style="margin: 22px 0 8px 0; text-align: center;">
         <div style="font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 8px;">
@@ -135,11 +122,15 @@ export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
 
   const ctaHtml =
     payload.ctaLabel && payload.ctaUrl
-      ? `<div style="margin-top: 24px; text-align: center;">
-          <a href="${escapeHtml(payload.ctaUrl)}" style="display: inline-block; background-color: ${palette.ctaBg}; color: ${palette.ctaText}; font-weight: 700; font-size: 14px; text-decoration: none; padding: 12px 26px; border-radius: 10px; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);">
-            ${escapeHtml(payload.ctaLabel)}
-          </a>
-        </div>`
+      ? `<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin: 24px auto 0 auto;">
+          <tr>
+            <td bgcolor="${palette.ctaBg}" style="background-color: ${palette.ctaBg}; border-radius: 10px; text-align: center;">
+              <a href="${escapeHtml(payload.ctaUrl)}" style="display: inline-block; background-color: ${palette.ctaBg}; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; font-weight: 700; font-size: 14px; text-decoration: none; padding: 12px 26px; border-radius: 10px;">
+                <font color="#ffffff" style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;">${escapeHtml(payload.ctaLabel)}</font>
+              </a>
+            </td>
+          </tr>
+        </table>`
       : "";
 
   return `<!DOCTYPE html>
@@ -147,8 +138,6 @@ export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="supported-color-schemes" content="light dark" />
   <title>${escapeHtml(payload.subject)}</title>
 </head>
 <body style="margin: 0; padding: 20px 10px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
@@ -157,17 +146,17 @@ export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
       <td align="center">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 520px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; overflow: hidden;">
           <tr>
-            <td style="background-color: #0f172a; background-image: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); padding: 24px 22px; text-align: center; border-bottom: 3px solid #2563eb;">
-              <div style="font-size: 13px; font-weight: 700; color: ${palette.badgeText}; letter-spacing: 0.8px; margin-bottom: 6px;">
-                MauzoChap POS
+            <td bgcolor="#162d6e" style="background-color: #162d6e !important; padding: 24px 22px; text-align: center; border-bottom: 3px solid #2563eb;">
+              <div style="font-size: 14px; font-weight: 700; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; letter-spacing: 0.6px; margin-bottom: 6px;">
+                <font color="#ffffff" style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;">MauzoChap POS</font>
               </div>
-              <h2 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 800; line-height: 1.3;">
-                ${heading}
+              <h2 style="margin: 0; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; font-size: 22px; font-weight: 800; line-height: 1.3;">
+                <font color="#ffffff" style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;">${heading}</font>
               </h2>
             </td>
           </tr>
           <tr>
-            <td style="padding: 26px 22px;">
+            <td bgcolor="#ffffff" style="background-color: #ffffff; padding: 26px 22px;">
               <p style="margin: 0 0 14px 0; color: #0f172a; font-size: 16px; font-weight: 600;">
                 ${greeting}
               </p>
