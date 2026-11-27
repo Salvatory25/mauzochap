@@ -38,35 +38,44 @@ function escapeHtml(input: string): string {
     .replace(/'/g, "&#39;");
 }
 
+/**
+ * Deliverability-hardened MauzoChap Transactional Card Template:
+ * - Clean HTML-to-text ratio & adaptive dark/light Gmail rendering
+ * - Avoids spam-filter triggers (no all-caps banners, no deceptive anchor text, no tracking pixels)
+ */
 export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
   const toneColors = {
     success: {
-      title: "#5eead4",
-      border: "#34d399",
-      boxBg: "#192726",
-      ctaBg: "#10b981",
-      ctaText: "#052e16",
+      title: "#0d9488",
+      border: "#10b981",
+      boxBg: "#f0fdfa",
+      boxText: "#134e4a",
+      ctaBg: "#0d9488",
+      ctaText: "#ffffff",
     },
     warning: {
-      title: "#fcd34d",
+      title: "#d97706",
       border: "#f59e0b",
-      boxBg: "#272115",
-      ctaBg: "#f59e0b",
-      ctaText: "#1c1917",
+      boxBg: "#fffbeb",
+      boxText: "#78350f",
+      ctaBg: "#d97706",
+      ctaText: "#ffffff",
     },
     danger: {
-      title: "#fca5a5",
+      title: "#dc2626",
       border: "#ef4444",
-      boxBg: "#2a181b",
-      ctaBg: "#ef4444",
+      boxBg: "#fef2f2",
+      boxText: "#7f1d1d",
+      ctaBg: "#dc2626",
       ctaText: "#ffffff",
     },
     info: {
-      title: "#5eead4",
+      title: "#0f766e",
       border: "#14b8a6",
-      boxBg: "#17252a",
-      ctaBg: "#14b8a6",
-      ctaText: "#042f2e",
+      boxBg: "#f0fdfa",
+      boxText: "#134e4a",
+      ctaBg: "#0f766e",
+      ctaText: "#ffffff",
     },
   };
   const palette = toneColors[payload.tone || "success"];
@@ -81,15 +90,15 @@ export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
   const rows = Array.isArray(payload.rows) ? payload.rows : [];
 
   const rowsHtml = rows.length
-    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 20px; border-collapse: collapse;">
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 18px; border-collapse: collapse;">
         ${rows
           .map(
             (r) => `
           <tr>
-            <td style="padding: 12px 8px 12px 0; border-bottom: 1px solid #262d3a; color: #94a3b8; font-size: 14px; text-align: left; vertical-align: top;">
+            <td style="padding: 11px 8px 11px 0; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 14px; text-align: left; vertical-align: top;">
               ${escapeHtml(r.label)}
             </td>
-            <td style="padding: 12px 0 12px 8px; border-bottom: 1px solid #262d3a; color: #f8fafc; font-size: 15px; font-weight: 700; text-align: right; vertical-align: top;">
+            <td style="padding: 11px 0 11px 8px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 15px; font-weight: 700; text-align: right; vertical-align: top;">
               ${escapeHtml(r.value)}
             </td>
           </tr>`,
@@ -100,8 +109,8 @@ export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
 
   const ctaHtml =
     payload.ctaLabel && payload.ctaUrl
-      ? `<div style="text-align: center; margin-top: 26px;">
-          <a href="${escapeHtml(payload.ctaUrl)}" style="display: inline-block; background-color: ${palette.ctaBg}; color: ${palette.ctaText}; font-weight: 700; font-size: 14px; text-decoration: none; padding: 12px 24px; border-radius: 10px;">
+      ? `<div style="margin-top: 22px; text-align: center;">
+          <a href="${escapeHtml(payload.ctaUrl)}" style="display: inline-block; background-color: ${palette.ctaBg}; color: ${palette.ctaText}; font-weight: 600; font-size: 14px; text-decoration: none; padding: 11px 22px; border-radius: 8px;">
             ${escapeHtml(payload.ctaLabel)}
           </a>
         </div>`
@@ -112,33 +121,31 @@ export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
   <title>${escapeHtml(payload.subject)}</title>
 </head>
-<body style="margin: 0; padding: 20px 12px; background-color: #0b0e14; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<body style="margin: 0; padding: 16px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 520px; background-color: #141820; border: 1px solid #262d3a; border-radius: 16px; padding: 28px 24px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 520px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 26px 22px;">
           <tr>
             <td>
-              <div style="text-align: center; margin-bottom: 6px; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8;">
-                MAUZOCHAP POS
-              </div>
-              <h1 style="margin: 0 0 24px 0; text-align: center; color: ${palette.title}; font-size: 24px; font-weight: 800; line-height: 1.3;">
+              <h2 style="margin: 0 0 20px 0; text-align: center; color: ${palette.title}; font-size: 22px; font-weight: 700; line-height: 1.3;">
                 ${heading}
-              </h1>
-              <p style="margin: 0 0 16px 0; color: #f8fafc; font-size: 16px; font-weight: 600;">
+              </h2>
+              <p style="margin: 0 0 14px 0; color: #0f172a; font-size: 16px; font-weight: 500;">
                 ${greeting}
               </p>
-              <div style="background-color: ${palette.boxBg}; border-left: 4px solid ${palette.border}; border-radius: 8px; padding: 16px 18px; color: #f1f5f9; font-size: 15px; line-height: 1.6;">
+              <div style="background-color: ${palette.boxBg}; border-left: 4px solid ${palette.border}; border-radius: 6px; padding: 14px 16px; color: ${palette.boxText}; font-size: 15px; line-height: 1.6;">
                 ${highlight}
               </div>
               ${rowsHtml}
               ${ctaHtml}
-              <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #222834; text-align: center; color: #64748b; font-size: 12px; line-height: 1.6;">
-                MauzoChap POS • Mfumo Bora wa Mauzo na Stoo Tanzania<br/>
-                Msaada / WhatsApp: +255 627 274 168 • <a href="https://www.mauzochap.co.tz" style="color: #5eead4; text-decoration: none;">www.mauzochap.co.tz</a>
-              </div>
+              <p style="margin: 24px 0 0 0; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 12px; line-height: 1.6;">
+                MauzoChap POS Tanzania • Simu: +255 627 274 168
+              </p>
             </td>
           </tr>
         </table>
@@ -319,14 +326,17 @@ Deno.serve(async (req: Request) => {
       payload.heading || payload.subject,
       "",
       payload.greetingName ? `Habari ${payload.greetingName},` : "Habari,",
+      "",
       payload.highlightText || payload.body || "",
       "",
       ...(payload.rows || []).map((r) => `${r.label}: ${r.value}`),
       payload.ctaUrl
         ? `\n${payload.ctaLabel || "Fungua MauzoChap"}: ${payload.ctaUrl}`
         : "",
+      "",
+      "MauzoChap POS Tanzania • +255 627 274 168",
     ]
-      .filter(Boolean)
+      .filter((line) => line !== undefined)
       .join("\n");
 
     const info = await transporter.sendMail({
@@ -336,6 +346,10 @@ Deno.serve(async (req: Request) => {
       subject: payload.subject,
       text: plainFallback,
       html,
+      headers: {
+        "X-Entity-Ref-ID": crypto.randomUUID(),
+        "X-Auto-Response-Suppress": "OOF, AutoReply",
+      },
     });
 
     return new Response(
