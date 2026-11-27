@@ -11,6 +11,7 @@ export const MAUZOCHAP_APP_URL = "https://www.mauzochap.co.tz";
 export interface EmailSummaryRow {
   label: string;
   value: string;
+  mono?: boolean;
 }
 
 export interface EmailOptions {
@@ -26,6 +27,7 @@ export interface EmailOptions {
   ctaUrl?: string;
   purpose?: string;
   otpCode?: string;
+  copyCode?: string;
 }
 
 export interface EmailResponse {
@@ -45,14 +47,14 @@ function escapeHtml(input: string): string {
 }
 
 /**
- * Generates the branded MauzoChap dark-card HTML template (matching SwalaSMS receipt style)
+ * Generates the MauzoChap Dark-Blue branded card HTML template with 1-tap selectable code support
  */
 export function buildMauzoChapCardHtml(options: EmailOptions): string {
   const toneColors = {
-    success: { title: "#5eead4", border: "#34d399", boxBg: "#192726" },
-    warning: { title: "#fcd34d", border: "#f59e0b", boxBg: "#272115" },
-    danger: { title: "#fca5a5", border: "#ef4444", boxBg: "#2a181b" },
-    info: { title: "#5eead4", border: "#14b8a6", boxBg: "#17252a" },
+    success: { border: "#1e3a8a", boxBg: "#eff6ff", boxText: "#0f172a" },
+    info: { border: "#2563eb", boxBg: "#eff6ff", boxText: "#0f172a" },
+    warning: { border: "#d97706", boxBg: "#fffbeb", boxText: "#78350f" },
+    danger: { border: "#dc2626", boxBg: "#fef2f2", boxText: "#7f1d1d" },
   };
   const palette = toneColors[options.tone || "success"];
   const heading = escapeHtml(options.heading || options.subject);
@@ -61,15 +63,20 @@ export function buildMauzoChapCardHtml(options: EmailOptions): string {
     : "Habari,";
   const highlight = escapeHtml(options.highlightText || options.body || "").replace(/\n/g, "<br/>");
   const rows = options.rows || [];
+  const activeCode = (options.otpCode || options.copyCode || "").trim();
+
+  const codeHtml = activeCode
+    ? `<div style="margin:20px 0 8px;text-align:center;"><div style="display:inline-block;background:#f8fafc;border:2px dashed #1e3a8a;border-radius:12px;padding:14px 28px;"><code style="font-family:monospace;font-size:30px;font-weight:800;letter-spacing:6px;color:#0f172a;user-select:all;-webkit-user-select:all;">${escapeHtml(activeCode)}</code></div></div>`
+    : "";
 
   const rowsHtml = rows
     .map(
       (r) =>
-        `<tr><td style="padding:12px 8px 12px 0;border-bottom:1px solid #262d3a;color:#94a3b8;font-size:14px;">${escapeHtml(r.label)}</td><td style="padding:12px 0 12px 8px;border-bottom:1px solid #262d3a;color:#f8fafc;font-size:15px;font-weight:700;text-align:right;">${escapeHtml(r.value)}</td></tr>`,
+        `<tr><td style="padding:11px 8px 11px 0;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:14px;">${escapeHtml(r.label)}</td><td style="padding:11px 0 11px 8px;border-bottom:1px solid #e2e8f0;color:#0f172a;font-size:15px;font-weight:700;text-align:right;">${escapeHtml(r.value)}</td></tr>`,
     )
     .join("");
 
-  return `<div style="background:#0b0e14;padding:20px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"><div style="max-width:520px;margin:0 auto;background:#141820;border:1px solid #262d3a;border-radius:16px;padding:28px 24px;"><div style="text-align:center;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#94a3b8;">MAUZOCHAP POS</div><h1 style="margin:6px 0 24px;text-align:center;color:${palette.title};font-size:24px;font-weight:800;">${heading}</h1><p style="margin:0 0 16px;color:#f8fafc;font-size:16px;font-weight:600;">${greeting}</p><div style="background:${palette.boxBg};border-left:4px solid ${palette.border};border-radius:8px;padding:16px 18px;color:#f1f5f9;font-size:15px;line-height:1.6;">${highlight}</div>${rowsHtml ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;border-collapse:collapse;">${rowsHtml}</table>` : ""}</div></div>`;
+  return `<div style="background:#f1f5f9;padding:20px 10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"><div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #cbd5e1;border-radius:16px;overflow:hidden;"><div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);padding:24px 22px;text-align:center;border-bottom:3px solid #2563eb;"><div style="font-size:13px;font-weight:700;color:#93c5fd;">MauzoChap POS</div><h2 style="margin:6px 0 0;color:#ffffff;font-size:22px;font-weight:800;">${heading}</h2></div><div style="padding:26px 22px;"><p style="margin:0 0 14px;color:#0f172a;font-size:16px;font-weight:600;">${greeting}</p><div style="background:${palette.boxBg};border-left:4px solid ${palette.border};border-radius:8px;padding:14px 16px;color:${palette.boxText};font-size:15px;line-height:1.6;">${highlight}</div>${codeHtml}${rowsHtml ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;border-collapse:collapse;">${rowsHtml}</table>` : ""}</div></div></div>`;
 }
 
 /**
@@ -248,20 +255,24 @@ export async function sendOtpEmail({
   recipientName?: string;
   code: string;
 }): Promise<EmailResponse> {
+  const autoFillUrl = `${MAUZOCHAP_APP_URL}/auth?mode=verify-otp&code=${encodeURIComponent(code)}&identifier=${encodeURIComponent(to)}&copy=1`;
+
   return sendEmail({
     to,
     purpose: "otp_reset",
     otpCode: code,
-    subject: `Nambari ya Siri (OTP): ${code} - MauzoChap POS`,
+    // Instagram-style subject prefix so Gmail / iOS / Android natively surface "Copy <code>" button!
+    subject: `${code} ndiyo nambari yako ya MauzoChap`,
     heading: "Nambari ya Siri (OTP)",
     greetingName: recipientName || undefined,
     tone: "info",
-    highlightText: `Nambari yako ya siri ya kubadilisha nenosiri la akaunti yako ya MauzoChap POS ni ${code}. Usitoe namba hii kwa mtu yeyote. Inatumika ndani ya dakika 10.`,
+    highlightText: `Tumia nambari ya siri hapa chini kubadilisha nenosiri la akaunti yako ya MauzoChap POS. Usimpe mtu yeyote namba hii. Inatumika ndani ya dakika 10.`,
     rows: [
-      { label: "Nambari ya OTP", value: code },
       { label: "Akaunti", value: to },
       { label: "Muda wa Kutumika", value: "Dakika 10" },
     ],
+    ctaLabel: `Nakili & Weka Nambari (${code})`,
+    ctaUrl: autoFillUrl,
   });
 }
 

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { MultiStepRegister } from "@/components/MultiStepRegister";
 import { sendOtpSMS } from "@/lib/sms-service";
 import { sendOtpEmail } from "@/lib/email";
-import { Eye, EyeOff, Smartphone, Mail, ShieldCheck, ArrowLeft, KeyRound } from "lucide-react";
+import { Eye, EyeOff, Smartphone, Mail, ShieldCheck, ArrowLeft, KeyRound, Copy, Check } from "lucide-react";
 
 import { buildSeoHead } from "@/lib/seo";
 
@@ -32,30 +32,62 @@ function AuthPage() {
   const { user } = useAuth();
   const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
   const modeParam = params.get("mode");
+  const codeParam = (params.get("code") || "").replace(/\D/g, "").slice(0, 6);
+  const identifierParam = params.get("identifier") || "";
+  const copyParam = params.get("copy");
   const inviteId = params.get("invite");
   const inviteRole = params.get("role") || "cashier";
   const inviteBranch = params.get("branch") || "";
 
   const [mode, setMode] = useState<"signin" | "signup" | "reset" | "verify-otp">(
-    modeParam === "signup" || modeParam === "register" || inviteId ? "signup" : "signin"
+    modeParam === "verify-otp" && codeParam.length === 6
+      ? "verify-otp"
+      : modeParam === "signup" || modeParam === "register" || inviteId
+        ? "signup"
+        : "signin"
   );
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(identifierParam);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // Forgot Password / OTP states
-  const [resetIdentifier, setResetIdentifier] = useState("");
-  const [otpCode, setOtpCode] = useState("");
+  const [resetIdentifier, setResetIdentifier] = useState(identifierParam);
+  const [otpCode, setOtpCode] = useState(codeParam);
+  const [copiedOtp, setCopiedOtp] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [otpSentTo, setOtpSentTo] = useState<{ phone?: string; email?: string }>({});
+  const [otpSentTo, setOtpSentTo] = useState<{ phone?: string; email?: string }>(
+    identifierParam ? { email: identifierParam } : {},
+  );
   const [resendCooldown, setResendCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const [inviteBusinessName, setInviteBusinessName] = useState<string | null>(null);
 
   useEffect(() => {
+    if (modeParam === "verify-otp" && codeParam.length === 6) {
+      setMode("verify-otp");
+      setOtpCode(codeParam);
+      if (identifierParam) {
+        setResetIdentifier(identifierParam);
+        setEmail(identifierParam);
+        setOtpSentTo((prev) => ({ ...prev, email: identifierParam }));
+      }
+      if (copyParam === "1" && typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        navigator.clipboard
+          .writeText(codeParam)
+          .then(() => {
+            setCopiedOtp(true);
+            toast.success(`Nambari ${codeParam} imenakiliwa na kujazwa kiotomatiki!`);
+          })
+          .catch(() => {
+            toast.success(`Nambari ${codeParam} imejazwa kiotomatiki! Weka nenosiri jipya.`);
+          });
+      }
+      return;
+    }
+
     if (modeParam === "signup" || modeParam === "register" || inviteId) {
       setMode("signup");
     }
@@ -67,7 +99,7 @@ function AuthPage() {
           }
         });
     }
-  }, [inviteId, modeParam]);
+  }, [inviteId, modeParam, codeParam, identifierParam, copyParam]);
 
   // Resend OTP countdown timer
   useEffect(() => {
@@ -238,7 +270,7 @@ function AuthPage() {
       style={{ background: "var(--gradient-subtle)" }}
     >
       {/* Left Branding Side */}
-      <div 
+      <div
         className="hidden lg:flex flex-col justify-center items-center p-12 relative overflow-hidden text-sidebar-foreground"
         style={{ background: "var(--sidebar)" }}
       >
@@ -247,7 +279,7 @@ function AuthPage() {
             <img src="/images/logo-white.png" alt="MauzoChap" className="w-20 h-20 object-contain drop-shadow-md" />
             <span className="text-3xl font-extrabold tracking-tight text-sidebar-foreground">MauzoChap</span>
           </Link>
-          
+
           <h2 className="text-4xl font-extrabold tracking-tight leading-[1.15]">
             The intelligent way to run your business.
           </h2>
@@ -255,7 +287,7 @@ function AuthPage() {
             A complete ecosystem for POS, inventory, customers, and analytics—built exclusively for modern Tanzanian enterprises.
           </p>
         </div>
-        
+
         <p className="absolute bottom-8 text-sm text-sidebar-foreground/50 font-semibold tracking-wide">
           © {new Date().getFullYear()} MauzoChap. All rights reserved.
         </p>
@@ -328,9 +360,27 @@ function AuthPage() {
 
             <form onSubmit={handleVerifyOtpAndReset} className="space-y-4 mt-5">
               <div>
-                <Label htmlFor="otpCode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Nambari ya Siri ya SMS (OTP - Tarakimu 6)
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="otpCode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Nambari ya Siri (OTP - Tarakimu 6)
+                  </Label>
+                  {otpCode.length === 6 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(otpCode).then(() => {
+                          setCopiedOtp(true);
+                          toast.success(`Nambari ${otpCode} imenakiliwa (Copied)!`);
+                          setTimeout(() => setCopiedOtp(false), 2500);
+                        });
+                      }}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer"
+                    >
+                      {copiedOtp ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copiedOtp ? "Imenakiliwa!" : "Copy Code"}
+                    </button>
+                  )}
+                </div>
                 <Input
                   id="otpCode"
                   type="text"

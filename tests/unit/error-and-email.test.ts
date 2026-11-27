@@ -79,7 +79,8 @@ describe('email & error handling utilities', () => {
         ],
       });
 
-      expect(html).toContain('MAUZOCHAP POS');
+      expect(html).toContain('MauzoChap POS');
+      expect(html).toContain('#1e3a8a');
       expect(html).toContain('Malipo Yamefanikiwa');
       expect(html).toContain('Habari Salvatory,');
       expect(html).toContain('20261127-MRREBD');
@@ -99,6 +100,8 @@ describe('email & error handling utilities', () => {
           body: expect.objectContaining({
             purpose: 'otp_reset',
             otpCode: '482910',
+            subject: '482910 ndiyo nambari yako ya MauzoChap',
+            ctaUrl: expect.stringContaining('mode=verify-otp&code=482910'),
           }),
         }),
       );
