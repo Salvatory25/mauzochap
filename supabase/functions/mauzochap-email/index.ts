@@ -149,13 +149,34 @@ export function renderMauzoChapCardHtml(payload: BrandedEmailPayload): string {
 </html>`;
 }
 
+async function resolveGmailPassword(adminClient: any): Promise<string> {
+  const envPass = (Deno.env.get("GMAIL_APP_PASSWORD") || "").replace(/\s+/g, "");
+  if (envPass) return envPass;
+
+  if (adminClient) {
+    const { data } = await adminClient
+      .from("internal_service_tokens")
+      .select("token")
+      .eq("service_name", "gmail_app_password")
+      .maybeSingle();
+    if (data?.token) {
+      return String(data.token).replace(/\s+/g, "");
+    }
+  }
+  return "";
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   const gmailUser = Deno.env.get("GMAIL_USER") || "mauzochap@gmail.com";
-  const gmailPass = (Deno.env.get("GMAIL_APP_PASSWORD") || "").replace(/\s+/g, "");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+  const adminClient = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
+  const gmailPass = await resolveGmailPassword(adminClient);
 
   if (req.method === "GET") {
     let smtpReachable = false;
@@ -194,20 +215,13 @@ Deno.serve(async (req: Request) => {
 
     const authHeader = req.headers.get("Authorization") || "";
     const internalCronToken = req.headers.get("x-internal-cron-token") || "";
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-
-    const adminClient = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
 
     let authorized = false;
 
-    // 1. Service role bearer
     if (serviceKey && authHeader === `Bearer ${serviceKey}`) {
       authorized = true;
     }
 
-    // 2. Internal database pg_cron token verification
     if (!authorized && internalCronToken && adminClient) {
       const { data: tokenRow } = await adminClient
         .from("internal_service_tokens")
@@ -219,7 +233,6 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // 3. Authenticated Supabase user JWT
     if (!authorized && authHeader.startsWith("Bearer ") && supabaseUrl && anonKey) {
       const token = authHeader.replace("Bearer ", "").trim();
       if (token && token !== anonKey) {
@@ -233,7 +246,6 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // 4. Pre-authentication flows (6-digit OTP reset & fresh signup welcome)
     if (!authorized && adminClient) {
       const cleanEmail = String(payload.to).trim().toLowerCase();
       if (payload.purpose === "otp_reset" && payload.otpCode) {
